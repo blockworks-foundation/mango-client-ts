@@ -2,14 +2,8 @@
   "cluster_urls": {
     "devnet": "https://devnet.solana.com",
     "localnet": "http://127.0.0.1:8899",
-    "mainnet": "https://api.mainnet-beta.solana.com"
-  },
-  "mainnet-beta": {
-    "dex_program_id": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
-    "spot_markets": {
-      "BTC/USDC": "CVfYa8RGXnuDBeGmniCcdkBwoLqVxh92xB1JqgRQx3F",
-      "ETH/USDC": "H5uzEytiByuXt964KampmuNCurNDwkVVypkym75J2DQW"
-    }
+    "mainnet": "https://api.mainnet-beta.solana.com",
+    "testnet": "https://testnet.solana.com"
   },
   "devnet": {
     "dex_program_id": "9MVDeYQnJmN2Dt7H44Z8cob4bET2ysdNu2uFJcatDJno",
@@ -65,6 +59,22 @@
       "BTC": "",
       "ETH": "",
       "USDC": ""
+    }
+  },
+  "testnet": {
+    "dex_program_id": "",
+    "mango_groups": {
+      "BTC_ETH_USDC": {}
+    },
+    "mango_program_id": "",
+    "spot_markets": {
+      "BTC_USDC": "",
+      "ETH_USDC": ""
+    },
+    "symbols": {
+      "BTC": "BahhjqQVqw3LELEVfyhHyEp7Db1TbFUNVrMiSsmTaBR2",
+      "ETH": "Dw91oaC5UGxzSDGaFontF1JS3XoViQV3EaTAgdtRPprM",
+      "USDC": "9q4p8UFxphSipGL3TGku8byTijgk4koTMwhBMV4QKvjw"
     }
   }
 }

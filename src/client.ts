@@ -13,7 +13,7 @@ import {
 import {
   encodeMangoInstruction,
   MangoGroupLayout,
-  MarginAccountLayout, NUM_TOKENS,
+  MarginAccountLayout, NUM_MARKETS, NUM_TOKENS,
   WideBits,
 } from './layout';
 import BN from 'bn.js';
@@ -90,6 +90,8 @@ export class MangoGroup {
 
 export class MarginAccount {
   publicKey: PublicKey;
+  createTime: number;  // used to determine when to update
+  // TODO maybe this is obviated by websocket feed onUpdate
 
   accountFlags!: WideBits;
   mangoGroup!: PublicKey;
@@ -99,9 +101,12 @@ export class MarginAccount {
   openOrders!: PublicKey[];
 
   openOrdersAccounts: undefined | (OpenOrders | undefined)[]  // undefined if an openOrdersAccount not yet initialized and has zeroKey
+  // TODO keep updated with websocket
+
   constructor(publicKey: PublicKey, decoded: any) {
-    this.publicKey = publicKey;
-    Object.assign(this, decoded);
+    this.publicKey = publicKey
+    this.createTime = getUnixTs()
+    Object.assign(this, decoded)
   }
 
   getNativeDeposit(mangoGroup: MangoGroup, tokenIndex: number): number {  // insufficient precision
@@ -173,6 +178,65 @@ export class MarginAccount {
     }
 
     return value
+  }
+
+  getAssetsVal(mangoGroup: MangoGroup, prices: number[]): number {
+    let assetsVal = 0
+    for (let i = 0; i < NUM_TOKENS; i++) {
+      assetsVal += this.getUiDeposit(mangoGroup, i) * prices[i]
+    }
+    if (this.openOrdersAccounts == undefined) {
+      return assetsVal
+    }
+
+    for (let i = 0; i < NUM_MARKETS; i++) {
+      const openOrdersAccount = this.openOrdersAccounts[i]
+      if (openOrdersAccount == undefined) {
+        continue
+      }
+
+      assetsVal += nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]) * prices[i]
+      assetsVal += nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_TOKENS-1])
+    }
+
+    return assetsVal
+  }
+
+  getLiabsVal(mangoGroup: MangoGroup, prices: number[]) {
+    let liabsVal = 0
+    for (let i = 0; i < NUM_TOKENS; i++) {
+      liabsVal += this.getUiBorrow(mangoGroup, i) * prices[i]
+    }
+    return liabsVal
+  }
+
+  getCollateralRatio(mangoGroup: MangoGroup, prices: number[]): number {
+    let assetsVal = 0
+    let liabsVal = 0
+    for (let i = 0; i < NUM_TOKENS; i++) {
+      assetsVal += this.getUiDeposit(mangoGroup, i) * prices[i]
+      liabsVal += this.getUiBorrow(mangoGroup, i) * prices[i]
+    }
+
+    if (liabsVal === 0) {
+      return 100
+    }
+
+    if (this.openOrdersAccounts == undefined) {
+      return assetsVal / liabsVal
+    }
+    for (let i = 0; i < NUM_MARKETS; i++) {
+      const openOrdersAccount = this.openOrdersAccounts[i]
+      if (openOrdersAccount == undefined) {
+        continue
+      }
+
+      assetsVal += nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]) * prices[i]
+      assetsVal += nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_TOKENS-1])
+
+    }
+
+    return assetsVal / liabsVal
   }
 }
 
@@ -736,3 +800,7 @@ async function getFilteredProgramAccounts(
 async function promiseUndef(): Promise<undefined> {
   return undefined
 }
+
+export const getUnixTs = () => {
+  return new Date().getTime() / 1000;
+};
