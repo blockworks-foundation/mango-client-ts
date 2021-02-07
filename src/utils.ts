@@ -64,7 +64,6 @@ export const SubmissionLayout = struct([
 
 export function decodeAggregatorInfo(accountInfo) {
   const aggregator = AggregatorLayout.decode(accountInfo.data);
-
   const minSubmissionValue = aggregator.minSubmissionValue;
   const maxSubmissionValue = aggregator.maxSubmissionValue;
   const submitInterval = aggregator.submitInterval;
@@ -74,8 +73,7 @@ export function decodeAggregatorInfo(accountInfo) {
   const submissions: any[] = []
   const submissionSpace = SubmissionLayout.span
   let latestUpdateTime = new BN(0);
-  const decimalAdj = Math.pow(10, aggregator.decimals)
-
+  const decimalAdj = Math.pow(10, aggregator.submissionDecimals)
   for (let i = 0; i < aggregator.submissions.length / submissionSpace; i++) {
     const submission = SubmissionLayout.decode(
       aggregator.submissions.slice(i*submissionSpace, (i+1)*submissionSpace)

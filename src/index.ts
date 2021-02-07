@@ -38,6 +38,8 @@ export { IDS }
 //     {skipPreflight: true, commitment: 'singleGossip'},
 //     mangoGroup.dexProgramId
 //   )
+//   const prices = await mangoGroup.getPrices(connection)
+//   console.log(prices)
 //
 //   // // margin short 0.1 BTC
 //   // await client.placeOrder(
