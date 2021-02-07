@@ -49,6 +49,7 @@ export const AggregatorLayout = struct([
   blob(4, "submitInterval"),
   u64("minSubmissionValue"),
   u64("maxSubmissionValue"),
+  u8("submissionDecimals"),
   blob(32, "description"),
   u8("isInitialized"),
   publicKeyLayout('owner'),
@@ -73,13 +74,14 @@ export function decodeAggregatorInfo(accountInfo) {
   const submissions: any[] = []
   const submissionSpace = SubmissionLayout.span
   let latestUpdateTime = new BN(0);
+  const decimalAdj = Math.pow(10, aggregator.decimals)
 
   for (let i = 0; i < aggregator.submissions.length / submissionSpace; i++) {
     const submission = SubmissionLayout.decode(
       aggregator.submissions.slice(i*submissionSpace, (i+1)*submissionSpace)
     )
 
-    submission.value = submission.value / 100.0;
+    submission.value = submission.value / decimalAdj;
     if (!submission.oracle.equals(new PublicKey(0))) {
       submissions.push(submission)
     }
