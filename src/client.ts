@@ -24,6 +24,7 @@ import {
   nativeToUi,
   uiToNative,
   zeroKey,
+  sendTransaction
 } from './utils';
 import { Market, OpenOrders } from '@project-serum/serum';
 import { Wallet } from '@project-serum/sol-wallet-adapter';
@@ -244,12 +245,14 @@ export class MangoClient {
   async initMangoGroup() {
     throw new Error("Not Implemented");
   }
+
   async sendTransaction(
     connection: Connection,
     transaction: Transaction,
     payer: Account | Wallet,
-    additionalSigners: Account[]
-  ): Promise<TransactionSignature> {
+    additionalSigners: Account[],
+    notifications?: {sendingMessage: string, sentMessage: string, successMessage: string}
+): Promise<TransactionSignature> {
     transaction.recentBlockhash = (await connection.getRecentBlockhash('max')).blockhash
     transaction.setSigners(payer.publicKey, ...additionalSigners.map( a => a.publicKey ))
     // TODO test on mainnet
@@ -257,24 +260,32 @@ export class MangoClient {
     // if Wallet was provided, sign with wallet
     if ((typeof payer) === Wallet) {  // this doesn't work. Need to copy over from Omega
       // TODO test with wallet
-      if (additionalSigners.length > 0) {
-        transaction.partialSign(...additionalSigners)
+
+      let args = {
+        transaction,
+        wallet: payer,
+        signers: additionalSigners,
+        connection,
       }
-      transaction = payer.signTransaction(transaction)
+      if (notifications) {
+        args = {...args, ...notifications}
+      }
+
+      return await sendTransaction(args)
     } else {
       // otherwise sign with the payer account
       const signers = [payer].concat(additionalSigners)
       transaction.sign(...signers)
+      const rawTransaction = transaction.serialize()
+      return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
     }
-    const rawTransaction = transaction.serialize()
-    return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
   }
   async initMarginAccount(
     connection: Connection,
     programId: PublicKey,
     dexProgramId: PublicKey,  // Serum DEX program ID
     mangoGroup: MangoGroup,
-    payer: Account | Wallet
+    payer: Account | Wallet,
   ): Promise<PublicKey> {
 
     // Create a Solana account for the MarginAccount and allocate space
@@ -302,8 +313,18 @@ export class MangoClient {
       accInstr.account,
     ]
 
+    let notifications;
+    if ((typeof payer) == Wallet) {
+      const functionName = 'InitMarginAccount'
+      notifications = {
+        sendingMessage: `sending ${functionName} instruction...`,
+        sentMessage: `${functionName} instruction sent`,
+        successMessage: `${functionName} instruction success`
+      }
+    }
+
     // sign, send and confirm transaction
-    await this.sendTransaction(connection, transaction, payer, additionalSigners)
+    await this.sendTransaction(connection, transaction, payer, additionalSigners, notifications)
 
     return accInstr.account.publicKey
   }
@@ -341,7 +362,16 @@ export class MangoClient {
     transaction.add(instruction)
     const additionalSigners = []
 
-    return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+    let notifications;
+    if ((typeof owner) == Wallet) {
+      const functionName = 'Deposit'
+      notifications = {
+        sendingMessage: `sending ${functionName} instruction...`,
+        sentMessage: `${functionName} instruction sent`,
+        successMessage: `${functionName} instruction success`
+      }
+    }
+    return await this.sendTransaction(connection, transaction, owner, additionalSigners, notifications)
   }
 
   async withdraw(
