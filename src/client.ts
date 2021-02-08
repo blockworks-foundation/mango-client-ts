@@ -258,7 +258,7 @@ export class MangoClient {
     // TODO test on mainnet
 
     // if Wallet was provided, sign with wallet
-    if (payer instanceof Wallet) {  // this doesn't work. Need to copy over from Omega
+    if (!(payer instanceof Account)) {
       // TODO test with wallet
 
       let args = {
@@ -314,7 +314,7 @@ export class MangoClient {
     ]
 
     let notifications;
-    if (payer instanceof Wallet) {
+    if (!(payer instanceof Account)) {
       const functionName = 'InitMarginAccount'
       notifications = {
         sendingMessage: `sending ${functionName} instruction...`,
@@ -363,7 +363,7 @@ export class MangoClient {
     const additionalSigners = []
 
     let notifications;
-    if (owner instanceof Wallet) {
+    if (!(owner instanceof Account)) {
       const functionName = 'Deposit'
       notifications = {
         sendingMessage: `sending ${functionName} instruction...`,
