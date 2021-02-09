@@ -30,6 +30,7 @@ import {
 import { Market, OpenOrders } from '@project-serum/serum';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
+import Wallet from '@project-serum/sol-wallet-adapter';
 
 
 export class MangoGroup {
@@ -681,7 +682,7 @@ export class MangoClient {
     connection: Connection,
     programId: PublicKey,
     mangoGroup: MangoGroup,
-    owner: Account
+    owner: Account | Wallet
   ): Promise<MarginAccount[]> {
 
     const filters = [
