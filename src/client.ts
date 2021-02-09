@@ -431,6 +431,11 @@ export class MangoClient {
     depositQuantities: number[]
   ): Promise<TransactionSignature> {
 
+    const depositsBN: BN[] = []
+    for (let i = 0; i < mangoGroup.tokens.length; i++) {
+      depositsBN[i] = uiToNative(depositQuantities[i], mangoGroup.mintDecimals[i])
+    }
+
     const keys = [
       { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
       { isSigner: true, isWritable: false, pubkey: liqor.publicKey },
@@ -443,7 +448,7 @@ export class MangoClient {
       ...tokenAccs.map( (pubkey) => ( { isSigner: false, isWritable: true, pubkey })),
       ...mangoGroup.tokens.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
     ]
-    const data = encodeMangoInstruction({Liquidate: {depositQuantities}})
+    const data = encodeMangoInstruction({Liquidate: {depositQuantities: depositsBN}})
 
 
     const instruction = new TransactionInstruction( { keys, data, programId })
