@@ -45,10 +45,7 @@
     "prettier": "^2.0.5",
     "ts-jest": "^26.2.0",
     "ts-node": "^9.1.1",
-    "typescript": "^4.1.3",
-    "antd": "^4.12.2",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "typescript": "^4.1.3"
   },
   "files": [
     "lib"
@@ -58,11 +55,10 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@project-serum/serum": "^0.13.18",
+    "@project-serum/serum": "^0.13.20",
     "@solana/web3.js": "^0.90.0",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0",
-    "double.js": "^1.0.14",
     "@project-serum/sol-wallet-adapter": "^0.1.4"
   },
   "browserslist": [

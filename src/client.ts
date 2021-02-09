@@ -13,7 +13,9 @@ import {
 import {
   encodeMangoInstruction,
   MangoGroupLayout,
-  MarginAccountLayout, NUM_MARKETS, NUM_TOKENS,
+  MarginAccountLayout,
+  NUM_MARKETS,
+  NUM_TOKENS,
   WideBits,
 } from './layout';
 import BN from 'bn.js';
@@ -24,10 +26,8 @@ import {
   nativeToUi,
   uiToNative,
   zeroKey,
-  sendTransaction
 } from './utils';
 import { Market, OpenOrders } from '@project-serum/serum';
-import { Wallet } from '@project-serum/sol-wallet-adapter';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 
@@ -212,30 +212,8 @@ export class MarginAccount {
   }
 
   getCollateralRatio(mangoGroup: MangoGroup, prices: number[]): number {
-    let assetsVal = 0
-    let liabsVal = 0
-    for (let i = 0; i < NUM_TOKENS; i++) {
-      assetsVal += this.getUiDeposit(mangoGroup, i) * prices[i]
-      liabsVal += this.getUiBorrow(mangoGroup, i) * prices[i]
-    }
-
-    if (liabsVal === 0) {
-      return 100
-    }
-
-    if (this.openOrdersAccounts == undefined) {
-      return assetsVal / liabsVal
-    }
-    for (let i = 0; i < NUM_MARKETS; i++) {
-      const openOrdersAccount = this.openOrdersAccounts[i]
-      if (openOrdersAccount == undefined) {
-        continue
-      }
-
-      assetsVal += nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]) * prices[i]
-      assetsVal += nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_TOKENS-1])
-
-    }
+    const assetsVal = this.getAssetsVal(mangoGroup, prices)
+    const liabsVal = this.getLiabsVal(mangoGroup, prices)
 
     return assetsVal / liabsVal
   }
@@ -249,53 +227,35 @@ export class MangoClient {
   async sendTransaction(
     connection: Connection,
     transaction: Transaction,
-    payer: Account | Wallet,
+    payer: Account,
     additionalSigners: Account[],
-    notifications?: {sendingMessage: string, sentMessage: string, successMessage: string}
 ): Promise<TransactionSignature> {
-    transaction.recentBlockhash = (await connection.getRecentBlockhash('max')).blockhash
-    transaction.setSigners(payer.publicKey, ...additionalSigners.map( a => a.publicKey ))
     // TODO test on mainnet
 
-    // if Wallet was provided, sign with wallet
-    if (!(payer instanceof Account)) {
-      // TODO test with wallet
+    transaction.recentBlockhash = (await connection.getRecentBlockhash('max')).blockhash
+    transaction.setSigners(payer.publicKey, ...additionalSigners.map( a => a.publicKey ))
 
-      let args = {
-        transaction,
-        wallet: payer,
-        signers: additionalSigners,
-        connection,
-      }
-      if (notifications) {
-        args = {...args, ...notifications}
-      }
+    const signers = [payer].concat(additionalSigners)
+    transaction.sign(...signers)
+    const rawTransaction = transaction.serialize()
+    return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
 
-      return await sendTransaction(args)
-    } else {
-      // otherwise sign with the payer account
-      const signers = [payer].concat(additionalSigners)
-      transaction.sign(...signers)
-      const rawTransaction = transaction.serialize()
-      return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
-    }
   }
   async initMarginAccount(
     connection: Connection,
     programId: PublicKey,
-    dexProgramId: PublicKey,  // Serum DEX program ID
     mangoGroup: MangoGroup,
-    payer: Account | Wallet,
+    owner: Account,  // assumed to be same as payer for now
   ): Promise<PublicKey> {
-
     // Create a Solana account for the MarginAccount and allocate space
-    const accInstr = await createAccountInstruction(connection, payer.publicKey, MarginAccountLayout.span, programId)
+    const accInstr = await createAccountInstruction(connection,
+      owner.publicKey, MarginAccountLayout.span, programId)
 
     // Specify the accounts this instruction takes in (see program/src/instruction.rs)
     const keys = [
-      { isSigner: false, isWritable: false, pubkey: mangoGroup.publicKey},
+      { isSigner: false, isWritable: false, pubkey: mangoGroup.publicKey },
       { isSigner: false, isWritable: true,  pubkey: accInstr.account.publicKey },
-      { isSigner: true,  isWritable: false, pubkey: payer.publicKey },
+      { isSigner: true,  isWritable: false, pubkey: owner.publicKey },
       { isSigner: false, isWritable: false, pubkey: SYSVAR_RENT_PUBKEY }
     ]
 
@@ -313,18 +273,8 @@ export class MangoClient {
       accInstr.account,
     ]
 
-    let notifications;
-    if (!(payer instanceof Account)) {
-      const functionName = 'InitMarginAccount'
-      notifications = {
-        sendingMessage: `sending ${functionName} instruction...`,
-        sentMessage: `${functionName} instruction sent`,
-        successMessage: `${functionName} instruction success`
-      }
-    }
-
     // sign, send and confirm transaction
-    await this.sendTransaction(connection, transaction, payer, additionalSigners, notifications)
+    await this.sendTransaction(connection, transaction, owner, additionalSigners)
 
     return accInstr.account.publicKey
   }
@@ -334,7 +284,7 @@ export class MangoClient {
     programId: PublicKey,
     mangoGroup: MangoGroup,
     marginAccount: MarginAccount,
-    owner: Account | Wallet,
+    owner: Account,
     token: PublicKey,
     tokenAcc: PublicKey,
 
@@ -362,16 +312,7 @@ export class MangoClient {
     transaction.add(instruction)
     const additionalSigners = []
 
-    let notifications;
-    if (!(owner instanceof Account)) {
-      const functionName = 'Deposit'
-      notifications = {
-        sendingMessage: `sending ${functionName} instruction...`,
-        sentMessage: `${functionName} instruction sent`,
-        successMessage: `${functionName} instruction success`
-      }
-    }
-    return await this.sendTransaction(connection, transaction, owner, additionalSigners, notifications)
+    return await this.sendTransaction(connection, transaction, owner, additionalSigners)
   }
 
   async withdraw(
@@ -379,7 +320,7 @@ export class MangoClient {
     programId: PublicKey,
     mangoGroup: MangoGroup,
     marginAccount: MarginAccount,
-    owner: Account | Wallet,
+    owner: Account,
     token: PublicKey,
     tokenAcc: PublicKey,
 
@@ -418,7 +359,7 @@ export class MangoClient {
     programId: PublicKey,
     mangoGroup: MangoGroup,
     marginAccount: MarginAccount,
-    owner: Account | Wallet,
+    owner: Account,
     token: PublicKey,
 
     quantity: number
@@ -452,7 +393,7 @@ export class MangoClient {
     programId: PublicKey,
     mangoGroup: MangoGroup,
     marginAccount: MarginAccount,
-    owner: Account | Wallet,
+    owner: Account,
 
     token: PublicKey,
     quantity: number
@@ -484,7 +425,7 @@ export class MangoClient {
     programId: PublicKey,
     mangoGroup: MangoGroup,
     liqeeMarginAccount: MarginAccount,  // liquidatee marginAccount
-    liqor: Account | Wallet,  // liquidator
+    liqor: Account,  // liquidator
     tokenAccs: PublicKey[],
     depositQuantities: number[]
   ): Promise<TransactionSignature> {
@@ -519,7 +460,7 @@ export class MangoClient {
     mangoGroup: MangoGroup,
     marginAccount: MarginAccount,
     spotMarket: Market,
-    owner: Account | Wallet,
+    owner: Account,
 
     side: 'buy' | 'sell',
     price: number,
@@ -609,7 +550,7 @@ export class MangoClient {
     programId: PublicKey,
     mangoGroup: MangoGroup,
     marginAccount: MarginAccount,
-    owner: Account | Wallet,
+    owner: Account,
     spotMarket: Market,
 
   ): Promise<TransactionSignature> {
@@ -659,7 +600,7 @@ export class MangoClient {
     programId: PublicKey,
     mangoGroup: MangoGroup,
     marginAccount: MarginAccount,
-    owner: Account | Wallet,
+    owner: Account,
     spotMarket: Market,
     order: Order,
   ): Promise<TransactionSignature> {
@@ -740,7 +681,7 @@ export class MangoClient {
     connection: Connection,
     programId: PublicKey,
     mangoGroup: MangoGroup,
-    owner: Account | Wallet
+    owner: Account
   ): Promise<MarginAccount[]> {
 
     const filters = [
@@ -766,7 +707,8 @@ export class MangoClient {
     const accounts = await getFilteredProgramAccounts(connection, programId, filters);
     return accounts.map(
       ({ publicKey, accountInfo }) =>
-        new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
+        new MarginAccount(publicKey, MarginAccountLayout.decode(
+          accountInfo == null ? undefined : accountInfo.data))
     );
   }
 }
