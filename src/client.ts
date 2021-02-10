@@ -658,6 +658,16 @@ export class MangoClient {
     const acc = await connection.getAccountInfo(marginAccountPk, 'singleGossip')
     return new MarginAccount(marginAccountPk, MarginAccountLayout.decode(acc == null ? undefined : acc.data))
   }
+  async getCompleteMarginAccount(
+    connection: Connection,
+    marginAccountPk: PublicKey,
+    dexProgramId: PublicKey
+  ): Promise<MarginAccount> {
+    const ma = await this.getMarginAccount(connection, marginAccountPk)
+    await ma.loadOpenOrders(connection, dexProgramId)
+    return ma
+  }
+
   async getAllMarginAccounts(
     connection: Connection,
     programId: PublicKey,
@@ -696,7 +706,6 @@ export class MangoClient {
           offset: MarginAccountLayout.offsetOf('mangoGroup'),
           bytes: mangoGroup.publicKey.toBase58(),
         },
-
       },
       {
         memcmp: {
