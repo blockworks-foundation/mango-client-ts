@@ -222,7 +222,7 @@ MangoInstructionLayout.addVariant(9,
   'CancelOrder'
 )
 
-MangoInstructionLayout.addVariant(10, struct([]), 'CancelOrderByClientId')
+MangoInstructionLayout.addVariant(10, struct([u64('clientId')]), 'CancelOrderByClientId')
 
 // @ts-ignore
 const instructionMaxSpan = Math.max(...Object.values(MangoInstructionLayout.registry).map((r) => r.span));

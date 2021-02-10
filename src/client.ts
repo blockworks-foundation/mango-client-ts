@@ -27,7 +27,7 @@ import {
   uiToNative,
   zeroKey,
 } from './utils';
-import { Market, OpenOrders } from '@project-serum/serum';
+import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
@@ -218,6 +218,47 @@ export class MarginAccount {
 
     return assetsVal / liabsVal
   }
+
+  async cancelAllOrdersByMarket(
+    connection: Connection,
+    client: MangoClient,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    market: Market,
+    bids: Orderbook,
+    asks: Orderbook,
+    owner: Account
+  ): Promise<TransactionSignature[]> {
+    const marketIndex = mangoGroup.getMarketIndex(market)
+
+    if (!this.openOrdersAccounts) {
+      throw new Error("Must load open orders accounts first")
+    }
+
+    const openOrdersAccount = this.openOrdersAccounts[marketIndex]
+    if (!openOrdersAccount) { // no open orders for this market
+      return []
+    }
+
+    const orders = market.filterForOpenOrders(bids, asks, [openOrdersAccount])
+    return await Promise.all(orders.map(
+      (order) => (
+        client.cancelOrder(connection, programId, mangoGroup, this, owner, market, order)
+      )
+    ))
+
+  }
+
+  async cancelAllOrders(
+    connection: Connection
+
+  ): Promise<boolean> {
+
+    // fetch all orders using order id
+
+    return true
+  }
+
 }
 
 export class MangoClient {
@@ -641,6 +682,7 @@ export class MangoClient {
     return await this.sendTransaction(connection, transaction, owner, additionalSigners)
   }
 
+
   async getMangoGroup(
     connection: Connection,
     mangoGroupPk: PublicKey
@@ -650,7 +692,6 @@ export class MangoClient {
     const mintDecimals: number[] = await Promise.all(decoded.tokens.map( (pk) => getMintDecimals(connection, pk) ))
     return new MangoGroup(mangoGroupPk, mintDecimals, decoded);
   }
-
   async getMarginAccount(
     connection: Connection,
     marginAccountPk: PublicKey
@@ -658,6 +699,8 @@ export class MangoClient {
     const acc = await connection.getAccountInfo(marginAccountPk, 'singleGossip')
     return new MarginAccount(marginAccountPk, MarginAccountLayout.decode(acc == null ? undefined : acc.data))
   }
+
+
   async getCompleteMarginAccount(
     connection: Connection,
     marginAccountPk: PublicKey,
@@ -722,8 +765,7 @@ export class MangoClient {
     const accounts = await getFilteredProgramAccounts(connection, programId, filters);
     return accounts.map(
       ({ publicKey, accountInfo }) =>
-        new MarginAccount(publicKey, MarginAccountLayout.decode(
-          accountInfo == null ? undefined : accountInfo.data))
+        new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
     );
   }
 }
