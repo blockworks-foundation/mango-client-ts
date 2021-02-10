@@ -182,6 +182,39 @@ export class MarginAccount {
     return value
   }
 
+  getAssets(mangoGroup: MangoGroup): number[] {
+    if (this.openOrdersAccounts == undefined) {
+      throw new Error("openOrdersAccounts not yet loaded")
+    }
+
+    const assets = new Array<number>(NUM_TOKENS)
+
+    for (let i = 0; i < NUM_TOKENS; i++) {
+      assets[i] = this.getUiDeposit(mangoGroup, i)
+    }
+    for (let i = 0; i < NUM_MARKETS; i++) {
+      const openOrdersAccount = this.openOrdersAccounts[i]
+      if (openOrdersAccount == undefined) {
+        continue
+      }
+
+      assets[i] += nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i])
+      assets[NUM_TOKENS-1] += nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_TOKENS-1])
+    }
+
+
+    return assets
+  }
+
+  getLiabs(mangoGroup: MangoGroup): number[] {
+    const liabs = new Array(NUM_TOKENS)
+    for (let i = 0; i < NUM_TOKENS; i++) {
+      liabs[i] = this.getUiBorrow(mangoGroup, i)
+    }
+
+    return liabs
+  }
+
   getAssetsVal(mangoGroup: MangoGroup, prices: number[]): number {
     let assetsVal = 0
     for (let i = 0; i < NUM_TOKENS; i++) {
