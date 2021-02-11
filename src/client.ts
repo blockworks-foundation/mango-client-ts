@@ -485,13 +485,90 @@ export class MangoClient {
     ]
     const data = encodeMangoInstruction({SettleBorrow: {tokenIndex: new BN(tokenIndex), quantity: nativeQuantity}})
 
-
     const instruction = new TransactionInstruction( { keys, data, programId })
-
     const transaction = new Transaction()
     transaction.add(instruction)
     const additionalSigners = []
 
+    return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+  }
+
+  /**
+   * Call SettleFunds on each market, then call SettleBorrow for each token in one transaction
+   * @param connection
+   * @param programId
+   * @param mangoGroup
+   * @param marginAccount
+   * @param markets
+   * @param owner
+   */
+  async settleAll(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    marginAccount: MarginAccount,
+    markets: Market[],
+    owner: Account
+  ): Promise<TransactionSignature> {
+
+    if (!marginAccount.openOrdersAccounts) {
+      throw new Error("openOrderesAccounts must be initialized")
+    }
+
+    const transaction = new Transaction()
+    for (let i = 0; i < NUM_MARKETS; i++) {
+      if (marginAccount.openOrdersAccounts[i] == undefined) {
+        continue
+      }
+      const spotMarket = markets[i]
+      const dexSigner = await PublicKey.createProgramAddress(
+        [
+          spotMarket.publicKey.toBuffer(),
+          spotMarket['_decoded'].vaultSignerNonce.toArrayLike(Buffer, 'le', 8)
+        ],
+        spotMarket.programId
+      )
+
+      const keys = [
+        { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
+        { isSigner: true, isWritable: false,  pubkey: owner.publicKey },
+        { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
+        { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+        { isSigner: false, isWritable: false, pubkey: spotMarket.programId },
+        { isSigner: false, isWritable: true, pubkey: spotMarket.publicKey },
+        { isSigner: false, isWritable: true, pubkey: marginAccount.openOrders[i] },
+        { isSigner: false, isWritable: false, pubkey: mangoGroup.signerKey },
+        { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].baseVault },
+        { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].quoteVault },
+        { isSigner: false, isWritable: true, pubkey: mangoGroup.vaults[i] },
+        { isSigner: false, isWritable: true, pubkey: mangoGroup.vaults[mangoGroup.vaults.length - 1] },
+        { isSigner: false, isWritable: false, pubkey: dexSigner },
+        { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
+      ]
+      const data = encodeMangoInstruction( {SettleFunds: {}} )
+
+      const instruction = new TransactionInstruction( { keys, data, programId })
+      transaction.add(instruction)
+    }
+
+    const assets = marginAccount.getAssets(mangoGroup)
+    const liabs = marginAccount.getLiabs(mangoGroup)
+
+    for (let i = 0; i < NUM_TOKENS; i++) {  // TODO test this. maybe it hits transaction size limit
+      const keys = [
+        { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
+        { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
+        { isSigner: true, isWritable: false,  pubkey: owner.publicKey },
+        { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY }
+      ]
+      const data = encodeMangoInstruction({SettleBorrow: {tokenIndex: new BN(i), quantity: uiToNative(liabs[i], mangoGroup.mintDecimals[i])}})
+
+      const instruction = new TransactionInstruction( { keys, data, programId })
+      transaction.add(instruction)
+
+    }
+
+    const additionalSigners = []
     return await this.sendTransaction(connection, transaction, owner, additionalSigners)
   }
 
