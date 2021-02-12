@@ -10,6 +10,8 @@
     "spot_markets": {
       "BTC/USDT": "EXnGBBSamqzd3uxEdRLUiYzjJkTwQyorAaFXdfteuGXe",
       "ETH/USDT": "5abZGhrELnUnfM9ZUnvK6XJPoBU5eShZwfFPkdhAC7o",
+      "SOL/USDT": "7xLk17EQQ5KLDLDe44wCmupJKJjTGd8hs3eSVVhCx932",
+      "SRM/USDC": "CDdR97S8y96v3To93aKvi3nCnjUrbuVSuumw8FLvbVeg",
       "BTC/USDC": "CVfYa8RGXnuDBeGmniCcdkBwoLqVxh92xB1JqgRQx3F",
       "ETH/USDC": "H5uzEytiByuXt964KampmuNCurNDwkVVypkym75J2DQW"
     }
