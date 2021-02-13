@@ -561,11 +561,10 @@ export class MangoClient {
         { isSigner: true, isWritable: false,  pubkey: owner.publicKey },
         { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY }
       ]
-      const data = encodeMangoInstruction({SettleBorrow: {tokenIndex: new BN(i), quantity: uiToNative(liabs[i], mangoGroup.mintDecimals[i])}})
+      const data = encodeMangoInstruction({SettleBorrow: {tokenIndex: new BN(i), quantity: uiToNative(liabs[i] * 2, mangoGroup.mintDecimals[i])}})
 
       const instruction = new TransactionInstruction( { keys, data, programId })
       transaction.add(instruction)
-
     }
 
     const additionalSigners = []

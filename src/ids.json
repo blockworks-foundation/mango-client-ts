@@ -2,23 +2,14 @@
   "cluster_urls": {
     "devnet": "https://devnet.solana.com",
     "localnet": "http://127.0.0.1:8899",
-    "testnet": "https://testnet.solana.com",
-    "mainnet-beta": "https://solana-api.projectserum.com"
-  },
-  "mainnet-beta": {
-    "dex_program_id": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
-    "spot_markets": {
-      "BTC/USDT": "EXnGBBSamqzd3uxEdRLUiYzjJkTwQyorAaFXdfteuGXe",
-      "ETH/USDT": "5abZGhrELnUnfM9ZUnvK6XJPoBU5eShZwfFPkdhAC7o",
-      "BTC/USDC": "CVfYa8RGXnuDBeGmniCcdkBwoLqVxh92xB1JqgRQx3F",
-      "ETH/USDC": "H5uzEytiByuXt964KampmuNCurNDwkVVypkym75J2DQW"
-    }
+    "mainnet-beta": "https://solana-api.projectserum.com",
+    "testnet": "https://testnet.solana.com"
   },
   "devnet": {
     "dex_program_id": "9MVDeYQnJmN2Dt7H44Z8cob4bET2ysdNu2uFJcatDJno",
     "mango_groups": {
       "BTC_ETH_USDC": {
-        "mango_group_pk": "J26hsHrmwtGCn7CEyFuLEd8j3Lx2jW3QrEF1Kt3bHGtd",
+        "mango_group_pk": "GpfqWo9VYHP8JzZEFYgCH5vTZbknKdUvwb817duU53y2",
         "mint_pks": [
           "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
@@ -33,13 +24,13 @@
           "GAZmMjiABoZimoePnrA2BiPx7BTDByskopZ7coBDnKFQ"
         ],
         "vault_pks": [
-          "Af2Updr4Cc6dDmyM7GKZQwXkYmZLTeLg41TBB7U2zKmP",
-          "Hd1e5TAmC8UXvuw1comLw5E7E4Yrg4q41ZavGFSJqNK4",
-          "WL7F6KfS283rtdmi6AHC17MAQmEY6Bs4gRGA8BVZqxM"
+          "GwgkfthbsYjSc19TeHNDqbtkVseKbow2NmmZBWrkB57W",
+          "HeZ8MQUnhxT23cswFKY6uomr2XjuQStJBeQL2FepwxjD",
+          "FFGNZALpQpSstp75y4ZyYxzGaFA9iSX3R1EtCXGGPSMS"
         ]
       }
     },
-    "mango_program_id": "3jLLSEDN6xh6vsVAwiyWAKXuhivwv4y6hTyf8QMsvz6c",
+    "mango_program_id": "AHKufSeSqvjehJcW1uTy1RKhV4BafbpQxVGXGHn7G3hX",
     "oracles": {
       "BTC/USDC": "WZsNe3EBSwg1kRccs7M86DYBeSzYzwrkVtEp8iVb6RJ",
       "ETH/USDC": "DBiZZ6riT6QVoGVBMBnSsYFwkie1GAxWdac3NCpyrDR1"
@@ -68,6 +59,15 @@
       "BTC": "",
       "ETH": "",
       "USDC": ""
+    }
+  },
+  "mainnet-beta": {
+    "dex_program_id": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+    "spot_markets": {
+      "BTC/USDC": "CVfYa8RGXnuDBeGmniCcdkBwoLqVxh92xB1JqgRQx3F",
+      "BTC/USDT": "EXnGBBSamqzd3uxEdRLUiYzjJkTwQyorAaFXdfteuGXe",
+      "ETH/USDC": "H5uzEytiByuXt964KampmuNCurNDwkVVypkym75J2DQW",
+      "ETH/USDT": "5abZGhrELnUnfM9ZUnvK6XJPoBU5eShZwfFPkdhAC7o"
     }
   },
   "testnet": {
