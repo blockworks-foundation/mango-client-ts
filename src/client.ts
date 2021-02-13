@@ -262,12 +262,11 @@ export class MarginAccount {
     asks: Orderbook,
     owner: Account
   ): Promise<TransactionSignature[]> {
-    const marketIndex = mangoGroup.getMarketIndex(market)
-
-    if (!this.openOrdersAccounts) {
+    if (this.openOrdersAccounts == undefined) {
       throw new Error("Must load open orders accounts first")
     }
 
+    const marketIndex = mangoGroup.getMarketIndex(market)
     const openOrdersAccount = this.openOrdersAccounts[marketIndex]
     if (!openOrdersAccount) { // no open orders for this market
       return []
