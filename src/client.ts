@@ -307,7 +307,7 @@ export class MangoClient {
 ): Promise<TransactionSignature> {
     // TODO test on mainnet
 
-    transaction.recentBlockhash = (await connection.getRecentBlockhash('max')).blockhash
+    transaction.recentBlockhash = (await connection.getRecentBlockhash('singleGossip')).blockhash
     transaction.setSigners(payer.publicKey, ...additionalSigners.map( a => a.publicKey ))
 
     const signers = [payer].concat(additionalSigners)
