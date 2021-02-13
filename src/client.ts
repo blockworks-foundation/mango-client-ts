@@ -136,7 +136,10 @@ export class MarginAccount {
         promises.push(OpenOrders.load(connection, this.openOrders[i], dexProgramId))
       }
     }
-    return Promise.all(promises)
+
+    this.openOrdersAccounts = await Promise.all(promises)
+
+    return this.openOrdersAccounts
   }
   toPrettyString(
     mangoGroup: MangoGroup
