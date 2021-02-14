@@ -88,6 +88,13 @@ export class MangoGroup {
   getDepositRate(tokenIndex: number): number {
     return 0.0  // TODO
   }
+
+  getUiTotalDeposit(tokenIndex: number): number {
+    return nativeToUi(this.totalDeposits[tokenIndex] * this.indexes[tokenIndex].deposit, this.mintDecimals[tokenIndex])
+  }
+  getUiTotalBorrow(tokenIndex: number): number {
+    return nativeToUi(this.totalBorrows[tokenIndex] * this.indexes[tokenIndex].borrow, this.mintDecimals[tokenIndex])
+  }
 }
 
 export class MarginAccount {
