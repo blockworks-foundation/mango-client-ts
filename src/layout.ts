@@ -4,6 +4,7 @@ import BN from 'bn.js';
 
 export const NUM_TOKENS = 3;
 export const NUM_MARKETS = NUM_TOKENS - 1;
+export const MANGO_GROUP_PADDING = 8 - (NUM_TOKENS + NUM_MARKETS) % 8;
 
 class PublicKeyLayout extends Blob {
   constructor(property) {
@@ -132,7 +133,10 @@ export const MangoGroupLayout = struct([
   seq(U64F64(), NUM_TOKENS, 'totalDeposits'),
   seq(U64F64(), NUM_TOKENS, 'totalBorrows'),
   U64F64('maintCollRatio'),
-  U64F64('initCollRatio')
+  U64F64('initCollRatio'),
+  seq(u8(), NUM_TOKENS, 'mintDecimals'),
+  seq(u8(), NUM_MARKETS, 'oracleDecimals'),
+  seq(u8(), MANGO_GROUP_PADDING, 'padding')
 ]);
 
 

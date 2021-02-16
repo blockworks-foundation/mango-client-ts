@@ -145,7 +145,6 @@ export class MarginAccount {
     }
 
     this.openOrdersAccounts = await Promise.all(promises)
-
     return this.openOrdersAccounts
   }
   toPrettyString(
