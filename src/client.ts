@@ -35,7 +35,6 @@ import Wallet from '@project-serum/sol-wallet-adapter';
 
 export class MangoGroup {
   publicKey: PublicKey;
-  mintDecimals: number[];
 
   accountFlags!: WideBits;
   tokens!: PublicKey[];
@@ -50,10 +49,11 @@ export class MangoGroup {
   totalBorrows!: number[];
   maintCollRatio!: number;
   initCollRatio!: number;
+  mintDecimals!: number[];
+  oracleDecimals!: number[];
 
-  constructor(publicKey: PublicKey, mintDecimals: number[], decoded: any) {
+  constructor(publicKey: PublicKey, decoded: any) {
     this.publicKey = publicKey;
-    this.mintDecimals = mintDecimals;
     Object.assign(this, decoded);
   }
 
@@ -108,7 +108,7 @@ export class MarginAccount {
   deposits!: number[];
   borrows!: number[];
   openOrders!: PublicKey[];
-
+  srmBalance!: number;
   openOrdersAccounts: undefined | (OpenOrders | undefined)[]  // undefined if an openOrdersAccount not yet initialized and has zeroKey
   // TODO keep updated with websocket
 
@@ -380,7 +380,6 @@ export class MangoClient {
       { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
       { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
       { isSigner: true, isWritable: false, pubkey: owner.publicKey },
-      { isSigner: false, isWritable: false, pubkey: token },
       { isSigner: false, isWritable: true,  pubkey: tokenAcc },
       { isSigner: false, isWritable: true,  pubkey: mangoGroup.vaults[tokenIndex] },
       { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
@@ -425,7 +424,7 @@ export class MangoClient {
       ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
       ...mangoGroup.tokens.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
     ]
-    const data = encodeMangoInstruction({Withdraw: {tokenIndex, quantity: nativeQuantity}})
+    const data = encodeMangoInstruction({Withdraw: {quantity: nativeQuantity}})
 
 
     const instruction = new TransactionInstruction( { keys, data, programId })
@@ -459,7 +458,7 @@ export class MangoClient {
       ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
       ...mangoGroup.tokens.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
     ]
-    const data = encodeMangoInstruction({Borrow: {tokenIndex, quantity: nativeQuantity}})
+    const data = encodeMangoInstruction({Borrow: {tokenIndex: new BN(tokenIndex), quantity: nativeQuantity}})
 
 
     const instruction = new TransactionInstruction( { keys, data, programId })
@@ -806,8 +805,7 @@ export class MangoClient {
   ): Promise<MangoGroup> {
     const acc = await connection.getAccountInfo(mangoGroupPk);
     const decoded = MangoGroupLayout.decode(acc == null ? undefined : acc.data);
-    const mintDecimals: number[] = await Promise.all(decoded.tokens.map( (pk) => getMintDecimals(connection, pk) ))
-    return new MangoGroup(mangoGroupPk, mintDecimals, decoded);
+    return new MangoGroup(mangoGroupPk, decoded);
   }
   async getMarginAccount(
     connection: Connection,
