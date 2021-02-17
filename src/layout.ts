@@ -1,4 +1,4 @@
-import { bits, BitStructure, Blob, Layout, seq, struct, u32, u8, UInt, union } from 'buffer-layout';
+import { bits, BitStructure, Blob, Layout, seq, struct, u32, u8, u16, UInt, union } from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
@@ -187,7 +187,7 @@ export function orderTypeLayout(property) {
 }
 
 export function selfTradeBehaviorLayout(property) {
-  return new EnumLayout({ decrementTake: 0, cancelProvide: 1 }, 4, property);
+  return new EnumLayout({ decrementTake: 0, cancelProvide: 1, abortTransaction: 2 }, 4, property);
 }
 
 export const MangoInstructionLayout = union(u32('instruction'))
@@ -207,10 +207,12 @@ MangoInstructionLayout.addVariant(9,
     [
       sideLayout('side'),
       u64('limitPrice'),
-      u64('maxQuantity'),
+      u64('maxBaseQuantity'),
+      u64('maxQuoteQuantity'),
+      selfTradeBehaviorLayout('selfTradeBehavior'),
       orderTypeLayout('orderType'),
       u64('clientId'),
-      selfTradeBehaviorLayout('selfTradeBehavior')
+      u16('limit'),
     ]
   ),
   'PlaceOrder'
@@ -221,9 +223,7 @@ MangoInstructionLayout.addVariant(11,
   struct(
     [
       sideLayout('side'),
-      u128('orderId'),
-      publicKeyLayout('openOrders'),
-      u8('openOrdersSlot')
+      u128('orderId')
     ]
   ),
   'CancelOrder'

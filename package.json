@@ -7,7 +7,7 @@
     "name": "Blockworks Foundation",
     "email": "hello@blockworks.foundation",
     "url": "https://blockworks.foundation"
-   },
+  },
   "main": "lib/index.js",
   "source": "src/index.js",
   "types": "lib/index.d.ts",
@@ -56,10 +56,10 @@
   },
   "dependencies": {
     "@project-serum/serum": "^0.13.20",
+    "@project-serum/sol-wallet-adapter": "^0.1.4",
     "@solana/web3.js": "^0.90.0",
     "bn.js": "^5.1.2",
-    "buffer-layout": "^1.2.0",
-    "@project-serum/sol-wallet-adapter": "^0.1.4"
+    "buffer-layout": "^1.2.0"
   },
   "browserslist": [
     ">0.2%",

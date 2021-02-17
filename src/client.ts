@@ -647,6 +647,39 @@ export class MangoClient {
     return await this.sendTransaction(connection, transaction, owner, additionalSigners)
   }
 
+  async withdrawSrm(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    marginAccount: MarginAccount,
+    owner: Account,
+    srmAccount: PublicKey,
+
+    quantity: number
+  ): Promise<TransactionSignature> {
+    const nativeQuantity = uiToNative(quantity, SRM_DECIMALS)
+
+    const keys = [
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey },
+      { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
+      { isSigner: true, isWritable: false, pubkey: owner.publicKey },
+      { isSigner: false, isWritable: true,  pubkey: srmAccount },
+      { isSigner: false, isWritable: true,  pubkey: mangoGroup.srmVault },
+      { isSigner: false, isWritable: false,  pubkey: mangoGroup.signerKey },
+      { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
+      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY }
+    ]
+    const data = encodeMangoInstruction({WithdrawSrm: {quantity: nativeQuantity}})
+
+    const instruction = new TransactionInstruction( { keys, data, programId })
+
+    const transaction = new Transaction()
+    transaction.add(instruction)
+    const additionalSigners = []
+
+    return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+  }
+
   async placeOrder(
     connection: Connection,
     programId: PublicKey,
@@ -668,8 +701,14 @@ export class MangoClient {
     orderType = orderType == undefined ? 'limit' : orderType
     // orderType = orderType ?? 'limit'
     const limitPrice = spotMarket.priceNumberToLots(price)
-    const maxQuantity = spotMarket.baseSizeNumberToLots(size)
-    if (maxQuantity.lte(new BN(0))) {
+    const maxBaseQuantity = spotMarket.baseSizeNumberToLots(size)
+
+    // TODO verify if multiplying by highest fee tier is appropriate
+    const maxQuoteQuantity = new BN(spotMarket['_decoded'].quoteLotSize.toNumber()).mul(
+      spotMarket.baseSizeNumberToLots(size * 1.0022).mul(spotMarket.priceNumberToLots(price)),
+    )
+
+    if (maxBaseQuantity.lte(new BN(0))) {
       throw new Error('size too small')
     }
     if (limitPrice.lte(new BN(0))) {
@@ -712,23 +751,26 @@ export class MangoClient {
       { isSigner: false, isWritable: false, pubkey: spotMarket.programId },
       { isSigner: false, isWritable: true, pubkey: spotMarket.publicKey },
       { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].requestQueue },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].eventQueue },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].bids },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].asks },
       { isSigner: false, isWritable: true, pubkey: mangoGroup.vaults[vaultIndex] },
       { isSigner: false, isWritable: false, pubkey: mangoGroup.signerKey },
       { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].baseVault },
       { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].quoteVault },
       { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
       { isSigner: false, isWritable: false, pubkey: SYSVAR_RENT_PUBKEY },
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.srmVault },
       ...openOrdersKeys.map( (pubkey) => ( { isSigner: false, isWritable: true, pubkey })),
       ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
-      ...mangoGroup.tokens.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
     ]
 
     const data = encodeMangoInstruction(
       {
         PlaceOrder:
           clientId
-            ? { side, limitPrice, maxQuantity, orderType, clientId, selfTradeBehavior }
-            : { side, limitPrice, maxQuantity, orderType, selfTradeBehavior }
+            ? { side, limitPrice, maxBaseQuantity, maxQuoteQuantity, selfTradeBehavior, orderType, clientId}
+            : { side, limitPrice, maxBaseQuantity, maxQuoteQuantity, selfTradeBehavior, orderType}
       }
     )
 
@@ -804,17 +846,17 @@ export class MangoClient {
       { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
       { isSigner: false, isWritable: false, pubkey: mangoGroup.dexProgramId },
       { isSigner: false, isWritable: true, pubkey: spotMarket.publicKey },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].bids },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].asks },
       { isSigner: false, isWritable: true, pubkey: order.openOrdersAddress },
-      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].requestQueue },
       { isSigner: false, isWritable: false, pubkey: mangoGroup.signerKey },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].eventQueue },
     ]
 
     const data = encodeMangoInstruction({
       CancelOrder: {
         side: order.side,
         orderId: order.orderId,
-        openOrders: order.openOrdersAddress,
-        openOrdersSlot: order.openOrdersSlot
       }
     })
 
@@ -828,7 +870,6 @@ export class MangoClient {
     return await this.sendTransaction(connection, transaction, owner, additionalSigners)
   }
 
-
   async getMangoGroup(
     connection: Connection,
     mangoGroupPk: PublicKey
@@ -837,6 +878,7 @@ export class MangoClient {
     const decoded = MangoGroupLayout.decode(acc == null ? undefined : acc.data);
     return new MangoGroup(mangoGroupPk, decoded);
   }
+
   async getMarginAccount(
     connection: Connection,
     marginAccountPk: PublicKey
@@ -844,7 +886,6 @@ export class MangoClient {
     const acc = await connection.getAccountInfo(marginAccountPk, 'singleGossip')
     return new MarginAccount(marginAccountPk, MarginAccountLayout.decode(acc == null ? undefined : acc.data))
   }
-
 
   async getCompleteMarginAccount(
     connection: Connection,
