@@ -132,6 +132,10 @@ export class MarginAccount {
     return nativeToUi(this.getNativeBorrow(mangoGroup, tokenIndex), mangoGroup.mintDecimals[tokenIndex])
   }
 
+  getUiSrmBalance() {
+    return nativeToUi(this.srmBalance, SRM_DECIMALS)
+  }
+
   async loadOpenOrders(
     connection: Connection,
     dexProgramId: PublicKey
