@@ -148,6 +148,7 @@ export class MarginAccount {
     this.openOrdersAccounts = await Promise.all(promises)
     return this.openOrdersAccounts
   }
+
   toPrettyString(
     mangoGroup: MangoGroup
   ): string {
@@ -953,6 +954,18 @@ export class MangoClient {
       ({ publicKey, accountInfo }) =>
         new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
     );
+  }
+
+  async getCompleteMarginAccountsForOwner(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    owner: Account | Wallet
+  ): Promise<MarginAccount[]> {
+
+    const marginAccounts = await this.getMarginAccountsForOwner(connection, programId, mangoGroup, owner)
+    await Promise.all(marginAccounts.map((ma) => ma.loadOpenOrders(connection, mangoGroup.dexProgramId)))
+    return marginAccounts
   }
 }
 
