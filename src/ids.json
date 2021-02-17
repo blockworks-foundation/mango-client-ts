@@ -6,11 +6,11 @@
     "testnet": "https://testnet.solana.com"
   },
   "devnet": {
-    "dex_program_id": "7ZTHT7CnBrXiEmGAiTTdAzgu2RdRyP61Knwy2ifGhL1x",
+    "dex_program_id": "6XffKSLZRxmQcRinmb4K32AegYnmkoTm6TLR2Ezp9FBR",
     "fee_symbol": "SRM",
     "mango_groups": {
       "BTC_ETH_USDC": {
-        "mango_group_pk": "Fc23A6NHH7uaAvVEpKAn4pgJ8FDs4LCSoNcRybPCKKfC",
+        "mango_group_pk": "8YGmg6rNc3bcZ7wDxu5CAhrSFCdJvzJUKjvmQcC7tjTr",
         "mint_pks": [
           "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
@@ -21,8 +21,8 @@
           "DBiZZ6riT6QVoGVBMBnSsYFwkie1GAxWdac3NCpyrDR1"
         ],
         "spot_market_pks": [
-          "FeLCvwGXvd6WYwAFTWaFrXH74uVzHLAtfwpSAU7jn3fu",
-          "3SuA63cG46PDZCbS2FfS7mMESBQdJwWwhj1QeUAGjpBh"
+          "DY6X83vWk5VdHQEtVxFdecmEsGXHyLskkeQeo8BHn75s",
+          "CQwr1dHHPeoUpzGcQHLtEYE1LdXkszxha8oG6Y7v5KWZ"
         ],
         "symbols": {
           "BTC": "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
@@ -30,9 +30,9 @@
           "USDC": "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7"
         },
         "vault_pks": [
-          "8WPAJohEVoytU2YkdzDeFyygR3274vU35i7o2XiUvYkT",
-          "2Sdwi6Q66bmva7e4XBTzuMBSJG6T7TWQKusZcYFmSGxV",
-          "DXX8Tg8b5KPAqJ9FBymMmTpJHyhtVJ6Zw8Ys2sCaKR5A"
+          "FEg4ZjKMJFeKXLatYXpMCmQZGh8GAidy2yCqBVVKGQhA",
+          "FQTRzLbKpcX3mSGWASD2m2QfAhSDUx4eVYjb2bSFq9ry",
+          "2bQtsdueSHcBmtsbq9NhjegVzXvwU8yLCKkkQXbarEbr"
         ]
       }
     },
@@ -42,14 +42,14 @@
       "ETH/USDC": "DBiZZ6riT6QVoGVBMBnSsYFwkie1GAxWdac3NCpyrDR1"
     },
     "spot_markets": {
-      "BTC/USDC": "FeLCvwGXvd6WYwAFTWaFrXH74uVzHLAtfwpSAU7jn3fu",
-      "ETH/USDC": "3SuA63cG46PDZCbS2FfS7mMESBQdJwWwhj1QeUAGjpBh"
+      "BTC/USDC": "DY6X83vWk5VdHQEtVxFdecmEsGXHyLskkeQeo8BHn75s",
+      "ETH/USDC": "CQwr1dHHPeoUpzGcQHLtEYE1LdXkszxha8oG6Y7v5KWZ"
     },
     "symbols": {
       "BTC": "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
       "ETH": "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
-      "MSRM": "ZbVY71sQNng1uFNvgimLfWXeWyasDvou9bEcqexzYaT",
-      "SRM": "2i6G2zTaJNeuuJUjrFAvdP7xvquDZREubRUWNwB3xsKQ",
+      "MSRM": "934bNdNw9QfE8dXD4mKQiKajYURfSkPhxfYZzpvmygca",
+      "SRM": "9FbAMDvXqNjPqZSYt4EWTguJuDrGkfvwr3gSFpiSbX9S",
       "USDC": "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7",
       "USDT": "7tSPGVhneTBWZjLGJGZb9V2UntC7T98cwtSLtgcXjeSs"
     }

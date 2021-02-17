@@ -28,7 +28,7 @@ import {
   zeroKey,
 } from './utils';
 import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
-import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
+import { SRM_DECIMALS, TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
 
@@ -49,6 +49,7 @@ export class MangoGroup {
   totalBorrows!: number[];
   maintCollRatio!: number;
   initCollRatio!: number;
+  srmVault!: PublicKey;
   mintDecimals!: number[];
   oracleDecimals!: number[];
 
@@ -421,8 +422,7 @@ export class MangoClient {
       { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
       { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
       ...marginAccount.openOrders.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
-      ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
-      ...mangoGroup.tokens.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
+      ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey }))
     ]
     const data = encodeMangoInstruction({Withdraw: {quantity: nativeQuantity}})
 
@@ -456,7 +456,6 @@ export class MangoClient {
       { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
       ...marginAccount.openOrders.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
       ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
-      ...mangoGroup.tokens.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
     ]
     const data = encodeMangoInstruction({Borrow: {tokenIndex: new BN(tokenIndex), quantity: nativeQuantity}})
 
@@ -603,7 +602,6 @@ export class MangoClient {
       ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
       ...mangoGroup.vaults.map( (pubkey) => ( { isSigner: false, isWritable: true, pubkey })),
       ...tokenAccs.map( (pubkey) => ( { isSigner: false, isWritable: true, pubkey })),
-      ...mangoGroup.tokens.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
     ]
     const data = encodeMangoInstruction({Liquidate: {depositQuantities: depositsBN}})
 
@@ -615,6 +613,38 @@ export class MangoClient {
     const additionalSigners = []
 
     return await this.sendTransaction(connection, transaction, liqor, additionalSigners)
+  }
+
+  async depositSrm(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    marginAccount: MarginAccount,
+    owner: Account,
+    srmAccount: PublicKey,
+
+    quantity: number
+  ): Promise<TransactionSignature> {
+    const nativeQuantity = uiToNative(quantity, SRM_DECIMALS)
+
+    const keys = [
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey },
+      { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
+      { isSigner: true, isWritable: false, pubkey: owner.publicKey },
+      { isSigner: false, isWritable: true,  pubkey: srmAccount },
+      { isSigner: false, isWritable: true,  pubkey: mangoGroup.srmVault },
+      { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
+      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY }
+    ]
+    const data = encodeMangoInstruction({DepositSrm: {quantity: nativeQuantity}})
+
+    const instruction = new TransactionInstruction( { keys, data, programId })
+
+    const transaction = new Transaction()
+    transaction.add(instruction)
+    const additionalSigners = []
+
+    return await this.sendTransaction(connection, transaction, owner, additionalSigners)
   }
 
   async placeOrder(
