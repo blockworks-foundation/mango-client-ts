@@ -10,7 +10,7 @@
     "fee_symbol": "SRM",
     "mango_groups": {
       "BTC_ETH_USDC": {
-        "mango_group_pk": "8YGmg6rNc3bcZ7wDxu5CAhrSFCdJvzJUKjvmQcC7tjTr",
+        "mango_group_pk": "GU99KLQ21kHurE3p7Hyzjsnma3UMAeZWoZQxLBRZzQXY",
         "mint_pks": [
           "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
@@ -30,9 +30,9 @@
           "USDC": "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7"
         },
         "vault_pks": [
-          "FEg4ZjKMJFeKXLatYXpMCmQZGh8GAidy2yCqBVVKGQhA",
-          "FQTRzLbKpcX3mSGWASD2m2QfAhSDUx4eVYjb2bSFq9ry",
-          "2bQtsdueSHcBmtsbq9NhjegVzXvwU8yLCKkkQXbarEbr"
+          "Apm2MwCYpKYjWirczkfgrbjozKj3WQMdGtZFfhUrTQum",
+          "4z6JD6jbKRZaW64UsZ3Ptp7C19geWeCxdZ9VEdcvKPDk",
+          "HB4tGYd4LM4tJjo1ZPi4L6mCDaJEsU8V14iRphK8hH8K"
         ]
       }
     },
