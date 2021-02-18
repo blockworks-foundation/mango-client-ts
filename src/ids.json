@@ -6,10 +6,11 @@
     "testnet": "https://testnet.solana.com"
   },
   "devnet": {
-    "dex_program_id": "9MVDeYQnJmN2Dt7H44Z8cob4bET2ysdNu2uFJcatDJno",
+    "dex_program_id": "6XffKSLZRxmQcRinmb4K32AegYnmkoTm6TLR2Ezp9FBR",
+    "fee_symbol": "SRM",
     "mango_groups": {
       "BTC_ETH_USDC": {
-        "mango_group_pk": "FK6o45mYRDNvgSqcZ4xd5wjyuSbxxM3LQhFz3n9eMr3x",
+        "mango_group_pk": "6hcULrp3j5JZS7PDK3XYehzdbXZoqaiKPNNGC2sF4oz2",
         "mint_pks": [
           "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
@@ -20,8 +21,8 @@
           "DBiZZ6riT6QVoGVBMBnSsYFwkie1GAxWdac3NCpyrDR1"
         ],
         "spot_market_pks": [
-          "6pZpjgfwKJhQ93ZYNjbJFtWEaB8kZjErsiGAEXn9WNjn",
-          "GAZmMjiABoZimoePnrA2BiPx7BTDByskopZ7coBDnKFQ"
+          "DY6X83vWk5VdHQEtVxFdecmEsGXHyLskkeQeo8BHn75s",
+          "CQwr1dHHPeoUpzGcQHLtEYE1LdXkszxha8oG6Y7v5KWZ"
         ],
         "symbols": {
           "BTC": "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
@@ -29,9 +30,9 @@
           "USDC": "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7"
         },
         "vault_pks": [
-          "9vUVVAXPZHVKV2vo8uv1jFtg2uR6iHQR3AvpzEnJejdR",
-          "MhtHbYG65N6e4dwhCbHJFzyRX9KndxQ3mGmmLmunHoS",
-          "5ygigzB3ngRXzuaiz7MQdh94ZH2SAR7wNbYe4GXHZbZ2"
+          "HHZCZBqkNrJp51g6T5Gu4eCVrCNfSJekCMgx4cjMDBJC",
+          "GCa1SdEaod5VucgJoCvc9wFSiX4G7i5GpDbtPbhBFCHY",
+          "134B3occRaHiiMxo1M5GXavW7ocWgwR6951951LU5Vub"
         ]
       }
     },
@@ -41,13 +42,16 @@
       "ETH/USDC": "DBiZZ6riT6QVoGVBMBnSsYFwkie1GAxWdac3NCpyrDR1"
     },
     "spot_markets": {
-      "BTC/USDC": "6pZpjgfwKJhQ93ZYNjbJFtWEaB8kZjErsiGAEXn9WNjn",
-      "ETH/USDC": "GAZmMjiABoZimoePnrA2BiPx7BTDByskopZ7coBDnKFQ"
+      "BTC/USDC": "DY6X83vWk5VdHQEtVxFdecmEsGXHyLskkeQeo8BHn75s",
+      "ETH/USDC": "CQwr1dHHPeoUpzGcQHLtEYE1LdXkszxha8oG6Y7v5KWZ"
     },
     "symbols": {
       "BTC": "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
       "ETH": "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
-      "USDC": "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7"
+      "MSRM": "934bNdNw9QfE8dXD4mKQiKajYURfSkPhxfYZzpvmygca",
+      "SRM": "9FbAMDvXqNjPqZSYt4EWTguJuDrGkfvwr3gSFpiSbX9S",
+      "USDC": "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7",
+      "USDT": "7tSPGVhneTBWZjLGJGZb9V2UntC7T98cwtSLtgcXjeSs"
     }
   },
   "localnet": {
@@ -68,6 +72,7 @@
   },
   "mainnet-beta": {
     "dex_program_id": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+    "fee_token": "SRM",
     "spot_markets": {
       "BTC/USDC": "CVfYa8RGXnuDBeGmniCcdkBwoLqVxh92xB1JqgRQx3F",
       "BTC/USDT": "EXnGBBSamqzd3uxEdRLUiYzjJkTwQyorAaFXdfteuGXe",
@@ -75,6 +80,10 @@
       "ETH/USDT": "5abZGhrELnUnfM9ZUnvK6XJPoBU5eShZwfFPkdhAC7o",
       "SOL/USDT": "7xLk17EQQ5KLDLDe44wCmupJKJjTGd8hs3eSVVhCx932",
       "SRM/USDC": "CDdR97S8y96v3To93aKvi3nCnjUrbuVSuumw8FLvbVeg"
+    },
+    "symbols": {
+      "MSRM": "MSRMcoVyrFxnSgo5uXwone5SKcGhT1KEJMFEkMEWf9L",
+      "SRM": "SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"
     }
   },
   "testnet": {
