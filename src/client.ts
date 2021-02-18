@@ -110,12 +110,13 @@ export class MarginAccount {
   borrows!: number[];
   openOrders!: PublicKey[];
   srmBalance!: number;
-  openOrdersAccounts: undefined | (OpenOrders | undefined)[]  // undefined if an openOrdersAccount not yet initialized and has zeroKey
+  openOrdersAccounts: (OpenOrders | undefined)[]  // undefined if an openOrdersAccount not yet initialized and has zeroKey
   // TODO keep updated with websocket
 
   constructor(publicKey: PublicKey, decoded: any) {
     this.publicKey = publicKey
     this.createTime = getUnixTs()
+    this.openOrdersAccounts = new Array(NUM_MARKETS).fill(undefined)
     Object.assign(this, decoded)
   }
 
@@ -182,10 +183,6 @@ export class MarginAccount {
       value += (this.getUiDeposit(mangoGroup, i) - this.getUiBorrow(mangoGroup, i))  * prices[i]
     }
 
-    if (this.openOrdersAccounts == undefined) {
-      return value
-    }
-
     for (let i = 0; i < this.openOrdersAccounts.length; i++) {
       const oos = this.openOrdersAccounts[i]
       if (oos != undefined) {
@@ -198,10 +195,6 @@ export class MarginAccount {
   }
 
   getAssets(mangoGroup: MangoGroup): number[] {
-    if (this.openOrdersAccounts == undefined) {
-      throw new Error("openOrdersAccounts not yet loaded")
-    }
-
     const assets = new Array<number>(NUM_TOKENS)
 
     for (let i = 0; i < NUM_TOKENS; i++) {
@@ -234,9 +227,6 @@ export class MarginAccount {
     let assetsVal = 0
     for (let i = 0; i < NUM_TOKENS; i++) {
       assetsVal += this.getUiDeposit(mangoGroup, i) * prices[i]
-    }
-    if (this.openOrdersAccounts == undefined) {
-      return assetsVal
     }
 
     for (let i = 0; i < NUM_MARKETS; i++) {
@@ -277,13 +267,10 @@ export class MarginAccount {
     asks: Orderbook,
     owner: Account
   ): Promise<TransactionSignature[]> {
-    if (this.openOrdersAccounts == undefined) {
-      throw new Error("Must load open orders accounts first")
-    }
 
     const marketIndex = mangoGroup.getMarketIndex(market)
     const openOrdersAccount = this.openOrdersAccounts[marketIndex]
-    if (!openOrdersAccount) { // no open orders for this market
+    if (openOrdersAccount == undefined) { // no open orders for this market
       return []
     }
 
@@ -294,16 +281,6 @@ export class MarginAccount {
       )
     ))
 
-  }
-
-  async cancelAllOrders(
-    connection: Connection
-
-  ): Promise<boolean> {
-
-    // fetch all orders using order id
-
-    return true
   }
 
 }
@@ -521,10 +498,6 @@ export class MangoClient {
     markets: Market[],
     owner: Account
   ): Promise<TransactionSignature> {
-
-    if (!marginAccount.openOrdersAccounts) {
-      throw new Error("openOrderesAccounts must be initialized")
-    }
 
     const transaction = new Transaction()
     for (let i = 0; i < NUM_MARKETS; i++) {
@@ -828,7 +801,7 @@ export class MangoClient {
     const transaction = new Transaction()
     transaction.add(instruction)
 
-    // Specify signers in addition to the wallet
+    // Specify signers in addition to the owner account
     const additionalSigners = []
 
     // sign, send and confirm transaction
@@ -886,18 +859,11 @@ export class MangoClient {
 
   async getMarginAccount(
     connection: Connection,
-    marginAccountPk: PublicKey
-  ): Promise<MarginAccount> {
-    const acc = await connection.getAccountInfo(marginAccountPk, 'singleGossip')
-    return new MarginAccount(marginAccountPk, MarginAccountLayout.decode(acc == null ? undefined : acc.data))
-  }
-
-  async getCompleteMarginAccount(
-    connection: Connection,
     marginAccountPk: PublicKey,
     dexProgramId: PublicKey
   ): Promise<MarginAccount> {
-    const ma = await this.getMarginAccount(connection, marginAccountPk)
+    const acc = await connection.getAccountInfo(marginAccountPk, 'singleGossip')
+    const ma = new MarginAccount(marginAccountPk, MarginAccountLayout.decode(acc == null ? undefined : acc.data))
     await ma.loadOpenOrders(connection, dexProgramId)
     return ma
   }
@@ -905,13 +871,13 @@ export class MangoClient {
   async getAllMarginAccounts(
     connection: Connection,
     programId: PublicKey,
-    mangoGroupPk: PublicKey
+    mangoGroup: MangoGroup
   ): Promise<MarginAccount[]>{
     const filters = [
       {
         memcmp: {
           offset: MarginAccountLayout.offsetOf('mangoGroup'),
-          bytes: mangoGroupPk.toBase58(),
+          bytes: mangoGroup.publicKey.toBase58(),
         }
       },
 
@@ -921,10 +887,14 @@ export class MangoClient {
     ];
 
     const accounts = await getFilteredProgramAccounts(connection, programId, filters);
-    return accounts.map(
+    const marginAccounts = accounts.map(
       ({ publicKey, accountInfo }) =>
         new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
-    );
+    )
+
+    await Promise.all(marginAccounts.map((ma) => ma.loadOpenOrders(connection, mangoGroup.dexProgramId)))
+    return marginAccounts
+
   }
 
   async getMarginAccountsForOwner(
@@ -954,23 +924,14 @@ export class MangoClient {
     ];
 
     const accounts = await getFilteredProgramAccounts(connection, programId, filters);
-    return accounts.map(
+    const marginAccounts = accounts.map(
       ({ publicKey, accountInfo }) =>
         new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
-    );
-  }
-
-  async getCompleteMarginAccountsForOwner(
-    connection: Connection,
-    programId: PublicKey,
-    mangoGroup: MangoGroup,
-    owner: Account | Wallet
-  ): Promise<MarginAccount[]> {
-
-    const marginAccounts = await this.getMarginAccountsForOwner(connection, programId, mangoGroup, owner)
+    )
     await Promise.all(marginAccounts.map((ma) => ma.loadOpenOrders(connection, mangoGroup.dexProgramId)))
     return marginAccounts
   }
+
 }
 
 async function getMultipleAccounts(
