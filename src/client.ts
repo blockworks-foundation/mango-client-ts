@@ -710,7 +710,7 @@ export class MangoClient {
 
     // TODO verify if multiplying by highest fee tier is appropriate
     const maxQuoteQuantity = new BN(spotMarket['_decoded'].quoteLotSize.toNumber()).mul(
-      spotMarket.baseSizeNumberToLots(size * 1.0022).mul(spotMarket.priceNumberToLots(price)),
+      maxBaseQuantity.mul(limitPrice),
     )
 
     if (maxBaseQuantity.lte(new BN(0))) {
@@ -774,8 +774,8 @@ export class MangoClient {
       {
         PlaceOrder:
           clientId
-            ? { side, limitPrice, maxBaseQuantity, maxQuoteQuantity, selfTradeBehavior, orderType, clientId}
-            : { side, limitPrice, maxBaseQuantity, maxQuoteQuantity, selfTradeBehavior, orderType}
+            ? { side, limitPrice, maxBaseQuantity, maxQuoteQuantity, selfTradeBehavior, orderType, clientId, limit: 65536}
+            : { side, limitPrice, maxBaseQuantity, maxQuoteQuantity, selfTradeBehavior, orderType, limit: 65536}
       }
     )
 
