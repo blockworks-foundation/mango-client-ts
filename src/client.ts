@@ -31,6 +31,7 @@ import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
 import { SRM_DECIMALS, TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
+import { makeCancelOrderInstruction } from './instruction';
 
 
 export class MangoGroup {
@@ -808,6 +809,7 @@ export class MangoClient {
     return await this.sendTransaction(connection, transaction, owner, additionalSigners)
   }
 
+
   async cancelOrder(
     connection: Connection,
     programId: PublicKey,
@@ -817,30 +819,20 @@ export class MangoClient {
     spotMarket: Market,
     order: Order,
   ): Promise<TransactionSignature> {
-    const keys = [
-      { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
-      { isSigner: true, isWritable: false,  pubkey: owner.publicKey },
-      { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
-      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
-      { isSigner: false, isWritable: false, pubkey: mangoGroup.dexProgramId },
-      { isSigner: false, isWritable: true, pubkey: spotMarket.publicKey },
-      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].bids },
-      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].asks },
-      { isSigner: false, isWritable: true, pubkey: order.openOrdersAddress },
-      { isSigner: false, isWritable: false, pubkey: mangoGroup.signerKey },
-      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].eventQueue },
-    ]
-
-    const data = encodeMangoInstruction({
-      CancelOrder: {
-        side: order.side,
-        orderId: order.orderId,
-      }
-    })
-
-
-    const instruction = new TransactionInstruction( { keys, data, programId })
-
+    const instruction = makeCancelOrderInstruction(
+      programId,
+      mangoGroup.publicKey,
+      owner.publicKey,
+      marginAccount.publicKey,
+      spotMarket.programId,
+      spotMarket.publicKey,
+      spotMarket['_decoded'].bids,
+      spotMarket['_decoded'].asks,
+      order.openOrdersAddress,
+      mangoGroup.signerKey,
+      spotMarket['_decoded'].eventQueue,
+      order
+    )
     const transaction = new Transaction()
     transaction.add(instruction)
     const additionalSigners = []
