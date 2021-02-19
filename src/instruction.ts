@@ -1,6 +1,7 @@
 import { PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { Order } from '@project-serum/serum/lib/market';
 import { encodeMangoInstruction } from './layout';
+import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 
 export function makeCancelOrderInstruction(
   programId: PublicKey,
@@ -37,4 +38,41 @@ export function makeCancelOrderInstruction(
     }
   })
   return  new TransactionInstruction( { keys, data, programId })
+}
+
+
+export function makeSettleFundsInstruction(
+  programId: PublicKey,
+  mangoGroupPk: PublicKey,
+  ownerPk: PublicKey,
+  marginAccountPk: PublicKey,
+  dexProgramId: PublicKey,
+  spotMarketPk: PublicKey,
+  openOrdersPk: PublicKey,
+  signerKey: PublicKey,
+  spotMarketBaseVaultPk: PublicKey,
+  spotMarketQuoteVaultPk: PublicKey,
+  mangoBaseVaultPk: PublicKey,
+  mangoQuoteVaultPk: PublicKey,
+  dexSignerKey: PublicKey,
+): TransactionInstruction {
+  const keys = [
+    { isSigner: false, isWritable: true, pubkey: mangoGroupPk},
+    { isSigner: true, isWritable: false,  pubkey: ownerPk },
+    { isSigner: false,  isWritable: true, pubkey: marginAccountPk },
+    { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+    { isSigner: false, isWritable: false, pubkey: dexProgramId },
+    { isSigner: false, isWritable: true, pubkey: spotMarketPk },
+    { isSigner: false, isWritable: true, pubkey: openOrdersPk },
+    { isSigner: false, isWritable: false, pubkey: signerKey },
+    { isSigner: false, isWritable: true, pubkey: spotMarketBaseVaultPk },
+    { isSigner: false, isWritable: true, pubkey: spotMarketQuoteVaultPk },
+    { isSigner: false, isWritable: true, pubkey: mangoBaseVaultPk },
+    { isSigner: false, isWritable: true, pubkey: mangoQuoteVaultPk },
+    { isSigner: false, isWritable: false, pubkey: dexSignerKey },
+    { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
+  ]
+  const data = encodeMangoInstruction( {SettleFunds: {}} )
+
+  return new TransactionInstruction( { keys, data, programId })
 }

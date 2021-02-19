@@ -31,7 +31,7 @@ import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
 import { SRM_DECIMALS, TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
-import { makeCancelOrderInstruction } from './instruction';
+import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instruction';
 
 
 export class MangoGroup {
@@ -778,27 +778,22 @@ export class MangoClient {
       spotMarket.programId
     )
 
-    const keys = [
-      { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
-      { isSigner: true, isWritable: false,  pubkey: owner.publicKey },
-      { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
-      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
-      { isSigner: false, isWritable: false, pubkey: spotMarket.programId },
-      { isSigner: false, isWritable: true, pubkey: spotMarket.publicKey },
-      { isSigner: false, isWritable: true, pubkey: marginAccount.openOrders[marketIndex] },
-      { isSigner: false, isWritable: false, pubkey: mangoGroup.signerKey },
-      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].baseVault },
-      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].quoteVault },
-      { isSigner: false, isWritable: true, pubkey: mangoGroup.vaults[marketIndex] },
-      { isSigner: false, isWritable: true, pubkey: mangoGroup.vaults[mangoGroup.vaults.length - 1] },
-      { isSigner: false, isWritable: false, pubkey: dexSigner },
-      { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
-    ]
-    const data = encodeMangoInstruction( {SettleFunds: {}} )
+    const instruction = makeSettleFundsInstruction(
+      programId,
+      mangoGroup.publicKey,
+      owner.publicKey,
+      marginAccount.publicKey,
+      spotMarket.programId,
+      spotMarket.publicKey,
+      marginAccount.openOrders[marketIndex],
+      mangoGroup.signerKey,
+      spotMarket['_decoded'].baseVault,
+      spotMarket['_decoded'].quoteVault,
+      mangoGroup.vaults[marketIndex],
+      mangoGroup.vaults[mangoGroup.vaults.length - 1],
+      dexSigner
+    )
 
-    const instruction = new TransactionInstruction( { keys, data, programId })
-
-    // Add all instructions to one atomic transaction
     const transaction = new Transaction()
     transaction.add(instruction)
 
