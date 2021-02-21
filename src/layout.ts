@@ -4,7 +4,7 @@ import BN from 'bn.js';
 
 export const NUM_TOKENS = 3;
 export const NUM_MARKETS = NUM_TOKENS - 1;
-export const MANGO_GROUP_PADDING = 8 - ((NUM_TOKENS + NUM_MARKETS) % 8);
+export const MANGO_GROUP_PADDING = 8 - (NUM_TOKENS + NUM_MARKETS) % 8;
 
 class PublicKeyLayout extends Blob {
   constructor(property) {
@@ -20,7 +20,7 @@ class PublicKeyLayout extends Blob {
   }
 }
 
-export function publicKeyLayout(property = '') {
+export function publicKeyLayout(property = "") {
   return new PublicKeyLayout(property);
 }
 
@@ -28,7 +28,7 @@ class BNLayout extends Blob {
   constructor(number: number, property) {
     super(number, property);
     // restore prototype chain
-    Object.setPrototypeOf(this, new.target.prototype);
+    Object.setPrototypeOf(this, new.target.prototype)
   }
 
   decode(b, offset) {
@@ -40,13 +40,14 @@ class BNLayout extends Blob {
   }
 }
 
-export function u64(property = '') {
+export function u64(property = "") {
   return new BNLayout(8, property);
 }
 
-export function u128(property = '') {
+export function u128(property = "") {
   return new BNLayout(16, property);
 }
+
 
 class U64F64Layout extends Blob {
   constructor(property: string) {
@@ -65,8 +66,8 @@ class U64F64Layout extends Blob {
   }
 }
 
-export function U64F64(property = '') {
-  return new U64F64Layout(property);
+export function U64F64(property = "") {
+  return new U64F64Layout(property)
 }
 
 export class WideBits extends Layout {
@@ -97,7 +98,10 @@ export class WideBits extends Layout {
     return super.replicate(property);
   }
   encode(src, b, offset = 0) {
-    return this._lower.encode(src, b, offset) + this._upper.encode(src, b, offset + this._lower.span);
+    return (
+      this._lower.encode(src, b, offset) +
+      this._upper.encode(src, b, offset + this._lower.span)
+    );
   }
 }
 const ACCOUNT_FLAGS_LAYOUT = new WideBits(undefined);
@@ -106,13 +110,13 @@ ACCOUNT_FLAGS_LAYOUT.addBoolean('MangoGroup');
 ACCOUNT_FLAGS_LAYOUT.addBoolean('MarginAccount');
 
 export function accountFlagsLayout(property = 'accountFlags') {
-  return ACCOUNT_FLAGS_LAYOUT.replicate(property); // TODO: when ts check is on, replicate throws error, doesn't compile
+  return ACCOUNT_FLAGS_LAYOUT.replicate(property);  // TODO: when ts check is on, replicate throws error, doesn't compile
 }
 
 export const MangoIndexLayout = struct([
   u64('lastUpdate'),
   U64F64('borrow'), // U64F64
-  U64F64('deposit'), // U64F64
+  U64F64('deposit')  // U64F64
 ]);
 
 export const MangoGroupLayout = struct([
@@ -131,10 +135,13 @@ export const MangoGroupLayout = struct([
   U64F64('maintCollRatio'),
   U64F64('initCollRatio'),
   publicKeyLayout('srmVault'),
+  publicKeyLayout('admin'),
+  seq(u64(), NUM_TOKENS, 'borrowLimits'),
   seq(u8(), NUM_TOKENS, 'mintDecimals'),
   seq(u8(), NUM_MARKETS, 'oracleDecimals'),
-  seq(u8(), MANGO_GROUP_PADDING, 'padding'),
+  seq(u8(), MANGO_GROUP_PADDING, 'padding')
 ]);
+
 
 export const MarginAccountLayout = struct([
   accountFlagsLayout('accountFlags'),
@@ -144,14 +151,15 @@ export const MarginAccountLayout = struct([
   seq(U64F64(), NUM_TOKENS, 'deposits'),
   seq(U64F64(), NUM_TOKENS, 'borrows'),
   seq(publicKeyLayout(), NUM_MARKETS, 'openOrders'),
-  u64('srmBalance'),
+  u64('srmBalance')
 ]);
+
 
 class EnumLayout extends UInt {
   values: any;
   constructor(values, span, property) {
     super(span, property);
-    this.values = values;
+    this.values = values
   }
   encode(src, b, offset) {
     if (this.values[src] !== undefined) {
@@ -162,7 +170,9 @@ class EnumLayout extends UInt {
 
   decode(b, offset) {
     const decodedValue = super.decode(b, offset);
-    const entry = Object.entries(this.values).find(([, value]) => value === decodedValue);
+    const entry = Object.entries(this.values).find(
+      ([, value]) => value === decodedValue,
+    );
     if (entry) {
       return entry[0];
     }
@@ -182,37 +192,47 @@ export function selfTradeBehaviorLayout(property) {
   return new EnumLayout({ decrementTake: 0, cancelProvide: 1, abortTransaction: 2 }, 4, property);
 }
 
-export const MangoInstructionLayout = union(u32('instruction'));
+export const MangoInstructionLayout = union(u32('instruction'))
 
-MangoInstructionLayout.addVariant(0, struct([]), 'InitMangoGroup');
-MangoInstructionLayout.addVariant(1, struct([]), 'InitMarginAccount');
-MangoInstructionLayout.addVariant(2, struct([u64('quantity')]), 'Deposit');
-MangoInstructionLayout.addVariant(3, struct([u64('quantity')]), 'Withdraw');
-MangoInstructionLayout.addVariant(4, struct([u64('tokenIndex'), u64('quantity')]), 'Borrow');
-MangoInstructionLayout.addVariant(5, struct([u64('tokenIndex'), u64('quantity')]), 'SettleBorrow');
-MangoInstructionLayout.addVariant(6, struct([seq(u64(), NUM_TOKENS, 'depositQuantities')]), 'Liquidate');
-MangoInstructionLayout.addVariant(7, struct([u64('quantity')]), 'DepositSrm');
-MangoInstructionLayout.addVariant(8, struct([u64('quantity')]), 'WithdrawSrm');
+MangoInstructionLayout.addVariant(0, struct([]), 'InitMangoGroup')  // TODO this is unimplemented
+MangoInstructionLayout.addVariant(1, struct([]), 'InitMarginAccount')
+MangoInstructionLayout.addVariant(2, struct([u64('quantity')]), 'Deposit')
+MangoInstructionLayout.addVariant(3, struct([u64('quantity')]), 'Withdraw')
+MangoInstructionLayout.addVariant(4, struct([u64('tokenIndex'), u64('quantity')]), 'Borrow')
+MangoInstructionLayout.addVariant(5, struct([u64('tokenIndex'), u64('quantity')]), 'SettleBorrow')
+MangoInstructionLayout.addVariant(6, struct([seq(u64(), NUM_TOKENS, 'depositQuantities')]), 'Liquidate')
+MangoInstructionLayout.addVariant(7, struct([u64('quantity')]), 'DepositSrm')
+MangoInstructionLayout.addVariant(8, struct([u64('quantity')]), 'WithdrawSrm')
 
-MangoInstructionLayout.addVariant(
-  9,
-  struct([
-    sideLayout('side'),
-    u64('limitPrice'),
-    u64('maxBaseQuantity'),
-    u64('maxQuoteQuantity'),
-    selfTradeBehaviorLayout('selfTradeBehavior'),
-    orderTypeLayout('orderType'),
-    u64('clientId'),
-    u16('limit'),
-  ]),
-  'PlaceOrder',
-);
+MangoInstructionLayout.addVariant(9,
+  struct(
+    [
+      sideLayout('side'),
+      u64('limitPrice'),
+      u64('maxBaseQuantity'),
+      u64('maxQuoteQuantity'),
+      selfTradeBehaviorLayout('selfTradeBehavior'),
+      orderTypeLayout('orderType'),
+      u64('clientId'),
+      u16('limit'),
+    ]
+  ),
+  'PlaceOrder'
+)
 
-MangoInstructionLayout.addVariant(10, struct([]), 'SettleFunds');
-MangoInstructionLayout.addVariant(11, struct([sideLayout('side'), u128('orderId')]), 'CancelOrder');
+MangoInstructionLayout.addVariant(10, struct([]), 'SettleFunds')
+MangoInstructionLayout.addVariant(11,
+  struct(
+    [
+      sideLayout('side'),
+      u128('orderId')
+    ]
+  ),
+  'CancelOrder'
+)
 
-MangoInstructionLayout.addVariant(12, struct([u64('clientId')]), 'CancelOrderByClientId');
+MangoInstructionLayout.addVariant(12, struct([u64('clientId')]), 'CancelOrderByClientId')
+MangoInstructionLayout.addVariant(13, struct([u64('tokenIndex'), u64('borrowLimit')]), 'ChangeBorrowLimit')
 
 // @ts-ignore
 const instructionMaxSpan = Math.max(...Object.values(MangoInstructionLayout.registry).map((r) => r.span));
