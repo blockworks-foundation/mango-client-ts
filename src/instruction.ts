@@ -3,6 +3,40 @@ import { PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/
 import { Order } from '@project-serum/serum/lib/market';
 import { encodeMangoInstruction } from './layout';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
+import BN from 'bn.js';
+
+// export function makeInitMangoGroupInstruction(
+//   programId: PublicKey,
+//   mangoGroupPk: PublicKey,
+//   signerKey: PublicKey,
+//   dexProgramId: PublicKey,
+//   srmVaultPk: PublicKey,
+//   mintPks: PublicKey[],
+//   vaultPks: PublicKey[],
+//   spotMarketPks: PublicKey[],
+//   oraclePks: PublicKey[],
+//   signerNonce: BN,
+//   maintCollRatio: number,
+//   initCollRatio: number
+// ): TransactionInstruction {
+//
+//   new BN()
+//   const keys = [
+//     { isSigner: false, isWritable: true, pubkey: mangoGroupPk},
+//     { isSigner: true, isWritable: false,  pubkey: ownerPk },
+//     { isSigner: false,  isWritable: true, pubkey: marginAccountPk },
+//     { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+//     { isSigner: false, isWritable: false, pubkey: dexProgramId },
+//     { isSigner: false, isWritable: true, pubkey: spotMarketPk },
+//     { isSigner: false, isWritable: true, pubkey: bidsPk },
+//     { isSigner: false, isWritable: true, pubkey: asksPk },
+//     { isSigner: false, isWritable: true, pubkey: openOrdersPk },
+//     { isSigner: false, isWritable: false, pubkey: signerKey },
+//     { isSigner: false, isWritable: true, pubkey: eventQueuePk },
+//   ]
+//
+//
+// }
 
 export function makeCancelOrderInstruction(
   programId: PublicKey,
