@@ -19,20 +19,13 @@ import {
   WideBits,
 } from './layout';
 import BN from 'bn.js';
-import {
-  createAccountInstruction,
-  decodeAggregatorInfo,
-  getMintDecimals,
-  nativeToUi,
-  uiToNative,
-  zeroKey,
-} from './utils';
+import { createAccountInstruction, decodeAggregatorInfo, nativeToUi, uiToNative, zeroKey } from './utils';
 import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
 import { SRM_DECIMALS, TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
 import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instruction';
-
+import { Aggregator } from 'solink';
 
 export class MangoGroup {
   publicKey: PublicKey;
@@ -51,6 +44,8 @@ export class MangoGroup {
   maintCollRatio!: number;
   initCollRatio!: number;
   srmVault!: PublicKey;
+  admin!: PublicKey;
+  borrowLimits!: number[];
   mintDecimals!: number[];
   oracleDecimals!: number[];
 
@@ -62,6 +57,9 @@ export class MangoGroup {
   async getPrices(
     connection: Connection,
   ): Promise<number[]>  {
+
+    const aggs = await Promise.all(this.oracles.map((pk) => (Aggregator.load(pk))))
+
     const oracleAccs = await getMultipleAccounts(connection, this.oracles);
     return oracleAccs.map((oa) => decodeAggregatorInfo(oa.accountInfo).submissionValue).concat(1.0)
   }
@@ -85,6 +83,12 @@ export class MangoGroup {
   }
 
   getBorrowRate(tokenIndex: number): number {
+
+    const optimalUtil = 0.7
+    const optimalRate = 0.1
+    const index = this.indexes[tokenIndex]
+
+
     return 0.0  // TODO
   }
   getDepositRate(tokenIndex: number): number {
@@ -287,9 +291,7 @@ export class MarginAccount {
 }
 
 export class MangoClient {
-  async initMangoGroup() {
-    throw new Error("Not Implemented");
-  }
+
 
   async sendTransaction(
     connection: Connection,
@@ -308,6 +310,17 @@ export class MangoClient {
     return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
 
   }
+
+  async initMangoGroup(
+    connection: Connection,
+    programId: PublicKey,
+    payer: PublicKey,
+
+  ) {
+
+    throw new Error("Not Implemented");
+  }
+
   async initMarginAccount(
     connection: Connection,
     programId: PublicKey,
