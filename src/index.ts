@@ -1,7 +1,4 @@
 import { MangoClient, MangoGroup } from './client';
-import { Account, Connection, PublicKey } from '@solana/web3.js';
-import * as fs from 'fs';
-import { Market } from '@project-serum/serum';
 import { NUM_TOKENS } from './layout';
 
 export { MangoClient, MangoGroup, MarginAccount } from './client';
@@ -9,8 +6,6 @@ export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layou
 export { NUM_TOKENS } from './layout';
 
 import IDS from "./ids.json";
-import { Aggregator } from './schema';
-import { nativeToUi } from './utils';
 export { IDS }
 
 //
