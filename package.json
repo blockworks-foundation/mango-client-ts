@@ -52,7 +52,8 @@
   ],
   "prettier": {
     "singleQuote": true,
-    "trailingComma": "all"
+    "trailingComma": "all",
+    "printWidth": 120
   },
   "dependencies": {
     "@project-serum/serum": "^0.13.20",
