@@ -1,3 +1,4 @@
+import * as BN from 'bn.js';
 import { PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { Order } from '@project-serum/serum/lib/market';
 import { encodeMangoInstruction } from './layout';
@@ -15,12 +16,12 @@ export function makeCancelOrderInstruction(
   openOrdersPk: PublicKey,
   signerKey: PublicKey,
   eventQueuePk: PublicKey,
-  order: Order
+  order: Order,
 ): TransactionInstruction {
   const keys = [
-    { isSigner: false, isWritable: true, pubkey: mangoGroupPk},
-    { isSigner: true, isWritable: false,  pubkey: ownerPk },
-    { isSigner: false,  isWritable: true, pubkey: marginAccountPk },
+    { isSigner: false, isWritable: true, pubkey: mangoGroupPk },
+    { isSigner: true, isWritable: false, pubkey: ownerPk },
+    { isSigner: false, isWritable: true, pubkey: marginAccountPk },
     { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
     { isSigner: false, isWritable: false, pubkey: dexProgramId },
     { isSigner: false, isWritable: true, pubkey: spotMarketPk },
@@ -29,17 +30,16 @@ export function makeCancelOrderInstruction(
     { isSigner: false, isWritable: true, pubkey: openOrdersPk },
     { isSigner: false, isWritable: false, pubkey: signerKey },
     { isSigner: false, isWritable: true, pubkey: eventQueuePk },
-  ]
+  ];
 
   const data = encodeMangoInstruction({
     CancelOrder: {
       side: order.side,
       orderId: order.orderId,
-    }
-  })
-  return  new TransactionInstruction( { keys, data, programId })
+    },
+  });
+  return new TransactionInstruction({ keys, data, programId });
 }
-
 
 export function makeSettleFundsInstruction(
   programId: PublicKey,
@@ -57,9 +57,9 @@ export function makeSettleFundsInstruction(
   dexSignerKey: PublicKey,
 ): TransactionInstruction {
   const keys = [
-    { isSigner: false, isWritable: true, pubkey: mangoGroupPk},
-    { isSigner: true, isWritable: false,  pubkey: ownerPk },
-    { isSigner: false,  isWritable: true, pubkey: marginAccountPk },
+    { isSigner: false, isWritable: true, pubkey: mangoGroupPk },
+    { isSigner: true, isWritable: false, pubkey: ownerPk },
+    { isSigner: false, isWritable: true, pubkey: marginAccountPk },
     { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
     { isSigner: false, isWritable: false, pubkey: dexProgramId },
     { isSigner: false, isWritable: true, pubkey: spotMarketPk },
@@ -71,8 +71,28 @@ export function makeSettleFundsInstruction(
     { isSigner: false, isWritable: true, pubkey: mangoQuoteVaultPk },
     { isSigner: false, isWritable: false, pubkey: dexSignerKey },
     { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
-  ]
-  const data = encodeMangoInstruction( {SettleFunds: {}} )
+  ];
+  const data = encodeMangoInstruction({ SettleFunds: {} });
 
-  return new TransactionInstruction( { keys, data, programId })
+  return new TransactionInstruction({ keys, data, programId });
+}
+
+export function makeSettleBorrowInstruction(
+  programId: PublicKey,
+  mangoGroupPk: PublicKey,
+  marginAccountPk: PublicKey,
+  walletPk: PublicKey,
+  tokenIndex: number,
+  quantity: number,
+): TransactionInstruction {
+  const keys = [
+    { isSigner: false, isWritable: true, pubkey: mangoGroupPk },
+    { isSigner: false, isWritable: true, pubkey: marginAccountPk },
+    { isSigner: true, isWritable: false, pubkey: walletPk },
+    { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+  ];
+  const data = encodeMangoInstruction({
+    SettleBorrow: { tokenIndex: new BN(tokenIndex), quantity },
+  });
+  return new TransactionInstruction({ keys, data, programId });
 }
