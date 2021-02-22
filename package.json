@@ -61,7 +61,7 @@
     "@solana/web3.js": "^0.90.0",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0",
-    "solink": "git+ssh://git@github.com:blockworks-foundation/solana-flux-aggregator.git"
+    "solink": "git+ssh://git@github.com:czl1378/solana-flux-aggregator.git"
   },
   "browserslist": [
     ">0.2%",
