@@ -25,7 +25,7 @@ import { SRM_DECIMALS, TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-i
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
 import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instruction';
-// import { Aggregator } from './schema'
+import { Aggregator } from './schema'
 
 export class MangoGroup {
   publicKey: PublicKey;
@@ -58,11 +58,11 @@ export class MangoGroup {
     connection: Connection,
   ): Promise<number[]>  {
 
-    // const aggs = await Promise.all(this.oracles.map((pk) => (Aggregator.loadWithConnection(pk, connection))))
-    // return aggs.map((agg) => (agg.answer.median.toNumber())).concat(1.0)
+    const aggs = await Promise.all(this.oracles.map((pk) => (Aggregator.loadWithConnection(pk, connection))))
+    return aggs.map((agg) => (agg.answer.median.toNumber())).concat(1.0)
 
-    const oracleAccs = await getMultipleAccounts(connection, this.oracles);
-    return oracleAccs.map((oa) => decodeAggregatorInfo(oa.accountInfo).submissionValue).concat(1.0)
+    // const oracleAccs = await getMultipleAccounts(connection, this.oracles);
+    // return oracleAccs.map((oa) => decodeAggregatorInfo(oa.accountInfo).submissionValue).concat(1.0)
   }
 
   getMarketIndex(spotMarket: Market): number {
