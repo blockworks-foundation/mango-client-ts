@@ -59,9 +59,7 @@
     "@project-serum/sol-wallet-adapter": "^0.1.4",
     "@solana/web3.js": "^0.90.0",
     "bn.js": "^5.1.2",
-    "buffer-layout": "^1.2.0",
-    "solink": ""
-
+    "buffer-layout": "^1.2.0"
   },
   "browserslist": [
     ">0.2%",
