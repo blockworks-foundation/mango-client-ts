@@ -6,6 +6,8 @@ export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layou
 export { NUM_TOKENS } from './layout';
 
 import IDS from "./ids.json";
+import { Connection, PublicKey } from '@solana/web3.js';
+import { Aggregator } from './schema';
 export { IDS }
 
 //
