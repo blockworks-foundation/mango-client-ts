@@ -4784,9 +4784,9 @@ snapdragon@^0.8.1:
     source-map-resolve "^0.5.0"
     use "^3.1.0"
 
-"solink@git+ssh://git@github.com:blockworks-foundation/solana-flux-aggregator.git":
+"solink@git+ssh://git@github.com:czl1378/solana-flux-aggregator.git":
   version "1.0.0"
-  resolved "git+ssh://git@github.com:blockworks-foundation/solana-flux-aggregator.git#c59ee0e47f8cda3a8d1be2ccd20cb63e338952c8"
+  resolved "git+ssh://git@github.com:czl1378/solana-flux-aggregator.git#1be19b1a6bcbad9c81af3f67dccaa253d148191a"
   dependencies:
     "@ltd/j-toml" "^1.6.0"
     "@solana/web3.js" "^0.90.5"
