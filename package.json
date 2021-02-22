@@ -59,7 +59,9 @@
     "@project-serum/sol-wallet-adapter": "^0.1.4",
     "@solana/web3.js": "^0.90.0",
     "bn.js": "^5.1.2",
-    "buffer-layout": "^1.2.0"
+    "buffer-layout": "^1.2.0",
+    "borsh": "https://github.com/defactojob/borsh-js#field-mapper",
+    "solray": "git+https://github.com/defactojob/solray"
   },
   "browserslist": [
     ">0.2%",
