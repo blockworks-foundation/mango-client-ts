@@ -1,6 +1,6 @@
 import { bits, BitStructure, Blob, Layout, seq, struct, u32, u8, u16, UInt, union } from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
-import * as BN from 'bn.js';
+import BN from 'bn.js';
 
 export const NUM_TOKENS = 3;
 export const NUM_MARKETS = NUM_TOKENS - 1;

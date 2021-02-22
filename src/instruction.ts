@@ -1,4 +1,4 @@
-import * as BN from 'bn.js';
+import BN from 'bn.js';
 import { PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { Order } from '@project-serum/serum/lib/market';
 import { encodeMangoInstruction } from './layout';
