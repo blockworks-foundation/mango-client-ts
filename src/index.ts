@@ -6,7 +6,6 @@ import { NUM_TOKENS } from './layout';
 
 export { MangoClient, MangoGroup, MarginAccount } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
-export { makeSettleFundsInstruction, makeSettleBorrowInstruction } from './instruction';
 export { NUM_TOKENS } from './layout';
 
 import IDS from './ids.json';
