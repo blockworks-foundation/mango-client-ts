@@ -9,10 +9,24 @@ export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layou
 export { NUM_TOKENS } from './layout';
 
 import IDS from "./ids.json";
+import { Aggregator } from '../../solana-flux-aggregator/src/schema';
 export { IDS }
 
 
+async function testSolink() {
+  const cluster = "devnet";
+  const client = new MangoClient();
+  const clusterIds = IDS[cluster]
 
+  const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip')
+  const mangoGroupPk = new PublicKey(clusterIds.mango_groups.BTC_ETH_USDC.mango_group_pk);
+  const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
+  const oraclePk = new PublicKey(IDS.devnet.spot_markets['BTC/USDC'])
+  const agg = await Aggregator.loadWithConnection(oraclePk, connection)
+  console.log(agg.answer.median.toNumber())
+}
+
+testSolink()
 
 
 // async function main() {

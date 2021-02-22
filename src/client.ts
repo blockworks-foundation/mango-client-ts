@@ -25,8 +25,7 @@ import { SRM_DECIMALS, TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-i
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
 import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instruction';
-const { Aggregator } = require('solink');
-
+import { Aggregator } from '../../solana-flux-aggregator/src/schema';
 
 export class MangoGroup {
   publicKey: PublicKey;
