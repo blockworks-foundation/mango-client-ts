@@ -13,13 +13,13 @@ import {
 import {
   encodeMangoInstruction,
   MangoGroupLayout,
-  MarginAccountLayout,
+  MarginAccountLayout, MAX_RATE,
   NUM_MARKETS,
-  NUM_TOKENS,
+  NUM_TOKENS, OPTIMAL_RATE, OPTIMAL_UTIL,
   WideBits,
 } from './layout';
 import BN from 'bn.js';
-import { createAccountInstruction, decodeAggregatorInfo, nativeToUi, uiToNative, zeroKey } from './utils';
+import { createAccountInstruction, nativeToUi, uiToNative, zeroKey } from './utils';
 import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
 import { SRM_DECIMALS, TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
@@ -86,13 +86,32 @@ export class MangoGroup {
   }
 
   getBorrowRate(tokenIndex: number): number {
-    const optimalUtil = 0.7
-    const optimalRate = 0.1
-    const index = this.indexes[tokenIndex]
-    return 0.0  // TODO
+
+    const totalBorrows = this.getUiTotalBorrow(tokenIndex)
+    const totalDeposits = this.getUiTotalDeposit(tokenIndex)
+    if (totalDeposits <= totalBorrows) {
+      return MAX_RATE
+    }
+
+    const utilization = totalBorrows / totalDeposits
+    if (utilization > OPTIMAL_UTIL) {
+      const extraUtil = utilization - OPTIMAL_UTIL
+      const slope = (MAX_RATE - OPTIMAL_RATE) / (1 - OPTIMAL_UTIL)
+      return OPTIMAL_RATE + slope * extraUtil
+    } else {
+      const slope = OPTIMAL_RATE / OPTIMAL_UTIL
+      return slope * utilization
+    }
   }
   getDepositRate(tokenIndex: number): number {
-    return 0.0  // TODO
+    const borrowRate = this.getBorrowRate(tokenIndex)
+    const totalBorrows = this.getUiTotalBorrow(tokenIndex)
+    const totalDeposits = this.getUiTotalDeposit(tokenIndex)
+    if (totalDeposits === 0) {
+      return MAX_RATE
+    }
+    const utilization = totalBorrows / totalDeposits
+    return utilization * borrowRate
   }
 
   getUiTotalDeposit(tokenIndex: number): number {
