@@ -10,15 +10,15 @@
     "fee_symbol": "SRM",
     "mango_groups": {
       "BTC_ETH_USDC": {
-        "mango_group_pk": "6hcULrp3j5JZS7PDK3XYehzdbXZoqaiKPNNGC2sF4oz2",
+        "mango_group_pk": "6C29D6jG975kRvfWsPEZkjLicEM8ZHv6qLr8FoK7BraR",
         "mint_pks": [
           "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
           "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7"
         ],
         "oracle_pks": [
-          "WZsNe3EBSwg1kRccs7M86DYBeSzYzwrkVtEp8iVb6RJ",
-          "DBiZZ6riT6QVoGVBMBnSsYFwkie1GAxWdac3NCpyrDR1"
+          "3iQqi9nBREjVvKtVWd44Jcbvs39CDAe6zSd613QzxuPE",
+          "5qxMJFJXB42j3kKo3FbTughREjziottXHcgLnjCNwjEs"
         ],
         "spot_market_pks": [
           "DY6X83vWk5VdHQEtVxFdecmEsGXHyLskkeQeo8BHn75s",
@@ -30,16 +30,16 @@
           "USDC": "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7"
         },
         "vault_pks": [
-          "HHZCZBqkNrJp51g6T5Gu4eCVrCNfSJekCMgx4cjMDBJC",
-          "GCa1SdEaod5VucgJoCvc9wFSiX4G7i5GpDbtPbhBFCHY",
-          "134B3occRaHiiMxo1M5GXavW7ocWgwR6951951LU5Vub"
+          "CHBmctN3PsBUTRWK2KqSGMrYjVNpsLZqT2onzHSNthRo",
+          "G5A19enx4eouJXwxYeijMCUR9sft7vUAvQtrrACovtXx",
+          "2rJhAgrAGhiE3yTo7AopwdifnS4E7ws4HEV3oLPouBWi"
         ]
       }
     },
     "mango_program_id": "AHKufSeSqvjehJcW1uTy1RKhV4BafbpQxVGXGHn7G3hX",
     "oracles": {
-      "BTC/USDC": "WZsNe3EBSwg1kRccs7M86DYBeSzYzwrkVtEp8iVb6RJ",
-      "ETH/USDC": "DBiZZ6riT6QVoGVBMBnSsYFwkie1GAxWdac3NCpyrDR1"
+      "BTC/USDC": "3iQqi9nBREjVvKtVWd44Jcbvs39CDAe6zSd613QzxuPE",
+      "ETH/USDC": "5qxMJFJXB42j3kKo3FbTughREjziottXHcgLnjCNwjEs"
     },
     "spot_markets": {
       "BTC/USDC": "DY6X83vWk5VdHQEtVxFdecmEsGXHyLskkeQeo8BHn75s",

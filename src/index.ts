@@ -1,15 +1,50 @@
 import { MangoClient, MangoGroup } from './client';
-import { Account, Connection, PublicKey } from '@solana/web3.js';
-import * as fs from 'fs';
-import { Market } from '@project-serum/serum';
 import { NUM_TOKENS } from './layout';
 
 export { MangoClient, MangoGroup, MarginAccount } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
 export { NUM_TOKENS } from './layout';
 
-import IDS from './ids.json';
-export { IDS };
+import IDS from "./ids.json";
+// import { Connection, PublicKey } from '@solana/web3.js';
+// import { Aggregator } from './schema';
+export { IDS }
+
+//
+// async function testMangoGroup() {
+//   const cluster = "devnet";
+//   const client = new MangoClient();
+//   const clusterIds = IDS[cluster]
+//
+//   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip')
+//   const mangoGroupPk = new PublicKey(clusterIds.mango_groups.BTC_ETH_USDC.mango_group_pk);
+//   const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
+//
+//   const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk)
+//
+//   for (let i = 0; i < NUM_TOKENS; i++) {
+//     console.log(nativeToUi(mangoGroup.borrowLimits[i], mangoGroup.mintDecimals[i]))
+//   }
+//
+// }
+// testMangoGroup()
+
+// async function testSolink() {
+//   const cluster = "devnet";
+//   const client = new MangoClient();
+//   const clusterIds = IDS[cluster]
+//
+//   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip')
+//   const mangoGroupPk = new PublicKey(clusterIds.mango_groups.BTC_ETH_USDC.mango_group_pk);
+//   const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
+//   const oraclePk = new PublicKey(IDS.devnet.oracles['BTC/USDC'])
+//   const agg = await Aggregator.loadWithConnection(oraclePk, connection)
+//   // const agg = await Aggregator.loadWithConnection(oraclePk, connection)
+//   console.log(agg.answer.median.toNumber())
+// }
+//
+// testSolink()
+
 
 // async function main() {
 //   const cluster = "devnet";

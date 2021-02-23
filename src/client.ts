@@ -19,19 +19,13 @@ import {
   WideBits,
 } from './layout';
 import BN from 'bn.js';
-import {
-  createAccountInstruction,
-  decodeAggregatorInfo,
-  getMintDecimals,
-  nativeToUi,
-  uiToNative,
-  zeroKey,
-} from './utils';
+import { createAccountInstruction, decodeAggregatorInfo, nativeToUi, uiToNative, zeroKey } from './utils';
 import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
 import { SRM_DECIMALS, TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
 import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instruction';
+import { Aggregator } from './schema'
 
 
 export class MangoGroup {
@@ -51,6 +45,8 @@ export class MangoGroup {
   maintCollRatio!: number;
   initCollRatio!: number;
   srmVault!: PublicKey;
+  admin!: PublicKey;
+  borrowLimits!: number[];
   mintDecimals!: number[];
   oracleDecimals!: number[];
 
@@ -62,8 +58,13 @@ export class MangoGroup {
   async getPrices(
     connection: Connection,
   ): Promise<number[]>  {
-    const oracleAccs = await getMultipleAccounts(connection, this.oracles);
-    return oracleAccs.map((oa) => decodeAggregatorInfo(oa.accountInfo).submissionValue).concat(1.0)
+
+    const aggs = await Promise.all(this.oracles.map((pk) => (Aggregator.loadWithConnection(pk, connection))))
+    return aggs.map((agg) => (agg.answer.median.toNumber())).concat(1.0)
+
+    // const oracleAccs = await getMultipleAccounts(connection, this.oracles);
+    // return oracleAccs.map((oa) => decodeAggregatorInfo(oa.accountInfo).submissionValue).concat(1.0)
+
   }
 
   getMarketIndex(spotMarket: Market): number {
@@ -85,6 +86,9 @@ export class MangoGroup {
   }
 
   getBorrowRate(tokenIndex: number): number {
+    const optimalUtil = 0.7
+    const optimalRate = 0.1
+    const index = this.indexes[tokenIndex]
     return 0.0  // TODO
   }
   getDepositRate(tokenIndex: number): number {
@@ -308,6 +312,17 @@ export class MangoClient {
     return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
 
   }
+
+  async initMangoGroup(
+    connection: Connection,
+    programId: PublicKey,
+    payer: PublicKey,
+
+  ) {
+
+    throw new Error("Not Implemented");
+  }
+
   async initMarginAccount(
     connection: Connection,
     programId: PublicKey,
@@ -370,7 +385,6 @@ export class MangoClient {
       { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY }
     ]
     const data = encodeMangoInstruction({Deposit: {quantity: nativeQuantity}})
-
 
     const instruction = new TransactionInstruction( { keys, data, programId })
 
