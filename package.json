@@ -1,8 +1,8 @@
 {
-  "name": "@mango/client",
+  "name": "@blockworks-foundation/mango-client",
   "version": "0.1.0",
-  "description": "Library for interacting with Mango Margin solana smart contracts.",
-  "repository": "blockworks-foundation/mango",
+  "description": "Library for interacting with Mango Markets' solana smart contracts.",
+  "repository": "blockworks-foundation/mango-client-ts",
   "author": {
     "name": "Blockworks Foundation",
     "email": "hello@blockworks.foundation",
@@ -13,7 +13,7 @@
   "types": "lib/index.d.ts",
   "license": "MIT",
   "engines": {
-    "node": ">=10"
+    "node": ">=14"
   },
   "scripts": {
     "build": "tsc",
@@ -52,7 +52,8 @@
   ],
   "prettier": {
     "singleQuote": true,
-    "trailingComma": "all"
+    "trailingComma": "all",
+    "printWidth": 120
   },
   "dependencies": {
     "@project-serum/serum": "^0.13.20",
