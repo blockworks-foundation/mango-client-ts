@@ -89,6 +89,10 @@ export class MangoGroup {
 
     const totalBorrows = this.getUiTotalBorrow(tokenIndex)
     const totalDeposits = this.getUiTotalDeposit(tokenIndex)
+
+    if (totalDeposits === 0 && totalBorrows === 0) {
+      return 0
+    }
     if (totalDeposits <= totalBorrows) {
       return MAX_RATE
     }
@@ -107,7 +111,9 @@ export class MangoGroup {
     const borrowRate = this.getBorrowRate(tokenIndex)
     const totalBorrows = this.getUiTotalBorrow(tokenIndex)
     const totalDeposits = this.getUiTotalDeposit(tokenIndex)
-    if (totalDeposits === 0) {
+    if (totalDeposits === 0 && totalBorrows === 0) {
+      return 0
+    } else if (totalDeposits === 0) {
       return MAX_RATE
     }
     const utilization = totalBorrows / totalDeposits
