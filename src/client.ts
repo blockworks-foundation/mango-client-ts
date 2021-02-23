@@ -291,9 +291,6 @@ export class MarginAccount {
 }
 
 export class MangoClient {
-  async initMangoGroup() {
-    throw new Error("Not Implemented");
-  }
 
   async sendTransaction(
     connection: Connection,

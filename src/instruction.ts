@@ -3,7 +3,6 @@ import { PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/
 import { Order } from '@project-serum/serum/lib/market';
 import { encodeMangoInstruction } from './layout';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
-import BN from 'bn.js';
 
 // export function makeInitMangoGroupInstruction(
 //   programId: PublicKey,
