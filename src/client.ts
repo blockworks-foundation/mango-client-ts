@@ -185,29 +185,40 @@ export class MarginAccount {
   }
 
   toPrettyString(
-    mangoGroup: MangoGroup
+    mangoGroup: MangoGroup,
+    prices: number[]
   ): string {
     const lines = [
       `MarginAccount: ${this.publicKey.toBase58()}`,
-      `Asset Deposits Borrows`,
+      `${"Asset".padEnd(5)} ${"Deposits".padEnd(10)} ${"Borrows".padEnd(10)}`,
     ]
 
+    const tokenToDecimals = {
+      "BTC": 4,
+      "ETH": 3,
+      "USDC": 2
+    }
     const tokenNames = ["BTC", "ETH", "USDC"]  // TODO pull this from somewhere
+
     for (let i = 0; i < mangoGroup.tokens.length; i++) {
+      const decimals = tokenToDecimals[tokenNames[i]]
+      const depositStr = this.getUiDeposit(mangoGroup, i).toFixed(decimals).toString().padEnd(10)
+      const borrowStr = this.getUiBorrow(mangoGroup, i).toFixed(decimals).toString().padEnd(10)
       lines.push(
-        `${tokenNames[i]} ${this.getUiDeposit(mangoGroup, i)} ${this.getUiBorrow(mangoGroup, i)}`
+        `${tokenNames[i].padEnd(5)} ${depositStr} ${borrowStr}`
       )
     }
+
+    lines.push(`Coll. Ratio: ${this.getCollateralRatio(mangoGroup, prices).toFixed(4)}`)
+    lines.push(`Value: ${this.computeValue(mangoGroup, prices).toFixed(2)}`)
 
     return lines.join('\n')
   }
 
-  async getValue(
-    connection: Connection,
-    mangoGroup: MangoGroup
-  ): Promise<number> {
-    const prices = await mangoGroup.getPrices(connection)
-
+  computeValue(
+    mangoGroup: MangoGroup,
+    prices: number[]
+  ): number {
     let value = 0
     for (let i = 0; i < this.deposits.length; i++) {
       value += (this.getUiDeposit(mangoGroup, i) - this.getUiBorrow(mangoGroup, i))  * prices[i]
@@ -222,6 +233,14 @@ export class MarginAccount {
     }
 
     return value
+  }
+
+  async getValue(
+    connection: Connection,
+    mangoGroup: MangoGroup
+  ): Promise<number> {
+    const prices = await mangoGroup.getPrices(connection)
+    return this.computeValue(mangoGroup, prices)
   }
 
   getAssets(mangoGroup: MangoGroup): number[] {
