@@ -1,8 +1,13 @@
 import BN from 'bn.js';
-import { PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
+import {
+  PublicKey,
+  SYSVAR_CLOCK_PUBKEY,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { Order } from '@project-serum/serum/lib/market';
 import { encodeMangoInstruction } from './layout';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
+import { uiToNative } from './utils';
 
 // export function makeInitMangoGroupInstruction(
 //   programId: PublicKey,
@@ -116,7 +121,7 @@ export function makeSettleBorrowInstruction(
   marginAccountPk: PublicKey,
   walletPk: PublicKey,
   tokenIndex: number,
-  quantity: number,
+  nativeQuantity: BN,
 ): TransactionInstruction {
   const keys = [
     { isSigner: false, isWritable: true, pubkey: mangoGroupPk },
@@ -125,7 +130,7 @@ export function makeSettleBorrowInstruction(
     { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
   ];
   const data = encodeMangoInstruction({
-    SettleBorrow: { tokenIndex: new BN(tokenIndex), quantity },
+    SettleBorrow: { tokenIndex: new BN(tokenIndex), nativeQuantity },
   });
   return new TransactionInstruction({ keys, data, programId });
 }
