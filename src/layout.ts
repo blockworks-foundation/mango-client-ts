@@ -195,6 +195,7 @@ export function selfTradeBehaviorLayout(property) {
 export const MangoInstructionLayout = union(u32('instruction'))
 
 MangoInstructionLayout.addVariant(0, struct([]), 'InitMangoGroup')  // TODO this is unimplemented
+
 MangoInstructionLayout.addVariant(1, struct([]), 'InitMarginAccount')
 MangoInstructionLayout.addVariant(2, struct([u64('quantity')]), 'Deposit')
 MangoInstructionLayout.addVariant(3, struct([u64('quantity')]), 'Withdraw')
@@ -233,6 +234,7 @@ MangoInstructionLayout.addVariant(11,
 
 MangoInstructionLayout.addVariant(12, struct([u64('clientId')]), 'CancelOrderByClientId')
 MangoInstructionLayout.addVariant(13, struct([u64('tokenIndex'), u64('borrowLimit')]), 'ChangeBorrowLimit')
+
 
 // @ts-ignore
 const instructionMaxSpan = Math.max(...Object.values(MangoInstructionLayout.registry).map((r) => r.span));

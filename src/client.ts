@@ -27,6 +27,7 @@ import Wallet from '@project-serum/sol-wallet-adapter';
 import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instruction';
 import { Aggregator } from './schema'
 
+
 export class MangoGroup {
   publicKey: PublicKey;
 
@@ -63,6 +64,7 @@ export class MangoGroup {
 
     // const oracleAccs = await getMultipleAccounts(connection, this.oracles);
     // return oracleAccs.map((oa) => decodeAggregatorInfo(oa.accountInfo).submissionValue).concat(1.0)
+
   }
 
   getMarketIndex(spotMarket: Market): number {
@@ -84,12 +86,9 @@ export class MangoGroup {
   }
 
   getBorrowRate(tokenIndex: number): number {
-
     const optimalUtil = 0.7
     const optimalRate = 0.1
     const index = this.indexes[tokenIndex]
-
-
     return 0.0  // TODO
   }
   getDepositRate(tokenIndex: number): number {
@@ -292,7 +291,9 @@ export class MarginAccount {
 }
 
 export class MangoClient {
-
+  async initMangoGroup() {
+    throw new Error("Not Implemented");
+  }
 
   async sendTransaction(
     connection: Connection,
@@ -384,7 +385,6 @@ export class MangoClient {
       { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY }
     ]
     const data = encodeMangoInstruction({Deposit: {quantity: nativeQuantity}})
-
 
     const instruction = new TransactionInstruction( { keys, data, programId })
 
