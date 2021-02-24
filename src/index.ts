@@ -1,17 +1,15 @@
 import { MangoClient, MangoGroup } from './client';
-import { NUM_TOKENS } from './layout';
+import IDS from './ids.json';
 
 export { MangoClient, MangoGroup, MarginAccount } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
 export * from './layout';
 export * from './utils'
 
-import IDS from "./ids.json";
-// import { Connection, PublicKey } from '@solana/web3.js';
-// import { Aggregator } from './schema';
 export { IDS }
 
-//
+
+
 // async function testMangoGroup() {
 //   const cluster = "devnet";
 //   const client = new MangoClient();

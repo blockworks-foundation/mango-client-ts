@@ -921,7 +921,8 @@ export class MangoClient {
     connection: Connection,
     programId: PublicKey,
     mangoGroup: MangoGroup
-  ): Promise<MarginAccount[]>{
+  ): Promise<MarginAccount[]> {
+
     const filters = [
       {
         memcmp: {
@@ -935,15 +936,53 @@ export class MangoClient {
       },
     ];
 
-    const accounts = await getFilteredProgramAccounts(connection, programId, filters);
-    const marginAccounts = accounts.map(
-      ({ publicKey, accountInfo }) =>
-        new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
+    const marginAccountsProms = getFilteredProgramAccounts(connection, programId, filters)
+      .then((accounts) => (
+        accounts.map(({ publicKey, accountInfo }) =>
+          new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
+        )
+      ))
+
+    const ordersFilters = [
+      {
+        memcmp: {
+          offset: OpenOrders.getLayout(mangoGroup.dexProgramId).offsetOf('owner'),
+          bytes: mangoGroup.signerKey.toBase58()
+        }
+      },
+      {
+        dataSize: OpenOrders.getLayout(mangoGroup.dexProgramId).span
+      }
+    ]
+
+    const openOrdersProms = getFilteredProgramAccounts(connection, programId, ordersFilters)
+      .then(
+        (accounts) => (
+          accounts.map(
+            ( { publicKey, accountInfo } ) =>
+            OpenOrders.fromAccountInfo(publicKey, accountInfo, mangoGroup.dexProgramId)
+          )
+        )
+      )
+
+    const marginAccounts = await marginAccountsProms
+    const openOrders = await openOrdersProms
+    const pkToOpenOrdersAccount = {}
+    openOrders.forEach(
+      (openOrdersAccount) => (
+        pkToOpenOrdersAccount[openOrdersAccount.publicKey.toBase58()] = openOrdersAccount
+      )
     )
 
-    await Promise.all(marginAccounts.map((ma) => ma.loadOpenOrders(connection, mangoGroup.dexProgramId)))
-    return marginAccounts
+    for (const ma of marginAccounts) {
+      for (let i = 0; i < ma.openOrders.length; i++) {
+        if (ma.openOrders[i].toBase58() in pkToOpenOrdersAccount) {
+          ma.openOrdersAccounts[i] = pkToOpenOrdersAccount[ma.openOrders[i].toBase58()]
+        }
+      }
+    }
 
+    return marginAccounts
   }
 
   async getMarginAccountsForOwner(
@@ -973,11 +1012,14 @@ export class MangoClient {
     ];
 
     const accounts = await getFilteredProgramAccounts(connection, programId, filters);
+
     const marginAccounts = accounts.map(
       ({ publicKey, accountInfo }) =>
         new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
     )
+
     await Promise.all(marginAccounts.map((ma) => ma.loadOpenOrders(connection, mangoGroup.dexProgramId)))
+
     return marginAccounts
   }
 
