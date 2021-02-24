@@ -1,4 +1,4 @@
-import { Account, Connection, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
+import { Account, AccountInfo, Connection, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { publicKeyLayout, u64 } from './layout';
 import BN from 'bn.js';
 import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
@@ -132,4 +132,43 @@ export function nativeToUi(amount: number, decimals: number): number {
 
   return amount / Math.pow(10, decimals)
 
+}
+
+
+export async function getFilteredProgramAccounts(
+  connection: Connection,
+  programId: PublicKey,
+  filters,
+): Promise<{ publicKey: PublicKey; accountInfo: AccountInfo<Buffer> }[]> {
+  // @ts-ignore
+  const resp = await connection._rpcRequest('getProgramAccounts', [
+    programId.toBase58(),
+    {
+      commitment: connection.commitment,
+      filters,
+      encoding: 'base64',
+    },
+  ]);
+  if (resp.error) {
+    throw new Error(resp.error.message);
+  }
+  return resp.result.map(
+    ({ pubkey, account: { data, executable, owner, lamports } }) => ({
+      publicKey: new PublicKey(pubkey),
+      accountInfo: {
+        data: Buffer.from(data[0], 'base64'),
+        executable,
+        owner: new PublicKey(owner),
+        lamports,
+      },
+    }),
+  );
+}
+
+export async function promiseUndef(): Promise<undefined> {
+  return undefined
+}
+
+export const getUnixTs = () => {
+  return new Date().getTime() / 1000;
 }

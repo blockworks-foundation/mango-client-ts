@@ -19,7 +19,14 @@ import {
   WideBits,
 } from './layout';
 import BN from 'bn.js';
-import { createAccountInstruction, nativeToUi, uiToNative, zeroKey } from './utils';
+import {
+  createAccountInstruction,
+  getFilteredProgramAccounts, getUnixTs,
+  nativeToUi,
+  promiseUndef,
+  uiToNative,
+  zeroKey,
+} from './utils';
 import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
 import { SRM_DECIMALS, TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
@@ -1001,41 +1008,4 @@ async function getMultipleAccounts(
   );
 }
 
-async function getFilteredProgramAccounts(
-  connection: Connection,
-  programId: PublicKey,
-  filters,
-): Promise<{ publicKey: PublicKey; accountInfo: AccountInfo<Buffer> }[]> {
-  // @ts-ignore
-  const resp = await connection._rpcRequest('getProgramAccounts', [
-    programId.toBase58(),
-    {
-      commitment: connection.commitment,
-      filters,
-      encoding: 'base64',
-    },
-  ]);
-  if (resp.error) {
-    throw new Error(resp.error.message);
-  }
-  return resp.result.map(
-    ({ pubkey, account: { data, executable, owner, lamports } }) => ({
-      publicKey: new PublicKey(pubkey),
-      accountInfo: {
-        data: Buffer.from(data[0], 'base64'),
-        executable,
-        owner: new PublicKey(owner),
-        lamports,
-      },
-    }),
-  );
-}
 
-
-async function promiseUndef(): Promise<undefined> {
-  return undefined
-}
-
-export const getUnixTs = () => {
-  return new Date().getTime() / 1000;
-};
