@@ -955,7 +955,7 @@ export class MangoClient {
       }
     ]
 
-    const openOrdersProms = getFilteredProgramAccounts(connection, programId, ordersFilters)
+    const openOrdersProms = getFilteredProgramAccounts(connection, mangoGroup.dexProgramId, ordersFilters)
       .then(
         (accounts) => (
           accounts.map(
@@ -1022,7 +1022,6 @@ export class MangoClient {
 
     return marginAccounts
   }
-
 }
 
 async function getMultipleAccounts(
