@@ -3,7 +3,8 @@ import { NUM_TOKENS } from './layout';
 
 export { MangoClient, MangoGroup, MarginAccount } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
-export { NUM_TOKENS } from './layout';
+export * from './layout';
+export * from './utils'
 
 import IDS from "./ids.json";
 // import { Connection, PublicKey } from '@solana/web3.js';
