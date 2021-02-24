@@ -67,7 +67,9 @@ export class MangoGroup {
   ): Promise<number[]>  {
 
     const aggs = await Promise.all(this.oracles.map((pk) => (Aggregator.loadWithConnection(pk, connection))))
-    return aggs.map((agg) => (agg.answer.median.toNumber())).concat(1.0)
+
+
+    return aggs.map((agg) => (agg.answer.median.toNumber() / Math.pow(10, agg.config.decimals))).concat(1.0)
 
     // const oracleAccs = await getMultipleAccounts(connection, this.oracles);
     // return oracleAccs.map((oa) => decodeAggregatorInfo(oa.accountInfo).submissionValue).concat(1.0)
