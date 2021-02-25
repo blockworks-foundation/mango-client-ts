@@ -73,7 +73,6 @@ export class MangoGroup {
 
     // const oracleAccs = await getMultipleAccounts(connection, this.oracles);
     // return oracleAccs.map((oa) => decodeAggregatorInfo(oa.accountInfo).submissionValue).concat(1.0)
-
   }
 
   getMarketIndex(spotMarket: Market): number {

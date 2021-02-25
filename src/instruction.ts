@@ -130,7 +130,7 @@ export function makeSettleBorrowInstruction(
     { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
   ];
   const data = encodeMangoInstruction({
-    SettleBorrow: { tokenIndex: new BN(tokenIndex), nativeQuantity },
+    SettleBorrow: { tokenIndex: new BN(tokenIndex), quantity: nativeQuantity },
   });
   return new TransactionInstruction({ keys, data, programId });
 }
