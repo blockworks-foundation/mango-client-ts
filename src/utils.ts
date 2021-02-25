@@ -2,7 +2,7 @@ import { Account, AccountInfo, Connection, PublicKey, SystemProgram, Transaction
 import { publicKeyLayout, u64 } from './layout';
 import BN from 'bn.js';
 import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
-import { blob, struct, u8 } from 'buffer-layout';
+import { blob, struct, u8, nu64 } from 'buffer-layout';
 
 export const zeroKey = new PublicKey(new Uint8Array(32))
 
@@ -171,4 +171,23 @@ export async function promiseUndef(): Promise<undefined> {
 
 export const getUnixTs = () => {
   return new Date().getTime() / 1000;
+}
+
+
+export const ACCOUNT_LAYOUT = struct([
+  blob(32, 'mint'),
+  blob(32, 'owner'),
+  nu64('amount'),
+  blob(93)
+]);
+
+export function parseTokenAccountData(
+  data: Buffer,
+): { mint: PublicKey; owner: PublicKey; amount: number } {
+  let { mint, owner, amount } = ACCOUNT_LAYOUT.decode(data);
+  return {
+    mint: new PublicKey(mint),
+    owner: new PublicKey(owner),
+    amount,
+  };
 }

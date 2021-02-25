@@ -1,5 +1,7 @@
 import { MangoClient, MangoGroup } from './client';
 import IDS from './ids.json';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { getUnixTs } from './utils';
 
 export { MangoClient, MangoGroup, MarginAccount } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
@@ -8,25 +10,6 @@ export * from './utils'
 
 export { IDS }
 
-
-
-// async function testMangoGroup() {
-//   const cluster = "devnet";
-//   const client = new MangoClient();
-//   const clusterIds = IDS[cluster]
-//
-//   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip')
-//   const mangoGroupPk = new PublicKey(clusterIds.mango_groups.BTC_ETH_USDC.mango_group_pk);
-//   const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
-//
-//   const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk)
-//
-//   for (let i = 0; i < NUM_TOKENS; i++) {
-//     console.log(nativeToUi(mangoGroup.borrowLimits[i], mangoGroup.mintDecimals[i]))
-//   }
-//
-// }
-// testMangoGroup()
 
 // async function testSolink() {
 //   const cluster = "devnet";

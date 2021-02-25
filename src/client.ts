@@ -22,17 +22,18 @@ import BN from 'bn.js';
 import {
   createAccountInstruction,
   getFilteredProgramAccounts, getUnixTs,
-  nativeToUi,
+  nativeToUi, parseTokenAccountData,
   promiseUndef,
   uiToNative,
   zeroKey,
 } from './utils';
 import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
-import { SRM_DECIMALS, TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
+import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
 import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instruction';
 import { Aggregator } from './schema'
+import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 
 export class MangoGroup {
@@ -57,9 +58,15 @@ export class MangoGroup {
   mintDecimals!: number[];
   oracleDecimals!: number[];
 
-  constructor(publicKey: PublicKey, decoded: any) {
-    this.publicKey = publicKey;
-    Object.assign(this, decoded);
+  nativeSrm: number | null;
+  constructor(publicKey: PublicKey, decoded: any, nativeSrm?: number) {
+    this.publicKey = publicKey
+    Object.assign(this, decoded)
+    if (nativeSrm) {
+      this.nativeSrm = nativeSrm
+    } else {
+      this.nativeSrm = null
+    }
   }
 
   async getPrices(
@@ -251,6 +258,16 @@ export class MarginAccount {
     return this.computeValue(mangoGroup, prices)
   }
 
+  getDeposits(mangoGroup: MangoGroup): number[] {
+    const deposits = new Array<number>(NUM_TOKENS)
+
+    for (let i = 0; i < NUM_TOKENS; i++) {
+      deposits[i] = this.getUiDeposit(mangoGroup, i)
+    }
+
+    return deposits
+  }
+
   getAssets(mangoGroup: MangoGroup): number[] {
     const assets = new Array<number>(NUM_TOKENS)
 
@@ -366,9 +383,7 @@ export class MangoClient {
     connection: Connection,
     programId: PublicKey,
     payer: PublicKey,
-
   ) {
-
     throw new Error("Not Implemented");
   }
 
@@ -564,10 +579,20 @@ export class MangoClient {
   ): Promise<TransactionSignature> {
 
     const transaction = new Transaction()
+
+    const assetGains: number[] = new Array(NUM_TOKENS).fill(0)
+
     for (let i = 0; i < NUM_MARKETS; i++) {
-      if (marginAccount.openOrdersAccounts[i] == undefined) {
+      const openOrdersAccount = marginAccount.openOrdersAccounts[i]
+      if (openOrdersAccount === undefined) {
+        continue
+      } else if (openOrdersAccount.quoteTokenFree.toNumber() === 0 && openOrdersAccount.baseTokenFree.toNumber() === 0) {
         continue
       }
+
+      assetGains[i] += openOrdersAccount.baseTokenFree.toNumber()
+      assetGains[NUM_TOKENS-1] += openOrdersAccount.quoteTokenFree.toNumber()
+
       const spotMarket = markets[i]
       const dexSigner = await PublicKey.createProgramAddress(
         [
@@ -576,6 +601,8 @@ export class MangoClient {
         ],
         spotMarket.programId
       )
+
+
 
       const keys = [
         { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
@@ -599,10 +626,15 @@ export class MangoClient {
       transaction.add(instruction)
     }
 
-    const assets = marginAccount.getAssets(mangoGroup)
+    const deposits = marginAccount.getDeposits(mangoGroup)
     const liabs = marginAccount.getLiabs(mangoGroup)
 
     for (let i = 0; i < NUM_TOKENS; i++) {  // TODO test this. maybe it hits transaction size limit
+
+      const deposit = deposits[i] + assetGains[i]
+      if (deposit === 0 || liabs[i] === 0) {
+        continue
+      }
       const keys = [
         { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
         { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
@@ -900,11 +932,23 @@ export class MangoClient {
 
   async getMangoGroup(
     connection: Connection,
-    mangoGroupPk: PublicKey
+    mangoGroupPk: PublicKey,
+    srmVaultPk?: PublicKey
   ): Promise<MangoGroup> {
-    const acc = await connection.getAccountInfo(mangoGroupPk);
-    const decoded = MangoGroupLayout.decode(acc == null ? undefined : acc.data);
-    return new MangoGroup(mangoGroupPk, decoded);
+    if (srmVaultPk) {
+      const [acc, srmVaultAcc] = await Promise.all(
+        [connection.getAccountInfo(mangoGroupPk), connection.getAccountInfo(srmVaultPk)]
+      )
+      const decoded = MangoGroupLayout.decode(acc == null ? undefined : acc.data);
+      if (!srmVaultAcc) { return new MangoGroup(mangoGroupPk, decoded) }
+
+      const srmVault = parseTokenAccountData(srmVaultAcc.data)
+      return new MangoGroup(mangoGroupPk, decoded, srmVault.amount)
+    } else {
+      const acc = await connection.getAccountInfo(mangoGroupPk);
+      const decoded = MangoGroupLayout.decode(acc == null ? undefined : acc.data);
+      return new MangoGroup(mangoGroupPk, decoded);
+    }
   }
 
   async getMarginAccount(
