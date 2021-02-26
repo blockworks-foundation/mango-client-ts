@@ -576,7 +576,7 @@ export class MangoClient {
     marginAccount: MarginAccount,
     markets: Market[],
     owner: Account
-  ): Promise<TransactionSignature> {
+  ): Promise<TransactionSignature | null> {
 
     const transaction = new Transaction()
 
@@ -645,7 +645,11 @@ export class MangoClient {
     }
 
     const additionalSigners = []
-    return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+    if (transaction.instructions.length == 0) {
+       return null
+    } else {
+      return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+    }
   }
 
   async liquidate(
