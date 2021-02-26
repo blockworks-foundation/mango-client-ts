@@ -10,7 +10,7 @@
     "fee_symbol": "SRM",
     "mango_groups": {
       "BTC_ETH_USDC": {
-        "mango_group_pk": "B3Cet5GDUQPgdAieH2j95LX1cgCrqEADGsndJk2fXqkM",
+        "mango_group_pk": "C9ZtsC1wmqMzbyCUTeBppZSKH82FsKrGnaWjv5BtWvvo",
         "mint_pks": [
           "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
@@ -21,19 +21,23 @@
           "5qxMJFJXB42j3kKo3FbTughREjziottXHcgLnjCNwjEs"
         ],
         "spot_market_pks": [
-          "DY6X83vWk5VdHQEtVxFdecmEsGXHyLskkeQeo8BHn75s",
-          "CQwr1dHHPeoUpzGcQHLtEYE1LdXkszxha8oG6Y7v5KWZ"
+          "FKysSZkCCh41G1SCxpE7Cb7eaLofYBhEneLzHFz6JvjH",
+          "BYz5dJegg11x94jS2R7ZTCgaJwimvupmkjeYDm9Y3UwP"
         ],
-        "srm_vault_pk": "Fxoyr3u1oxzcY8NdYUwW6Mbi5mBW6KLx44J6zKiix43r",
+        "spot_market_symbols": {
+          "BTC/USDC": "FKysSZkCCh41G1SCxpE7Cb7eaLofYBhEneLzHFz6JvjH",
+          "ETH/USDC": "BYz5dJegg11x94jS2R7ZTCgaJwimvupmkjeYDm9Y3UwP"
+        },
+        "srm_vault_pk": "7YBghCMgSnvs3cg9taiwwKySiwDvby4USL3bmg8JQXF2",
         "symbols": {
           "BTC": "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "ETH": "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
           "USDC": "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7"
         },
         "vault_pks": [
-          "BUgSeSxAyKdXc9VUqadCsS4ZuZZhdGjUr8JkRrxoZXV9",
-          "DcfCtZrmHwEi1J3ksU2hYKGDR4n8Pbwi1fxURzNC6xEe",
-          "HfiDTJ4V6KN7o4dtDfZgYxWLTipGJUPVCQxk6ajFkNEc"
+          "Avpn6H3Tu2kJqCouYVpJgqU17iKRR9e2eEjVydQpPuyM",
+          "GRPxtA2TdS8PaGK4E9utnFo7QGf4jLt7RRqbkQXR5fsU",
+          "6gmXb2hRKeSRD1vvGwVtAVJSH8fBH7SitseyMnC3cat3"
         ]
       },
       "BTC_ETH_USDT": {
@@ -51,6 +55,10 @@
           "ELXP9wTE4apvK9sxAqtCtMidbAvJJDrNVg4wL6jqQEBA",
           "97mbLfi4S56y5Vg2LCF4Z7ru8jD1QjHa5SH3eyFYrMdg"
         ],
+        "spot_market_symbols": {
+          "BTC/USDT": "ELXP9wTE4apvK9sxAqtCtMidbAvJJDrNVg4wL6jqQEBA",
+          "ETH/USDT": "97mbLfi4S56y5Vg2LCF4Z7ru8jD1QjHa5SH3eyFYrMdg"
+        },
         "srm_vault_pk": "Bf9VhCut3mfkz2xbVs4N7Q2ddLoRxLxoGNakBAWFfKDJ",
         "symbols": {
           "BTC": "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
@@ -103,7 +111,8 @@
     }
   },
   "mainnet-beta": {
-    "dex_program_id": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+    "dex_program_id": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "dex_program_id_v2": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
     "fee_token": "SRM",
     "spot_markets": {
       "BTC/USDC": "CVfYa8RGXnuDBeGmniCcdkBwoLqVxh92xB1JqgRQx3F",
