@@ -27,13 +27,13 @@ import {
   uiToNative,
   zeroKey,
 } from './utils';
-import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
+import { getFeeRates, getFeeTier, Market, OpenOrders, Orderbook } from '@project-serum/serum';
 import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
 import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instruction';
 import { Aggregator } from './schema'
-import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 
 export class MangoGroup {
@@ -601,9 +601,6 @@ export class MangoClient {
         ],
         spotMarket.programId
       )
-
-
-
       const keys = [
         { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
         { isSigner: true, isWritable: false,  pubkey: owner.publicKey },
@@ -770,17 +767,16 @@ export class MangoClient {
 
   ): Promise<TransactionSignature> {
     // TODO allow wrapped SOL wallets
-    // TODO allow fee discounts
 
-    orderType = orderType == undefined ? 'limit' : orderType
-    // orderType = orderType ?? 'limit'
+    orderType = orderType || 'limit'
     const limitPrice = spotMarket.priceNumberToLots(price)
     const maxBaseQuantity = spotMarket.baseSizeNumberToLots(size)
 
-    // TODO verify if multiplying by highest fee tier is appropriate
-    const maxQuoteQuantity = new BN(spotMarket['_decoded'].quoteLotSize.toNumber()).mul(
-      maxBaseQuantity.mul(limitPrice),
-    )
+    const feeTier = getFeeTier(0, nativeToUi(mangoGroup.nativeSrm || 0, SRM_DECIMALS));
+    const rates = getFeeRates(feeTier);
+    const maxQuoteQuantity = new BN(spotMarket['_decoded'].quoteLotSize.toNumber() * rates.taker).mul(
+      spotMarket.baseSizeNumberToLots(size).mul(spotMarket.priceNumberToLots(price)),
+    );
 
     if (maxBaseQuantity.lte(new BN(0))) {
       throw new Error('size too small')

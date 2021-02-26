@@ -6,7 +6,7 @@
     "testnet": "https://testnet.solana.com"
   },
   "devnet": {
-    "dex_program_id": "6XffKSLZRxmQcRinmb4K32AegYnmkoTm6TLR2Ezp9FBR",
+    "dex_program_id": "DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY",
     "fee_symbol": "SRM",
     "mango_groups": {
       "BTC_ETH_USDC": {
@@ -43,8 +43,10 @@
       "ETH/USDC": "5qxMJFJXB42j3kKo3FbTughREjziottXHcgLnjCNwjEs"
     },
     "spot_markets": {
-      "BTC/USDC": "DY6X83vWk5VdHQEtVxFdecmEsGXHyLskkeQeo8BHn75s",
-      "ETH/USDC": "CQwr1dHHPeoUpzGcQHLtEYE1LdXkszxha8oG6Y7v5KWZ"
+      "BTC/USDC": "FKysSZkCCh41G1SCxpE7Cb7eaLofYBhEneLzHFz6JvjH",
+      "ETH/USDC": "BYz5dJegg11x94jS2R7ZTCgaJwimvupmkjeYDm9Y3UwP",
+      "BTC/USDT": "ELXP9wTE4apvK9sxAqtCtMidbAvJJDrNVg4wL6jqQEBA",
+      "ETH/USDT": "97mbLfi4S56y5Vg2LCF4Z7ru8jD1QjHa5SH3eyFYrMdg"
     },
     "symbols": {
       "BTC": "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
