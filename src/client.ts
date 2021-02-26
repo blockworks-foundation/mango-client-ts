@@ -1,6 +1,5 @@
 import {
   Account,
-  AccountInfo,
   Connection,
   PublicKey,
   sendAndConfirmRawTransaction,
@@ -77,9 +76,6 @@ export class MangoGroup {
 
 
     return aggs.map((agg) => (agg.answer.median.toNumber() / Math.pow(10, agg.config.decimals))).concat(1.0)
-
-    // const oracleAccs = await getMultipleAccounts(connection, this.oracles);
-    // return oracleAccs.map((oa) => decodeAggregatorInfo(oa.accountInfo).submissionValue).concat(1.0)
   }
 
   getMarketIndex(spotMarket: Market): number {
@@ -1068,30 +1064,4 @@ export class MangoClient {
     return marginAccounts
   }
 }
-
-async function getMultipleAccounts(
-  connection: Connection,
-  publicKeys: PublicKey[]
-
-): Promise<{ publicKey: PublicKey; accountInfo: AccountInfo<Buffer> }[]> {
-  const publickKeyStrs = publicKeys.map((pk) => (pk.toBase58()));
-
-  // @ts-ignore
-  const resp = await connection._rpcRequest('getMultipleAccounts', [publickKeyStrs]);
-  if (resp.error) {
-    throw new Error(resp.error.message);
-  }
-  return resp.result.value.map(
-    ({ data, executable, lamports, owner } , i) => ({
-      publicKey: publicKeys[i],
-      accountInfo: {
-        data: Buffer.from(data[0], 'base64'),
-        executable,
-        owner: new PublicKey(owner),
-        lamports,
-      },
-    }),
-  );
-}
-
 

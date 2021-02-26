@@ -191,3 +191,28 @@ export function parseTokenAccountData(
     amount,
   };
 }
+
+export async function getMultipleAccounts(
+  connection: Connection,
+  publicKeys: PublicKey[]
+
+): Promise<{ publicKey: PublicKey; accountInfo: AccountInfo<Buffer> }[]> {
+  const publickKeyStrs = publicKeys.map((pk) => (pk.toBase58()));
+
+  // @ts-ignore
+  const resp = await connection._rpcRequest('getMultipleAccounts', [publickKeyStrs]);
+  if (resp.error) {
+    throw new Error(resp.error.message);
+  }
+  return resp.result.value.map(
+    ({ data, executable, lamports, owner } , i) => ({
+      publicKey: publicKeys[i],
+      accountInfo: {
+        data: Buffer.from(data[0], 'base64'),
+        executable,
+        owner: new PublicKey(owner),
+        lamports,
+      },
+    }),
+  );
+}
