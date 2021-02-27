@@ -2,7 +2,7 @@
   "cluster_urls": {
     "devnet": "https://devnet.solana.com",
     "localnet": "http://127.0.0.1:8899",
-    "mainnet": "https://solana-api.projectserum.com",
+    "mainnet-beta": "https://solana-api.projectserum.com",
     "testnet": "https://testnet.solana.com"
   },
   "devnet": {

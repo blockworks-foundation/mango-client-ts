@@ -11,6 +11,10 @@ export * from './utils'
 export { IDS }
 
 
+async function initMangoGroup() {
+
+}
+
 // async function testSolink() {
 //   const cluster = "devnet";
 //   const client = new MangoClient();
