@@ -2,7 +2,7 @@ import {
   Account,
   Connection,
   PublicKey,
-  sendAndConfirmRawTransaction,
+  sendAndConfirmRawTransaction, SimulatedTransactionResponse,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   Transaction,
@@ -19,10 +19,11 @@ import {
 } from './layout';
 import BN from 'bn.js';
 import {
+  awaitTransactionSignatureConfirmation,
   createAccountInstruction,
   getFilteredProgramAccounts, getUnixTs,
   nativeToUi, parseTokenAccountData,
-  promiseUndef,
+  promiseUndef, simulateTransaction, sleep,
   uiToNative,
   zeroKey,
 } from './utils';
@@ -355,11 +356,12 @@ export class MarginAccount {
 
 export class MangoClient {
 
-  async sendTransaction2(
+  async sendTransaction(
     connection: Connection,
     transaction: Transaction,
     payer: Account,
-    additionalSigners: Account[]
+    additionalSigners: Account[],
+    timeout = 15,
   ): Promise<TransactionSignature> {
 
     transaction.recentBlockhash = (await connection.getRecentBlockhash('singleGossip')).blockhash
@@ -368,10 +370,63 @@ export class MangoClient {
     const signers = [payer].concat(additionalSigners)
     transaction.sign(...signers)
     const rawTransaction = transaction.serialize()
-    return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
+    const startTime = getUnixTs();
+
+    const txid: TransactionSignature = await connection.sendRawTransaction(
+      rawTransaction,
+      {
+        skipPreflight: true,
+      },
+    );
+
+    console.log('Started awaiting confirmation for', txid);
+    let done = false;
+    (async () => {
+      while (!done && getUnixTs() - startTime < timeout) {
+        connection.sendRawTransaction(rawTransaction, {
+          skipPreflight: true
+        });
+        await sleep(300);
+      }
+    })();
+
+    try {
+      await awaitTransactionSignatureConfirmation(txid, timeout, connection);
+    } catch (err) {
+      if (err.timeout) {
+        throw new Error('Timed out awaiting confirmation on transaction');
+      }
+      let simulateResult: SimulatedTransactionResponse | null = null;
+      try {
+        simulateResult = (
+          await simulateTransaction(connection, transaction, 'singleGossip')
+        ).value;
+      } catch (e) {
+
+      }
+      if (simulateResult && simulateResult.err) {
+        if (simulateResult.logs) {
+          for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
+            const line = simulateResult.logs[i];
+            if (line.startsWith('Program log: ')) {
+              throw new Error(
+                'Transaction failed: ' + line.slice('Program log: '.length),
+              );
+            }
+          }
+        }
+        throw new Error(JSON.stringify(simulateResult.err));
+      }
+      throw new Error('Transaction failed');
+    } finally {
+      done = true;
+    }
+
+    console.log('Latency', txid, getUnixTs() - startTime);
+    return txid;
   }
 
-  async sendTransaction(
+  async sendTransactionDeprecated(
     connection: Connection,
     transaction: Transaction,
     payer: Account,
@@ -386,7 +441,6 @@ export class MangoClient {
     transaction.sign(...signers)
     const rawTransaction = transaction.serialize()
     return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
-
   }
 
   async initMangoGroup(
