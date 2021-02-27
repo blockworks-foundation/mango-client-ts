@@ -73,8 +73,6 @@ export class MangoGroup {
   ): Promise<number[]>  {
 
     const aggs = await Promise.all(this.oracles.map((pk) => (Aggregator.loadWithConnection(pk, connection))))
-
-
     return aggs.map((agg) => (agg.answer.median.toNumber() / Math.pow(10, agg.config.decimals))).concat(1.0)
   }
 
