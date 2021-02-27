@@ -355,6 +355,22 @@ export class MarginAccount {
 
 export class MangoClient {
 
+  async sendTransaction2(
+    connection: Connection,
+    transaction: Transaction,
+    payer: Account,
+    additionalSigners: Account[]
+  ): Promise<TransactionSignature> {
+
+    transaction.recentBlockhash = (await connection.getRecentBlockhash('singleGossip')).blockhash
+    transaction.setSigners(payer.publicKey, ...additionalSigners.map( a => a.publicKey ))
+
+    const signers = [payer].concat(additionalSigners)
+    transaction.sign(...signers)
+    const rawTransaction = transaction.serialize()
+    return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
+  }
+
   async sendTransaction(
     connection: Connection,
     transaction: Transaction,
@@ -940,7 +956,6 @@ export class MangoClient {
       return new MangoGroup(mangoGroupPk, decoded, srmVault.amount)
     } else {
       const acc = await connection.getAccountInfo(mangoGroupPk);
-      console.log(acc?.data.toString())
       const decoded = MangoGroupLayout.decode(acc == null ? undefined : acc.data);
       return new MangoGroup(mangoGroupPk, decoded);
     }

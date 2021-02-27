@@ -11,22 +11,22 @@ export * from './utils'
 export { IDS }
 
 
-// async function testMangoGroup() {
-//   const cluster = "mainnet-beta";
-//   const client = new MangoClient();
-//   const clusterIds = IDS[cluster]
-//
-//   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip')
-//   const mangoGroupPk = new PublicKey(clusterIds.mango_groups.BTC_ETH_USDT.mango_group_pk);
-//   const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
-//   const oraclePk = new PublicKey(IDS['mainnet-beta'].oracles['BTC/USDT'])
-//
-//   const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk)
-//
-//   console.log(mangoGroup)
-// }
-//
-// testMangoGroup()
+async function testMangoGroup() {
+  const cluster = "mainnet-beta";
+  const client = new MangoClient();
+  const clusterIds = IDS[cluster]
+
+  const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip')
+  const mangoGroupPk = new PublicKey(clusterIds.mango_groups.BTC_ETH_USDT.mango_group_pk);
+  const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
+  const oraclePk = new PublicKey(IDS['mainnet-beta'].oracles['BTC/USDT'])
+
+  const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk)
+
+  console.log(mangoGroup)
+}
+
+testMangoGroup()
 
 // async function testSolink() {
 //   const cluster = "devnet";
