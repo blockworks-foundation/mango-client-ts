@@ -134,6 +134,9 @@
     "oracles": {
       "BTC/USDT": "HWh11EWkVHHZoRV6D6WzfRSna4yFv8ZvwcqDk74oDnSs",
       "ETH/USDT": "AcYcDG74nxeFHxuqeD5RRWTMWKi77QVx7t9bEy8Y4eyN"
+    },
+    "mango_groups": {
+
     }
   },
   "testnet": {
