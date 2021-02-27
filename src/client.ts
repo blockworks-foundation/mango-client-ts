@@ -940,6 +940,7 @@ export class MangoClient {
       return new MangoGroup(mangoGroupPk, decoded, srmVault.amount)
     } else {
       const acc = await connection.getAccountInfo(mangoGroupPk);
+      console.log(acc?.data.toString())
       const decoded = MangoGroupLayout.decode(acc == null ? undefined : acc.data);
       return new MangoGroup(mangoGroupPk, decoded);
     }
