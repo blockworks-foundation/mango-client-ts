@@ -113,8 +113,45 @@
   "mainnet-beta": {
     "dex_program_id": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "dex_program_id_v2": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
-    "mango_program_id": "Ahf4Q9U9sh86YzRHNkR6u94iRacd9XL2zvUtp2iN94wb",
     "fee_token": "SRM",
+    "mango_groups": {
+      "BTC_ETH_USDT": {
+        "mango_group_pk": "8BH9uLEtdBHDoUjhZfVpCSPGA2YUwR4UPZ3mB2mPR39a",
+        "mint_pks": [
+          "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
+          "2FPyTwcZLUg1MDrwsyoP4D6s1tM7hAkHYRjkNb5w6Pxk",
+          "BQcdHdAQW1hczDbBi9hiegXAR7A98Q9jx3X3iBBBDiq4"
+        ],
+        "oracle_pks": [
+          "HWh11EWkVHHZoRV6D6WzfRSna4yFv8ZvwcqDk74oDnSs",
+          "AcYcDG74nxeFHxuqeD5RRWTMWKi77QVx7t9bEy8Y4eyN"
+        ],
+        "spot_market_pks": [
+          "EXnGBBSamqzd3uxEdRLUiYzjJkTwQyorAaFXdfteuGXe",
+          "5abZGhrELnUnfM9ZUnvK6XJPoBU5eShZwfFPkdhAC7o"
+        ],
+        "spot_market_symbols": {
+          "BTC/USDT": "EXnGBBSamqzd3uxEdRLUiYzjJkTwQyorAaFXdfteuGXe",
+          "ETH/USDT": "5abZGhrELnUnfM9ZUnvK6XJPoBU5eShZwfFPkdhAC7o"
+        },
+        "srm_vault_pk": "9JNgJsAynAqR6b5nGa8DGyVvKWbv74yF1ATBcVAUwdBw",
+        "symbols": {
+          "BTC": "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
+          "ETH": "2FPyTwcZLUg1MDrwsyoP4D6s1tM7hAkHYRjkNb5w6Pxk",
+          "USDT": "BQcdHdAQW1hczDbBi9hiegXAR7A98Q9jx3X3iBBBDiq4"
+        },
+        "vault_pks": [
+          "Bib8cnz7ATnKWfN35REoyjsUXopGomx1p8i2xvP3rfwD",
+          "3oatrk974NTvrbUR9AN29eD3YySDTZkLfmByb4vU18Dj",
+          "5GBdRuWPLvnxCQS4rx2mKe168zivwM3QdQKdrLch85hw"
+        ]
+      }
+    },
+    "mango_program_id": "Ahf4Q9U9sh86YzRHNkR6u94iRacd9XL2zvUtp2iN94wb",
+    "oracles": {
+      "BTC/USDT": "HWh11EWkVHHZoRV6D6WzfRSna4yFv8ZvwcqDk74oDnSs",
+      "ETH/USDT": "AcYcDG74nxeFHxuqeD5RRWTMWKi77QVx7t9bEy8Y4eyN"
+    },
     "spot_markets": {
       "BTC/USDC": "CVfYa8RGXnuDBeGmniCcdkBwoLqVxh92xB1JqgRQx3F",
       "BTC/USDT": "EXnGBBSamqzd3uxEdRLUiYzjJkTwQyorAaFXdfteuGXe",
@@ -130,13 +167,6 @@
       "SRM": "SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt",
       "USDC": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "USDT": "BQcdHdAQW1hczDbBi9hiegXAR7A98Q9jx3X3iBBBDiq4"
-    },
-    "oracles": {
-      "BTC/USDT": "HWh11EWkVHHZoRV6D6WzfRSna4yFv8ZvwcqDk74oDnSs",
-      "ETH/USDT": "AcYcDG74nxeFHxuqeD5RRWTMWKi77QVx7t9bEy8Y4eyN"
-    },
-    "mango_groups": {
-
     }
   },
   "testnet": {
