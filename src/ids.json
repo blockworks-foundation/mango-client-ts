@@ -116,7 +116,7 @@
     "fee_token": "SRM",
     "mango_groups": {
       "BTC_ETH_USDT": {
-        "mango_group_pk": "8BH9uLEtdBHDoUjhZfVpCSPGA2YUwR4UPZ3mB2mPR39a",
+        "mango_group_pk": "Cf1KmvQYx1n8rhiNqqwNUgLcJY514kyvEPXUAJ1pfKrX",
         "mint_pks": [
           "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
           "2FPyTwcZLUg1MDrwsyoP4D6s1tM7hAkHYRjkNb5w6Pxk",
@@ -127,23 +127,23 @@
           "AcYcDG74nxeFHxuqeD5RRWTMWKi77QVx7t9bEy8Y4eyN"
         ],
         "spot_market_pks": [
-          "EXnGBBSamqzd3uxEdRLUiYzjJkTwQyorAaFXdfteuGXe",
-          "5abZGhrELnUnfM9ZUnvK6XJPoBU5eShZwfFPkdhAC7o"
+          "5r8FfnbNYcQbS1m4CYmoHYGjBtu6bxfo6UJHNRfzPiYH",
+          "71CtEComq2XdhGNbXBuYPmosAjMCPSedcgbNi5jDaGbR"
         ],
         "spot_market_symbols": {
-          "BTC/USDT": "EXnGBBSamqzd3uxEdRLUiYzjJkTwQyorAaFXdfteuGXe",
-          "ETH/USDT": "5abZGhrELnUnfM9ZUnvK6XJPoBU5eShZwfFPkdhAC7o"
+          "BTC/USDT": "5r8FfnbNYcQbS1m4CYmoHYGjBtu6bxfo6UJHNRfzPiYH",
+          "ETH/USDT": "71CtEComq2XdhGNbXBuYPmosAjMCPSedcgbNi5jDaGbR"
         },
-        "srm_vault_pk": "9JNgJsAynAqR6b5nGa8DGyVvKWbv74yF1ATBcVAUwdBw",
+        "srm_vault_pk": "3UuNohbBYEgWod8zZ8S3jQb8jYJRzDf1AprdaNqBDbRj",
         "symbols": {
           "BTC": "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
           "ETH": "2FPyTwcZLUg1MDrwsyoP4D6s1tM7hAkHYRjkNb5w6Pxk",
           "USDT": "BQcdHdAQW1hczDbBi9hiegXAR7A98Q9jx3X3iBBBDiq4"
         },
         "vault_pks": [
-          "Bib8cnz7ATnKWfN35REoyjsUXopGomx1p8i2xvP3rfwD",
-          "3oatrk974NTvrbUR9AN29eD3YySDTZkLfmByb4vU18Dj",
-          "5GBdRuWPLvnxCQS4rx2mKe168zivwM3QdQKdrLch85hw"
+          "DGr6XF3q6ZuguUsBpSj23nUabBFrZKL8zNsGA5p4bXBR",
+          "9JLwCHRsb8HpmdraFhXM12zDq5XVwRjBH4Wf4UkzF3qM",
+          "7VSViGUDveyDsEtj8P795fsakvXNbzKcE383UhjKQKPM"
         ]
       }
     },
@@ -154,9 +154,9 @@
     },
     "spot_markets": {
       "BTC/USDC": "CVfYa8RGXnuDBeGmniCcdkBwoLqVxh92xB1JqgRQx3F",
-      "BTC/USDT": "EXnGBBSamqzd3uxEdRLUiYzjJkTwQyorAaFXdfteuGXe",
+      "BTC/USDT": "5r8FfnbNYcQbS1m4CYmoHYGjBtu6bxfo6UJHNRfzPiYH",
       "ETH/USDC": "H5uzEytiByuXt964KampmuNCurNDwkVVypkym75J2DQW",
-      "ETH/USDT": "5abZGhrELnUnfM9ZUnvK6XJPoBU5eShZwfFPkdhAC7o",
+      "ETH/USDT": "71CtEComq2XdhGNbXBuYPmosAjMCPSedcgbNi5jDaGbR",
       "SOL/USDT": "7xLk17EQQ5KLDLDe44wCmupJKJjTGd8hs3eSVVhCx932",
       "SRM/USDC": "CDdR97S8y96v3To93aKvi3nCnjUrbuVSuumw8FLvbVeg"
     },
