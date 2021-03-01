@@ -361,7 +361,7 @@ export class MangoClient {
     transaction: Transaction,
     payer: Account,
     additionalSigners: Account[],
-    timeout = 15000,
+    timeout = 30000,
   ): Promise<TransactionSignature> {
 
     transaction.recentBlockhash = (await connection.getRecentBlockhash('singleGossip')).blockhash
