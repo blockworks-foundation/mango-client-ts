@@ -361,7 +361,7 @@ export class MangoClient {
     transaction: Transaction,
     payer: Account,
     additionalSigners: Account[],
-    timeout = 15,
+    timeout = 15000,
   ): Promise<TransactionSignature> {
 
     transaction.recentBlockhash = (await connection.getRecentBlockhash('singleGossip')).blockhash
@@ -382,7 +382,7 @@ export class MangoClient {
     console.log('Started awaiting confirmation for', txid);
     let done = false;
     (async () => {
-      while (!done && getUnixTs() - startTime < timeout) {
+      while (!done && (getUnixTs() - startTime) < timeout / 1000) {
         connection.sendRawTransaction(rawTransaction, {
           skipPreflight: true
         });

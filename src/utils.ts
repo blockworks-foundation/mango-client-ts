@@ -10,6 +10,7 @@ import {
 import BN from 'bn.js';
 import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
 import { blob, struct, u8, nu64 } from 'buffer-layout';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 export const zeroKey = new PublicKey(new Uint8Array(32))
 
@@ -43,7 +44,6 @@ export async function simulateTransaction(
   return res.result;
 }
 
-
 export async function awaitTransactionSignatureConfirmation(
   txid: TransactionSignature,
   timeout: number,
@@ -64,7 +64,7 @@ export async function awaitTransactionSignatureConfirmation(
         connection.onSignature(
           txid,
           (result) => {
-            console.log('WS confirmed', txid, result);
+            // console.log('WS confirmed', txid, result);
             done = true;
             if (result.err) {
               reject(result.err);
@@ -72,9 +72,9 @@ export async function awaitTransactionSignatureConfirmation(
               resolve(result);
             }
           },
-          'recent',
+          'singleGossip',
         );
-        console.log('Set up WS connection', txid);
+        // console.log('Set up WS connection', txid);
       } catch (e) {
         done = true;
         console.log('WS error in setup', txid, e);
@@ -89,15 +89,15 @@ export async function awaitTransactionSignatureConfirmation(
             const result = signatureStatuses && signatureStatuses.value[0];
             if (!done) {
               if (!result) {
-                console.log('REST null result for', txid, result);
+                // console.log('REST null result for', txid, result);
               } else if (result.err) {
-                console.log('REST error for', txid, result);
+                // console.log('REST error for', txid, result);
                 done = true;
                 reject(result.err);
               } else if (!result.confirmations) {
-                console.log('REST no confirmations for', txid, result);
+                // console.log('REST no confirmations for', txid, result);
               } else {
-                console.log('REST confirmation for', txid, result);
+                // console.log('REST confirmation for', txid, result);
                 done = true;
                 resolve(result);
               }
@@ -253,4 +253,32 @@ export async function getMultipleAccounts(
       },
     }),
   );
+}
+
+
+export async function findLargestTokenAccountForOwner(
+  connection: Connection,
+  owner: PublicKey,
+  mint: PublicKey
+): Promise<{ publicKey: PublicKey; tokenAccount: { mint: PublicKey; owner: PublicKey; amount: number} }> {
+
+  const response = await connection.getTokenAccountsByOwner(owner, {mint, programId: TOKEN_PROGRAM_ID}, connection.commitment)
+  let max = -1;
+  let maxTokenAccount: null | { mint: PublicKey; owner: PublicKey; amount: number} = null
+  let maxPubkey: null | PublicKey = null
+  for (const { pubkey, account } of response.value) {
+
+    const tokenAccount = parseTokenAccountData(account.data)
+    if (tokenAccount.amount > max) {
+      maxTokenAccount = tokenAccount
+      max = tokenAccount.amount
+      maxPubkey = pubkey
+    }
+  }
+
+  if (maxPubkey && maxTokenAccount) {
+    return {publicKey: maxPubkey, tokenAccount: maxTokenAccount}
+  } else {
+    throw new Error("No accounts for this token")
+  }
 }
