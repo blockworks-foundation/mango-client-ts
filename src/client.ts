@@ -842,9 +842,9 @@ export class MangoClient {
 
     const feeTier = getFeeTier(0, nativeToUi(mangoGroup.nativeSrm || 0, SRM_DECIMALS));
     const rates = getFeeRates(feeTier);
-    const maxQuoteQuantity = new BN(spotMarket['_decoded'].quoteLotSize.toNumber() * rates.taker).mul(
-      spotMarket.baseSizeNumberToLots(size).mul(spotMarket.priceNumberToLots(price)),
-    );
+    const maxQuoteQuantity = new BN(
+      spotMarket['_decoded'].quoteLotSize.toNumber() * (1 + rates.taker),
+    ).mul(spotMarket.baseSizeNumberToLots(size).mul(spotMarket.priceNumberToLots(price)));
 
     if (maxBaseQuantity.lte(new BN(0))) {
       throw new Error('size too small')
