@@ -91,13 +91,13 @@ export async function awaitTransactionSignatureConfirmation(
               if (!result) {
                 // console.log('REST null result for', txid, result);
               } else if (result.err) {
-                // console.log('REST error for', txid, result);
+                console.log('REST error for', txid, result);
                 done = true;
                 reject(result.err);
-              } else if (!result.confirmations) {
-                // console.log('REST no confirmations for', txid, result);
+              } else if (!(result.confirmations || result.confirmationStatus === "confirmed" || result.confirmationStatus === "finalized")) {
+                console.log('REST not confirmed', txid, result);
               } else {
-                // console.log('REST confirmation for', txid, result);
+                console.log('REST confirmed', txid, result);
                 done = true;
                 resolve(result);
               }
