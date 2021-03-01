@@ -832,7 +832,7 @@ export class MangoClient {
     size: number,
     orderType?: 'limit' | 'ioc' | 'postOnly',
     clientId?: BN,
-
+    timeout?: number
   ): Promise<TransactionSignature> {
     // TODO allow wrapped SOL wallets
 
@@ -916,7 +916,11 @@ export class MangoClient {
     transaction.add(placeOrderInstruction)
 
     // sign, send and confirm transaction
-    return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+    if (timeout) {
+      return await this.sendTransaction(connection, transaction, owner, additionalSigners, timeout)
+    } else {
+      return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+    }
   }
   async settleFunds(
     connection: Connection,
