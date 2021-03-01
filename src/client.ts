@@ -912,9 +912,6 @@ export class MangoClient {
       }
     )
 
-    for (const x of data) {
-      console.log(x)
-    }
     const placeOrderInstruction = new TransactionInstruction( { keys, data, programId })
     transaction.add(placeOrderInstruction)
 
