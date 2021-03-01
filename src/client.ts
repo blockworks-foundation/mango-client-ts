@@ -912,6 +912,7 @@ export class MangoClient {
       }
     )
 
+    console.log(data)
     const placeOrderInstruction = new TransactionInstruction( { keys, data, programId })
     transaction.add(placeOrderInstruction)
 
