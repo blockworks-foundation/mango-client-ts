@@ -2,7 +2,8 @@ import {
   Account,
   Connection,
   PublicKey,
-  sendAndConfirmRawTransaction, SimulatedTransactionResponse,
+  sendAndConfirmRawTransaction,
+  SimulatedTransactionResponse,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   Transaction,
@@ -12,18 +13,25 @@ import {
 import {
   encodeMangoInstruction,
   MangoGroupLayout,
-  MarginAccountLayout, MAX_RATE,
+  MarginAccountLayout,
+  MAX_RATE,
   NUM_MARKETS,
-  NUM_TOKENS, OPTIMAL_RATE, OPTIMAL_UTIL,
+  NUM_TOKENS,
+  OPTIMAL_RATE,
+  OPTIMAL_UTIL,
   WideBits,
 } from './layout';
 import BN from 'bn.js';
 import {
   awaitTransactionSignatureConfirmation,
   createAccountInstruction,
-  getFilteredProgramAccounts, getUnixTs,
-  nativeToUi, parseTokenAccountData,
-  promiseUndef, simulateTransaction, sleep,
+  getFilteredProgramAccounts,
+  getUnixTs,
+  nativeToUi,
+  parseTokenAccountData,
+  promiseUndef,
+  simulateTransaction,
+  sleep,
   uiToNative,
   zeroKey,
 } from './utils';
@@ -32,7 +40,7 @@ import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
 import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instruction';
-import { Aggregator } from './schema'
+import { Aggregator } from './schema';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 
