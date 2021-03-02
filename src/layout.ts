@@ -111,6 +111,7 @@ const ACCOUNT_FLAGS_LAYOUT = new WideBits(undefined);
 ACCOUNT_FLAGS_LAYOUT.addBoolean('Initialized');
 ACCOUNT_FLAGS_LAYOUT.addBoolean('MangoGroup');
 ACCOUNT_FLAGS_LAYOUT.addBoolean('MarginAccount');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('MangoSrmAccount');
 
 export function accountFlagsLayout(property = 'accountFlags') {
   return ACCOUNT_FLAGS_LAYOUT.replicate(property);  // TODO: when ts check is on, replicate throws error, doesn't compile
@@ -153,8 +154,14 @@ export const MarginAccountLayout = struct([
 
   seq(U64F64(), NUM_TOKENS, 'deposits'),
   seq(U64F64(), NUM_TOKENS, 'borrows'),
-  seq(publicKeyLayout(), NUM_MARKETS, 'openOrders'),
-  u64('srmBalance')
+  seq(publicKeyLayout(), NUM_MARKETS, 'openOrders')
+]);
+
+export const MangoSrmAccountLayout = struct([
+  accountFlagsLayout('accountFlags'),
+  publicKeyLayout('mangoGroup'),
+  publicKeyLayout('owner'),
+  u64('amount')
 ]);
 
 
