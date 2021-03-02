@@ -2,7 +2,7 @@ import {
   Account,
   Connection,
   PublicKey,
-  sendAndConfirmRawTransaction,
+  sendAndConfirmRawTransaction, SimulatedTransactionResponse,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   Transaction,
@@ -19,10 +19,11 @@ import {
 } from './layout';
 import BN from 'bn.js';
 import {
+  awaitTransactionSignatureConfirmation,
   createAccountInstruction,
   getFilteredProgramAccounts, getUnixTs,
   nativeToUi, parseTokenAccountData,
-  promiseUndef,
+  promiseUndef, simulateTransaction, sleep,
   uiToNative,
   zeroKey,
 } from './utils';
@@ -355,11 +356,12 @@ export class MarginAccount {
 
 export class MangoClient {
 
-  async sendTransaction2(
+  async sendTransaction(
     connection: Connection,
     transaction: Transaction,
     payer: Account,
-    additionalSigners: Account[]
+    additionalSigners: Account[],
+    timeout = 30000,
   ): Promise<TransactionSignature> {
 
     transaction.recentBlockhash = (await connection.getRecentBlockhash('singleGossip')).blockhash
@@ -368,10 +370,63 @@ export class MangoClient {
     const signers = [payer].concat(additionalSigners)
     transaction.sign(...signers)
     const rawTransaction = transaction.serialize()
-    return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
+    const startTime = getUnixTs();
+
+    const txid: TransactionSignature = await connection.sendRawTransaction(
+      rawTransaction,
+      {
+        skipPreflight: true,
+      },
+    );
+
+    console.log('Started awaiting confirmation for', txid);
+    let done = false;
+    (async () => {
+      while (!done && (getUnixTs() - startTime) < timeout / 1000) {
+        connection.sendRawTransaction(rawTransaction, {
+          skipPreflight: true
+        });
+        await sleep(300);
+      }
+    })();
+
+    try {
+      await awaitTransactionSignatureConfirmation(txid, timeout, connection);
+    } catch (err) {
+      if (err.timeout) {
+        throw new Error('Timed out awaiting confirmation on transaction');
+      }
+      let simulateResult: SimulatedTransactionResponse | null = null;
+      try {
+        simulateResult = (
+          await simulateTransaction(connection, transaction, 'singleGossip')
+        ).value;
+      } catch (e) {
+
+      }
+      if (simulateResult && simulateResult.err) {
+        if (simulateResult.logs) {
+          for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
+            const line = simulateResult.logs[i];
+            if (line.startsWith('Program log: ')) {
+              throw new Error(
+                'Transaction failed: ' + line.slice('Program log: '.length),
+              );
+            }
+          }
+        }
+        throw new Error(JSON.stringify(simulateResult.err));
+      }
+      throw new Error('Transaction failed');
+    } finally {
+      done = true;
+    }
+
+    console.log('Latency', txid, getUnixTs() - startTime);
+    return txid;
   }
 
-  async sendTransaction(
+  async sendTransactionDeprecated(
     connection: Connection,
     transaction: Transaction,
     payer: Account,
@@ -386,7 +441,6 @@ export class MangoClient {
     transaction.sign(...signers)
     const rawTransaction = transaction.serialize()
     return await sendAndConfirmRawTransaction(connection, rawTransaction, {skipPreflight: true})
-
   }
 
   async initMangoGroup(
@@ -778,7 +832,7 @@ export class MangoClient {
     size: number,
     orderType?: 'limit' | 'ioc' | 'postOnly',
     clientId?: BN,
-
+    timeout?: number
   ): Promise<TransactionSignature> {
     // TODO allow wrapped SOL wallets
 
@@ -788,9 +842,9 @@ export class MangoClient {
 
     const feeTier = getFeeTier(0, nativeToUi(mangoGroup.nativeSrm || 0, SRM_DECIMALS));
     const rates = getFeeRates(feeTier);
-    const maxQuoteQuantity = new BN(spotMarket['_decoded'].quoteLotSize.toNumber() * rates.taker).mul(
-      spotMarket.baseSizeNumberToLots(size).mul(spotMarket.priceNumberToLots(price)),
-    );
+    const maxQuoteQuantity = new BN(
+      spotMarket['_decoded'].quoteLotSize.toNumber() * (1 + rates.taker),
+    ).mul(spotMarket.baseSizeNumberToLots(size).mul(spotMarket.priceNumberToLots(price)));
 
     if (maxBaseQuantity.lte(new BN(0))) {
       throw new Error('size too small')
@@ -862,7 +916,11 @@ export class MangoClient {
     transaction.add(placeOrderInstruction)
 
     // sign, send and confirm transaction
-    return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+    if (timeout) {
+      return await this.sendTransaction(connection, transaction, owner, additionalSigners, timeout)
+    } else {
+      return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+    }
   }
   async settleFunds(
     connection: Connection,

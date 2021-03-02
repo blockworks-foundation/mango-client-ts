@@ -1,8 +1,5 @@
 import { MangoClient, MangoGroup } from './client';
 import IDS from './ids.json';
-import { Connection, PublicKey } from '@solana/web3.js';
-import { getUnixTs } from './utils';
-import { Aggregator } from './schema';
 
 export { MangoClient, MangoGroup, MarginAccount } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
@@ -12,7 +9,7 @@ export * from './utils'
 export { IDS }
 
 
-// async function testMangoGroup() {
+// async function tests() {
 //   const cluster = "mainnet-beta";
 //   const client = new MangoClient();
 //   const clusterIds = IDS[cluster]
@@ -20,6 +17,29 @@ export { IDS }
 //   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip')
 //   const mangoGroupPk = new PublicKey(clusterIds.mango_groups.BTC_ETH_USDT.mango_group_pk);
 //   const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
+//   const keyPairPath = homedir() + '/.config/solana/blw.json'
+//   const payer = new Account(JSON.parse(fs.readFileSync(keyPairPath, 'utf-8')))
+//
+//   async function testInitMarginAccount() {
+//     const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk)
+//     for (const token of mangoGroup.tokens) {
+//       console.log(token.toBase58())
+//     }
+//     const marginAccountPk = await client.initMarginAccount(connection, mangoProgramId, mangoGroup, payer)
+//     console.log(marginAccountPk.toBase58())
+//     await sleep(2000)
+//     const marginAccount = await client.getMarginAccount(connection, marginAccountPk, mangoGroup.dexProgramId)
+//     console.log(marginAccount.toPrettyString(mangoGroup, await mangoGroup.getPrices(connection)))
+//     console.log(marginAccount.owner.toBase58())
+//   }
+//
+//   await testInitMarginAccount()
+// }
+// tests()
+
+
+// async function testMangoGroup() {
+
 //   const oraclePk = new PublicKey(IDS['mainnet-beta'].oracles['BTC/USDT'])
 //
 //   const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk)
@@ -37,12 +57,14 @@ export { IDS }
 //   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip')
 //   const mangoGroupPk = new PublicKey(clusterIds.mango_groups['BTC_ETH_USDT'].mango_group_pk);
 //   const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
-//   const oraclePk = new PublicKey(IDS[cluster].oracles['BTC/USDT'])
+//   const oraclePk = new PublicKey(IDS[cluster].oracles['ETH/USDT'])
 //   const agg = await Aggregator.loadWithConnection(oraclePk, connection)
+//
 //   // const agg = await Aggregator.loadWithConnection(oraclePk, connection)
-//   console.log(agg.answer.median.toNumber())
+//   console.log(agg.answer.median.toNumber(), agg.answer.updatedAt.toNumber(), agg.round.id.toNumber())
+//
 // }
-
+//
 // testSolink()
 
 

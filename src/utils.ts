@@ -1,9 +1,120 @@
-import { Account, AccountInfo, Connection, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
+import {
+  Account,
+  AccountInfo, Commitment,
+  Connection,
+  PublicKey, RpcResponseAndContext, SimulatedTransactionResponse,
+  SystemProgram, Transaction,
+  TransactionInstruction,
+  TransactionSignature,
+} from '@solana/web3.js';
 import BN from 'bn.js';
 import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
 import { blob, struct, u8, nu64 } from 'buffer-layout';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 export const zeroKey = new PublicKey(new Uint8Array(32))
+
+export async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function simulateTransaction(
+  connection: Connection,
+  transaction: Transaction,
+  commitment: Commitment,
+): Promise<RpcResponseAndContext<SimulatedTransactionResponse>> {
+  // @ts-ignore
+  transaction.recentBlockhash = await connection._recentBlockhash(
+    // @ts-ignore
+    connection._disableBlockhashCaching,
+  );
+
+  const signData = transaction.serializeMessage();
+  // @ts-ignore
+  const wireTransaction = transaction._serialize(signData);
+  const encodedTransaction = wireTransaction.toString('base64');
+  const config: any = { encoding: 'base64', commitment };
+  const args = [encodedTransaction, config];
+
+  // @ts-ignore
+  const res = await connection._rpcRequest('simulateTransaction', args);
+  if (res.error) {
+    throw new Error('failed to simulate transaction: ' + res.error.message);
+  }
+  return res.result;
+}
+
+export async function awaitTransactionSignatureConfirmation(
+  txid: TransactionSignature,
+  timeout: number,
+  connection: Connection,
+) {
+  let done = false;
+  const result = await new Promise((resolve, reject) => {
+    (async () => {
+      setTimeout(() => {
+        if (done) {
+          return;
+        }
+        done = true;
+        console.log('Timed out for txid', txid);
+        reject({ timeout: true });
+      }, timeout);
+      try {
+        connection.onSignature(
+          txid,
+          (result) => {
+            // console.log('WS confirmed', txid, result);
+            done = true;
+            if (result.err) {
+              reject(result.err);
+            } else {
+              resolve(result);
+            }
+          },
+          'singleGossip',
+        );
+        // console.log('Set up WS connection', txid);
+      } catch (e) {
+        done = true;
+        console.log('WS error in setup', txid, e);
+      }
+      while (!done) {
+        // eslint-disable-next-line no-loop-func
+        (async () => {
+          try {
+            const signatureStatuses = await connection.getSignatureStatuses([
+              txid,
+            ]);
+            const result = signatureStatuses && signatureStatuses.value[0];
+            if (!done) {
+              if (!result) {
+                // console.log('REST null result for', txid, result);
+              } else if (result.err) {
+                console.log('REST error for', txid, result);
+                done = true;
+                reject(result.err);
+              } else if (!(result.confirmations || result.confirmationStatus === "confirmed" || result.confirmationStatus === "finalized")) {
+                console.log('REST not confirmed', txid, result);
+              } else {
+                console.log('REST confirmed', txid, result);
+                done = true;
+                resolve(result);
+              }
+            }
+          } catch (e) {
+            if (!done) {
+              console.log('REST connection error: txid', txid, e);
+            }
+          }
+        })();
+        await sleep(300);
+      }
+    })();
+  });
+  done = true;
+  return result;
+}
 
 
 export async function createAccountInstruction(
@@ -142,4 +253,32 @@ export async function getMultipleAccounts(
       },
     }),
   );
+}
+
+
+export async function findLargestTokenAccountForOwner(
+  connection: Connection,
+  owner: PublicKey,
+  mint: PublicKey
+): Promise<{ publicKey: PublicKey; tokenAccount: { mint: PublicKey; owner: PublicKey; amount: number} }> {
+
+  const response = await connection.getTokenAccountsByOwner(owner, {mint, programId: TOKEN_PROGRAM_ID}, connection.commitment)
+  let max = -1;
+  let maxTokenAccount: null | { mint: PublicKey; owner: PublicKey; amount: number} = null
+  let maxPubkey: null | PublicKey = null
+  for (const { pubkey, account } of response.value) {
+
+    const tokenAccount = parseTokenAccountData(account.data)
+    if (tokenAccount.amount > max) {
+      maxTokenAccount = tokenAccount
+      max = tokenAccount.amount
+      maxPubkey = pubkey
+    }
+  }
+
+  if (maxPubkey && maxTokenAccount) {
+    return {publicKey: maxPubkey, tokenAccount: maxTokenAccount}
+  } else {
+    throw new Error("No accounts for this token")
+  }
 }
