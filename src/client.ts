@@ -822,7 +822,7 @@ export class MangoClient {
     connection: Connection,
     programId: PublicKey,
     mangoGroup: MangoGroup,
-    mangoSrmAccount: PublicKey,
+    mangoSrmAccount: MangoSrmAccount,
     owner: Account,
     srmAccount: PublicKey,
 
@@ -832,7 +832,7 @@ export class MangoClient {
 
     const keys = [
       { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey },
-      { isSigner: false,  isWritable: true, pubkey: mangoSrmAccount },
+      { isSigner: false,  isWritable: true, pubkey: mangoSrmAccount.publicKey },
       { isSigner: true, isWritable: false, pubkey: owner.publicKey },
       { isSigner: false, isWritable: true,  pubkey: srmAccount },
       { isSigner: false, isWritable: true,  pubkey: mangoGroup.srmVault },
