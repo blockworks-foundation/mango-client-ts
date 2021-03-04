@@ -4,6 +4,7 @@ import { Account, Connection, PublicKey } from '@solana/web3.js';
 import { Aggregator } from './schema';
 import { homedir } from 'os';
 import fs from 'fs';
+import { sleep } from './utils';
 
 export { MangoClient, MangoGroup, MarginAccount } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
@@ -40,8 +41,12 @@ export { IDS }
 //     const srmVaultPk = new PublicKey(clusterIds['mango_groups']['BTC_ETH_USDT']['srm_vault_pk'])
 //     const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk, srmVaultPk)
 //     const srmAccountPk = new PublicKey("6utvndL8EEjpwK5QVtguErncQEPVbkuyABmXu6FeygeV")
-//     const mangoSrmAccount = await client.depositSrm(connection, mangoProgramId, mangoGroup, payer, srmAccountPk, 100)
-//     console.log(mangoSrmAccount)
+//     const mangoSrmAccountPk = await client.depositSrm(connection, mangoProgramId, mangoGroup, payer, srmAccountPk, 100)
+//     console.log(mangoSrmAccountPk.toBase58())
+//     await sleep(2000)
+//     const mangoSrmAccount = await client.getMangoSrmAccount(connection, mangoSrmAccountPk)
+//     const txid = await client.withdrawSrm(connection, mangoProgramId, mangoGroup, mangoSrmAccount, payer, srmAccountPk, 50)
+//     console.log('success', txid)
 //   }
 //
 //   // await testSolink()
