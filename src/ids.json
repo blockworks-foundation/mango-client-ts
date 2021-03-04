@@ -41,15 +41,15 @@
         ]
       },
       "BTC_ETH_USDT": {
-        "mango_group_pk": "HJ3wvtPo7MzpKYh15okMpMae9vYLwkx2aizEmizfXkEh",
+        "mango_group_pk": "3ws16LBHuQ1aXu6hgDzM33Z9FNv9TDnNWUHW1K4ieAcu",
         "mint_pks": [
           "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
           "7tSPGVhneTBWZjLGJGZb9V2UntC7T98cwtSLtgcXjeSs"
         ],
         "oracle_pks": [
-          "3iQqi9nBREjVvKtVWd44Jcbvs39CDAe6zSd613QzxuPE",
-          "5qxMJFJXB42j3kKo3FbTughREjziottXHcgLnjCNwjEs"
+          "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
+          "3ynBi9nQyKoEJwC47cmXviLSgHaaXQBKRxukatYYLN1Y"
         ],
         "spot_market_pks": [
           "ELXP9wTE4apvK9sxAqtCtMidbAvJJDrNVg4wL6jqQEBA",
@@ -59,20 +59,20 @@
           "BTC/USDT": "ELXP9wTE4apvK9sxAqtCtMidbAvJJDrNVg4wL6jqQEBA",
           "ETH/USDT": "97mbLfi4S56y5Vg2LCF4Z7ru8jD1QjHa5SH3eyFYrMdg"
         },
-        "srm_vault_pk": "3Zf3SjZU1HYc1547FELFDumdpxgZgGhW3rDPSkMjFrwV",
+        "srm_vault_pk": "2bVMMRZfrQA9Jq9kTxZBeF2FqN99HEXNLQ4jK1dkhQs4",
         "symbols": {
           "BTC": "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "ETH": "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
           "USDT": "7tSPGVhneTBWZjLGJGZb9V2UntC7T98cwtSLtgcXjeSs"
         },
         "vault_pks": [
-          "AL2nqeUhNUkigxK6a7s8UeeQen75hBnpXnWvJ6MSVUKQ",
-          "3fk4WLN4YJ9PpsrCBLETYtyfs1EuYTymETp9EdwFChw7",
-          "8WZeYhDuYasbjjNs7KUDRU5A4UMJW9TjHXSW1iqMRy6N"
+          "4doL2gk5rDHtWbLoFEGBpXvhNCsazfu7M3TKRSBAspQ4",
+          "AHtu6KUXocaJjfjYoGR7bNfQDJt84X3hfYbwvWnbgGex",
+          "6iY2jNGN5rFTp7dtiWUV2rk2Pa2Ms6QtNXGe2oAvbGgU"
         ]
       }
     },
-    "mango_program_id": "JD3bq9hGdy38PuWQ4h2YJpELmHVGPPfFSuFkpzAd9zfu",
+    "mango_program_id": "Ahf4Q9U9sh86YzRHNkR6u94iRacd9XL2zvUtp2iN94wb",
     "oracles": {
       "BTC/USDC": "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
       "BTC/USDT": "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
