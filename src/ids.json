@@ -74,10 +74,10 @@
     },
     "mango_program_id": "JD3bq9hGdy38PuWQ4h2YJpELmHVGPPfFSuFkpzAd9zfu",
     "oracles": {
-      "BTC/USDC": "3iQqi9nBREjVvKtVWd44Jcbvs39CDAe6zSd613QzxuPE",
-      "BTC/USDT": "3iQqi9nBREjVvKtVWd44Jcbvs39CDAe6zSd613QzxuPE",
-      "ETH/USDC": "5qxMJFJXB42j3kKo3FbTughREjziottXHcgLnjCNwjEs",
-      "ETH/USDT": "5qxMJFJXB42j3kKo3FbTughREjziottXHcgLnjCNwjEs"
+      "BTC/USDC": "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
+      "BTC/USDT": "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
+      "ETH/USDC": "3ynBi9nQyKoEJwC47cmXviLSgHaaXQBKRxukatYYLN1Y",
+      "ETH/USDT": "3ynBi9nQyKoEJwC47cmXviLSgHaaXQBKRxukatYYLN1Y"
     },
     "spot_markets": {
       "BTC/USDC": "FKysSZkCCh41G1SCxpE7Cb7eaLofYBhEneLzHFz6JvjH",
