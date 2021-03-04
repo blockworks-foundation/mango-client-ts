@@ -41,15 +41,15 @@
         ]
       },
       "BTC_ETH_USDT": {
-        "mango_group_pk": "5faCLrkbaLhp4kDUiwkEZP2CsH6pHFRV8NSC8kgDf4bm",
+        "mango_group_pk": "CAsLeiWN4S2Q8SAcbo6P7nLUaxs4urVSpzrHpgZLPGLL",
         "mint_pks": [
           "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
           "7tSPGVhneTBWZjLGJGZb9V2UntC7T98cwtSLtgcXjeSs"
         ],
         "oracle_pks": [
-          "3iQqi9nBREjVvKtVWd44Jcbvs39CDAe6zSd613QzxuPE",
-          "5qxMJFJXB42j3kKo3FbTughREjziottXHcgLnjCNwjEs"
+          "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
+          "3ynBi9nQyKoEJwC47cmXviLSgHaaXQBKRxukatYYLN1Y"
         ],
         "spot_market_pks": [
           "ELXP9wTE4apvK9sxAqtCtMidbAvJJDrNVg4wL6jqQEBA",
@@ -59,25 +59,25 @@
           "BTC/USDT": "ELXP9wTE4apvK9sxAqtCtMidbAvJJDrNVg4wL6jqQEBA",
           "ETH/USDT": "97mbLfi4S56y5Vg2LCF4Z7ru8jD1QjHa5SH3eyFYrMdg"
         },
-        "srm_vault_pk": "Bf9VhCut3mfkz2xbVs4N7Q2ddLoRxLxoGNakBAWFfKDJ",
+        "srm_vault_pk": "BnYohERJjx6sADWe1P3n5cwr2JJFz3HaBidqspDMezm6",
         "symbols": {
           "BTC": "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
           "ETH": "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
           "USDT": "7tSPGVhneTBWZjLGJGZb9V2UntC7T98cwtSLtgcXjeSs"
         },
         "vault_pks": [
-          "EP1oJGFhYTR6Vfr3zGrRySiwcCcNiJRkppBreVsuaLR9",
-          "AsyDJrq2TRewDGa4hiyWoHF6R4Los5y7yt5XjxergNzM",
-          "5CHhWpkWCevB3CDnf7jSVV7vagRq3CpHv6vZ48LNYLsP"
+          "DKh18z5VYwGNergmKztewEBAe6SCQXaMuJkYVDQhWcyY",
+          "3vyfCDP4EyZPVHMHgJLhFjZrYdQpv5cKrcdKjm8KAFKQ",
+          "BMfn9XdjGQUpdZRLS8TEf1oX9n5cDhgUxJBuqUz7E3k9"
         ]
       }
     },
-    "mango_program_id": "Ahf4Q9U9sh86YzRHNkR6u94iRacd9XL2zvUtp2iN94wb",
+    "mango_program_id": "JD3bq9hGdy38PuWQ4h2YJpELmHVGPPfFSuFkpzAd9zfu",
     "oracles": {
-      "BTC/USDC": "3iQqi9nBREjVvKtVWd44Jcbvs39CDAe6zSd613QzxuPE",
-      "BTC/USDT": "3iQqi9nBREjVvKtVWd44Jcbvs39CDAe6zSd613QzxuPE",
-      "ETH/USDC": "5qxMJFJXB42j3kKo3FbTughREjziottXHcgLnjCNwjEs",
-      "ETH/USDT": "5qxMJFJXB42j3kKo3FbTughREjziottXHcgLnjCNwjEs"
+      "BTC/USDC": "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
+      "BTC/USDT": "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
+      "ETH/USDC": "3ynBi9nQyKoEJwC47cmXviLSgHaaXQBKRxukatYYLN1Y",
+      "ETH/USDT": "3ynBi9nQyKoEJwC47cmXviLSgHaaXQBKRxukatYYLN1Y"
     },
     "spot_markets": {
       "BTC/USDC": "FKysSZkCCh41G1SCxpE7Cb7eaLofYBhEneLzHFz6JvjH",

@@ -12,7 +12,7 @@ import {
 } from '@solana/web3.js';
 import {
   encodeMangoInstruction,
-  MangoGroupLayout,
+  MangoGroupLayout, MangoSrmAccountLayout,
   MarginAccountLayout,
   MAX_RATE,
   NUM_MARKETS,
@@ -157,7 +157,6 @@ export class MarginAccount {
   deposits!: number[];
   borrows!: number[];
   openOrders!: PublicKey[];
-  srmBalance!: number;
   openOrdersAccounts: (OpenOrders | undefined)[]  // undefined if an openOrdersAccount not yet initialized and has zeroKey
   // TODO keep updated with websocket
 
@@ -181,9 +180,7 @@ export class MarginAccount {
     return nativeToUi(this.getNativeBorrow(mangoGroup, tokenIndex), mangoGroup.mintDecimals[tokenIndex])
   }
 
-  getUiSrmBalance() {
-    return nativeToUi(this.srmBalance, SRM_DECIMALS)
-  }
+
 
   async loadOpenOrders(
     connection: Connection,
@@ -358,6 +355,24 @@ export class MarginAccount {
       )
     ))
 
+  }
+
+}
+
+
+export class MangoSrmAccount {
+  publicKey: PublicKey;
+  accountFlags!: WideBits;
+  mangoGroup!: PublicKey;
+  amount!: number;
+
+  constructor(publicKey: PublicKey, decoded: any) {
+    this.publicKey = publicKey
+    Object.assign(this, decoded)
+  }
+
+  getUiSrmAmount() {
+    return nativeToUi(this.amount, SRM_DECIMALS)
   }
 
 }
@@ -766,39 +781,48 @@ export class MangoClient {
     connection: Connection,
     programId: PublicKey,
     mangoGroup: MangoGroup,
-    marginAccount: MarginAccount,
     owner: Account,
     srmAccount: PublicKey,
+    quantity: number,
 
-    quantity: number
-  ): Promise<TransactionSignature> {
+    mangoSrmAccount?: PublicKey
+  ): Promise<PublicKey> {
+
+    const transaction = new Transaction()
+    const additionalSigners: Account[] = []
+    if (!mangoSrmAccount) {
+      const accInstr = await createAccountInstruction(connection,
+        owner.publicKey, MangoSrmAccountLayout.span, programId)
+      transaction.add(accInstr.instruction)
+      additionalSigners.push(accInstr.account)
+      mangoSrmAccount = accInstr.account.publicKey
+    }
+
     const nativeQuantity = uiToNative(quantity, SRM_DECIMALS)
-
     const keys = [
       { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey },
-      { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
+      { isSigner: false,  isWritable: true, pubkey: mangoSrmAccount },
       { isSigner: true, isWritable: false, pubkey: owner.publicKey },
       { isSigner: false, isWritable: true,  pubkey: srmAccount },
       { isSigner: false, isWritable: true,  pubkey: mangoGroup.srmVault },
       { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
-      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY }
+      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+      { isSigner: false, isWritable: false, pubkey: SYSVAR_RENT_PUBKEY }
     ]
     const data = encodeMangoInstruction({DepositSrm: {quantity: nativeQuantity}})
 
     const instruction = new TransactionInstruction( { keys, data, programId })
-
-    const transaction = new Transaction()
     transaction.add(instruction)
-    const additionalSigners = []
 
-    return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+    await this.sendTransaction(connection, transaction, owner, additionalSigners)
+    return mangoSrmAccount
   }
 
   async withdrawSrm(
     connection: Connection,
     programId: PublicKey,
     mangoGroup: MangoGroup,
-    marginAccount: MarginAccount,
+    mangoSrmAccount: MangoSrmAccount,
     owner: Account,
     srmAccount: PublicKey,
 
@@ -808,7 +832,7 @@ export class MangoClient {
 
     const keys = [
       { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey },
-      { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
+      { isSigner: false,  isWritable: true, pubkey: mangoSrmAccount.publicKey },
       { isSigner: true, isWritable: false, pubkey: owner.publicKey },
       { isSigner: false, isWritable: true,  pubkey: srmAccount },
       { isSigner: false, isWritable: true,  pubkey: mangoGroup.srmVault },
@@ -930,6 +954,7 @@ export class MangoClient {
       return await this.sendTransaction(connection, transaction, owner, additionalSigners)
     }
   }
+
   async settleFunds(
     connection: Connection,
     programId: PublicKey,
@@ -1142,6 +1167,49 @@ export class MangoClient {
     await Promise.all(marginAccounts.map((ma) => ma.loadOpenOrders(connection, mangoGroup.dexProgramId)))
 
     return marginAccounts
+  }
+
+  async getMangoSrmAccount(
+    connection: Connection,
+    mangoSrmAccountPk: PublicKey
+  ): Promise<MangoSrmAccount> {
+    const acc = await connection.getAccountInfo(mangoSrmAccountPk, 'singleGossip')
+    return new MangoSrmAccount(mangoSrmAccountPk, MangoSrmAccountLayout.decode(acc == null ? undefined : acc.data))
+  }
+
+  async getMangoSrmAccountsForOwner(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    owner: Account | Wallet
+  ): Promise<MangoSrmAccount[]> {
+    const filters = [
+      {
+        memcmp: {
+          offset: MangoSrmAccountLayout.offsetOf('mangoGroup'),
+          bytes: mangoGroup.publicKey.toBase58(),
+        },
+      },
+      {
+        memcmp: {
+          offset: MangoSrmAccountLayout.offsetOf('owner'),
+          bytes: owner.publicKey.toBase58(),
+        }
+      },
+
+      {
+        dataSize: MangoSrmAccountLayout.span,
+      },
+    ];
+
+    const accounts = await getFilteredProgramAccounts(connection, programId, filters);
+
+    const srmAccounts = accounts.map(
+      ({ publicKey, accountInfo }) =>
+        new MangoSrmAccount(publicKey, MangoSrmAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
+    )
+
+    return srmAccounts
   }
 }
 
