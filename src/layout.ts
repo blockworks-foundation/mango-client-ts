@@ -154,7 +154,8 @@ export const MarginAccountLayout = struct([
 
   seq(U64F64(), NUM_TOKENS, 'deposits'),
   seq(U64F64(), NUM_TOKENS, 'borrows'),
-  seq(publicKeyLayout(), NUM_MARKETS, 'openOrders')
+  seq(publicKeyLayout(), NUM_MARKETS, 'openOrders'),
+  seq(u8(), 8, 'padding')
 ]);
 
 export const MangoSrmAccountLayout = struct([
