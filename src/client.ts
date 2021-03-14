@@ -43,6 +43,14 @@ import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instru
 import { Aggregator } from './schema';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
+export const tokenToDecimals = {
+  "BTC": 4,
+  "ETH": 3,
+  "USDT": 2,
+  "USDC": 2
+}
+
+
 
 export class MangoGroup {
   publicKey: PublicKey;
@@ -208,12 +216,8 @@ export class MarginAccount {
       `${"Asset".padEnd(5)} ${"Deposits".padEnd(10)} ${"Borrows".padEnd(10)}`,
     ]
 
-    const tokenToDecimals = {
-      "BTC": 4,
-      "ETH": 3,
-      "USDC": 2
-    }
-    const tokenNames = ["BTC", "ETH", "USDC"]  // TODO pull this from somewhere
+
+    const tokenNames = ["BTC", "ETH", "USDT"]  // TODO pull this from somewhere
 
     for (let i = 0; i < mangoGroup.tokens.length; i++) {
       const decimals = tokenToDecimals[tokenNames[i]]

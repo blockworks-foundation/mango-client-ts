@@ -1,12 +1,7 @@
 import { MangoClient, MangoGroup } from './client';
 import IDS from './ids.json';
-import { Account, Connection, PublicKey } from '@solana/web3.js';
-import { Aggregator } from './schema';
-import { homedir } from 'os';
-import fs from 'fs';
-import { sleep } from './utils';
 
-export { MangoClient, MangoGroup, MarginAccount } from './client';
+export { MangoClient, MangoGroup, MarginAccount, tokenToDecimals } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
 export * from './layout';
 export * from './utils'
