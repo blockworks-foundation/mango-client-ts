@@ -213,7 +213,7 @@ export class MarginAccount {
   ): string {
     const lines = [
       `MarginAccount: ${this.publicKey.toBase58()}`,
-      `${"Asset".padEnd(5)} ${"Deposits".padEnd(10)} ${"Borrows".padEnd(10)}`,
+      `${"Token".padEnd(5)} ${"Assets".padEnd(10)} ${"Deposits".padEnd(10)} ${"Borrows".padEnd(10)}`,
     ]
 
 
@@ -221,10 +221,11 @@ export class MarginAccount {
 
     for (let i = 0; i < mangoGroup.tokens.length; i++) {
       const decimals = tokenToDecimals[tokenNames[i]]
+      const assetStr = this.getAssets(mangoGroup)[i].toFixed(decimals).toString().padEnd(10)
       const depositStr = this.getUiDeposit(mangoGroup, i).toFixed(decimals).toString().padEnd(10)
       const borrowStr = this.getUiBorrow(mangoGroup, i).toFixed(decimals).toString().padEnd(10)
       lines.push(
-        `${tokenNames[i].padEnd(5)} ${depositStr} ${borrowStr}`
+        `${tokenNames[i].padEnd(5)} ${assetStr} ${depositStr} ${borrowStr}`
       )
     }
 
