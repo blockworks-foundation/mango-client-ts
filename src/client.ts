@@ -960,6 +960,119 @@ export class MangoClient {
     }
   }
 
+  async placeAndSettle(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    marginAccount: MarginAccount,
+    spotMarket: Market,
+    owner: Account,
+
+    side: 'buy' | 'sell',
+    price: number,
+    size: number,
+    orderType?: 'limit' | 'ioc' | 'postOnly',
+    clientId?: BN,
+    timeout?: number
+  ): Promise<TransactionSignature> {
+    // TODO allow wrapped SOL wallets
+
+    orderType = orderType || 'limit'
+    const limitPrice = spotMarket.priceNumberToLots(price)
+    const maxBaseQuantity = spotMarket.baseSizeNumberToLots(size)
+
+    const feeTier = getFeeTier(0, nativeToUi(mangoGroup.nativeSrm || 0, SRM_DECIMALS));
+    const rates = getFeeRates(feeTier);
+    const maxQuoteQuantity = new BN(
+      spotMarket['_decoded'].quoteLotSize.toNumber() * (1 + rates.taker),
+    ).mul(spotMarket.baseSizeNumberToLots(size).mul(spotMarket.priceNumberToLots(price)));
+
+    if (maxBaseQuantity.lte(new BN(0))) {
+      throw new Error('size too small')
+    }
+    if (limitPrice.lte(new BN(0))) {
+      throw new Error('invalid price')
+    }
+    const selfTradeBehavior = 'decrementTake'
+    const marketIndex = mangoGroup.getMarketIndex(spotMarket)
+    const vaultIndex = (side === 'buy') ? mangoGroup.vaults.length - 1 : marketIndex
+
+    // Add all instructions to one atomic transaction
+    const transaction = new Transaction()
+
+    // Specify signers in addition to the wallet
+    const additionalSigners: Account[] = []
+
+    // Create a Solana account for the open orders account if it's missing
+    const openOrdersKeys: PublicKey[] = [];
+    for (let i = 0; i < marginAccount.openOrders.length; i++) {
+      if (i === marketIndex && marginAccount.openOrders[marketIndex].equals(zeroKey)) {
+        // open orders missing for this market; create a new one now
+        const openOrdersSpace = OpenOrders.getLayout(mangoGroup.dexProgramId).span
+        const openOrdersLamports = await connection.getMinimumBalanceForRentExemption(openOrdersSpace, 'singleGossip')
+        const accInstr = await createAccountInstruction(
+          connection, owner.publicKey, openOrdersSpace, mangoGroup.dexProgramId, openOrdersLamports
+        )
+
+        transaction.add(accInstr.instruction)
+        additionalSigners.push(accInstr.account)
+        openOrdersKeys.push(accInstr.account.publicKey)
+      } else {
+        openOrdersKeys.push(marginAccount.openOrders[i])
+      }
+    }
+
+    const dexSigner = await PublicKey.createProgramAddress(
+      [
+        spotMarket.publicKey.toBuffer(),
+        spotMarket['_decoded'].vaultSignerNonce.toArrayLike(Buffer, 'le', 8),
+      ],
+      spotMarket.programId,
+    );
+    const keys = [
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
+      { isSigner: true,  isWritable: false,  pubkey: owner.publicKey },
+      { isSigner: false, isWritable: true, pubkey: marginAccount.publicKey },
+      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+      { isSigner: false, isWritable: false, pubkey: spotMarket.programId },
+      { isSigner: false, isWritable: true, pubkey: spotMarket.publicKey },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].requestQueue },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].eventQueue },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].bids },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].asks },
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.vaults[marketIndex] },
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.vaults[NUM_TOKENS-1] },
+      { isSigner: false, isWritable: false, pubkey: mangoGroup.signerKey },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].baseVault },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].quoteVault },
+      { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
+      { isSigner: false, isWritable: false, pubkey: SYSVAR_RENT_PUBKEY },
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.srmVault },
+      { isSigner: false, isWritable: false, pubkey: dexSigner },
+      ...openOrdersKeys.map( (pubkey) => ( { isSigner: false, isWritable: true, pubkey })),
+      ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
+    ]
+
+    const data = encodeMangoInstruction(
+      {
+        PlaceAndSettle:
+          clientId
+            ? { side, limitPrice, maxBaseQuantity, maxQuoteQuantity, selfTradeBehavior, orderType, clientId, limit: 65535}
+            : { side, limitPrice, maxBaseQuantity, maxQuoteQuantity, selfTradeBehavior, orderType, limit: 65535}
+      }
+    )
+
+    const placeOrderInstruction = new TransactionInstruction( { keys, data, programId })
+    transaction.add(placeOrderInstruction)
+
+    // sign, send and confirm transaction
+    if (timeout) {
+      return await this.sendTransaction(connection, transaction, owner, additionalSigners, timeout)
+    } else {
+      return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+    }
+  }
+
   async settleFunds(
     connection: Connection,
     programId: PublicKey,
