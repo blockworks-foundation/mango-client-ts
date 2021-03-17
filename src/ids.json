@@ -8,6 +8,14 @@
   "devnet": {
     "dex_program_id": "DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY",
     "fee_symbol": "SRM",
+    "faucets": {
+      "BTC": "97z3NzcDxqRMyE7F73PuHEmAbA72S7eDopjhe7GTymTk",
+      "ETH": "CvRouhBrimBuSyLd8zHxduNJDtV4LWtoowoF62FCwK7V",
+      "USDT": "DV8YAUHc4CiadQoFCHriTjNXbtwCw1Rt834EBYeCyvGt",
+      "USDC": "",
+      "SRM": "9NzrM7CZ1jq46mX2JGcqyUxBupQEn614A5sZrvg3TrCU",
+      "MSRM": "9ysywkpvyvxaaezq2Dapj1p1gHPP3U3D3ccTTecVfYHe"
+    },
     "mango_groups": {
       "BTC_ETH_USDC": {
         "mango_group_pk": "C9ZtsC1wmqMzbyCUTeBppZSKH82FsKrGnaWjv5BtWvvo",

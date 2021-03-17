@@ -1,5 +1,6 @@
 import { MangoClient, MangoGroup } from './client';
 import IDS from './ids.json';
+import { Account, Connection, PublicKey } from '@solana/web3.js';
 
 export { MangoClient, MangoGroup, MarginAccount, tokenToDecimals } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
@@ -8,9 +9,14 @@ export * from './utils'
 
 export { IDS }
 
+import { homedir } from 'os'
+import * as fs from 'fs';
+import { Aggregator } from './schema';
+import { sleep } from './utils';
+
 
 // async function tests() {
-//   const cluster = "devnet";
+//   const cluster = "mainnet-beta";
 //   const client = new MangoClient();
 //   const clusterIds = IDS[cluster]
 //
@@ -44,8 +50,13 @@ export { IDS }
 //     console.log('success', txid)
 //   }
 //
+//   async function getMarginAccountDetails() {
+//     const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk);
+//     console.log(mangoGroup.indexes[2].deposit, mangoGroup.indexes[2].borrow)
+//   }
+//   await getMarginAccountDetails()
 //   // await testSolink()
-//   testDepositSrm()
+//   // testDepositSrm()
 // }
 //
 // tests()
