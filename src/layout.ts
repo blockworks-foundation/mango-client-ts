@@ -245,7 +245,21 @@ MangoInstructionLayout.addVariant(11,
 
 MangoInstructionLayout.addVariant(12, struct([u64('clientId')]), 'CancelOrderByClientId')
 MangoInstructionLayout.addVariant(13, struct([u64('tokenIndex'), u64('borrowLimit')]), 'ChangeBorrowLimit')
-
+MangoInstructionLayout.addVariant(14,
+  struct(
+    [
+      sideLayout('side'),
+      u64('limitPrice'),
+      u64('maxBaseQuantity'),
+      u64('maxQuoteQuantity'),
+      selfTradeBehaviorLayout('selfTradeBehavior'),
+      orderTypeLayout('orderType'),
+      u64('clientId'),
+      u16('limit'),
+    ]
+  ),
+  'PlaceAndSettle'
+)
 
 // @ts-ignore
 const instructionMaxSpan = Math.max(...Object.values(MangoInstructionLayout.registry).map((r) => r.span));
