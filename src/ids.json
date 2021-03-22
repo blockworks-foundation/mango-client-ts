@@ -11,10 +11,11 @@
     "faucets": {
       "BTC": "97z3NzcDxqRMyE7F73PuHEmAbA72S7eDopjhe7GTymTk",
       "ETH": "CvRouhBrimBuSyLd8zHxduNJDtV4LWtoowoF62FCwK7V",
-      "USDT": "DV8YAUHc4CiadQoFCHriTjNXbtwCw1Rt834EBYeCyvGt",
+      "WUSDT": "DV8YAUHc4CiadQoFCHriTjNXbtwCw1Rt834EBYeCyvGt",
       "USDC": "",
       "SRM": "9NzrM7CZ1jq46mX2JGcqyUxBupQEn614A5sZrvg3TrCU",
-      "MSRM": "9ysywkpvyvxaaezq2Dapj1p1gHPP3U3D3ccTTecVfYHe"
+      "MSRM": "9ysywkpvyvxaaezq2Dapj1p1gHPP3U3D3ccTTecVfYHe",
+      "USDT": "AS1EfwXvpejkkLrEPdz9J84By9kPvVBzYaD6Ks8ya1A6"
     },
     "mango_groups": {
       "BTC_ETH_USDC": {
@@ -48,7 +49,7 @@
           "6gmXb2hRKeSRD1vvGwVtAVJSH8fBH7SitseyMnC3cat3"
         ]
       },
-      "BTC_ETH_USDT": {
+      "BTC_ETH_WUSDT": {
         "mango_group_pk": "6WZGjqRi9XKgkqZdsYwit4ASVDQ1iiHqkiDvVgY1n2uW",
         "mint_pks": [
           "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
