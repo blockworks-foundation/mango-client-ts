@@ -161,6 +161,37 @@
     "fee_token": "SRM",
     "mango_groups": {
       "BTC_ETH_USDT": {
+        "mango_group_pk": "Eb4m2do4qfaNRqjiyXNHwwfe9iRUpYPZNnLtNGMS7RRi",
+        "mint_pks": [
+          "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
+          "2FPyTwcZLUg1MDrwsyoP4D6s1tM7hAkHYRjkNb5w6Pxk",
+          "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
+        ],
+        "oracle_pks": [
+          "HWh11EWkVHHZoRV6D6WzfRSna4yFv8ZvwcqDk74oDnSs",
+          "AcYcDG74nxeFHxuqeD5RRWTMWKi77QVx7t9bEy8Y4eyN"
+        ],
+        "spot_market_pks": [
+          "C1EuT9VokAKLiW7i2ASnZUvxDoKuKkCpDDeNxAptuNe4",
+          "7dLVkUfBVfCGkFhSXDCq1ukM9usathSgS716t643iFGF"
+        ],
+        "spot_market_symbols": {
+          "BTC/USDT": "C1EuT9VokAKLiW7i2ASnZUvxDoKuKkCpDDeNxAptuNe4",
+          "ETH/USDT": "7dLVkUfBVfCGkFhSXDCq1ukM9usathSgS716t643iFGF"
+        },
+        "srm_vault_pk": "7dbFyfb9fo4Gz5Rcs5X2996CnvxbDqkBopTy3S7XLR9A",
+        "symbols": {
+          "BTC": "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
+          "ETH": "2FPyTwcZLUg1MDrwsyoP4D6s1tM7hAkHYRjkNb5w6Pxk",
+          "USDT": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
+        },
+        "vault_pks": [
+          "AfPmecr2GbfgSaBvdPBbhV5krVMyne8vjYVtbWoySZHv",
+          "EgsjcBCuRT6NDRZMqAam5vCEf6wsttnn8d29xys65zMV",
+          "BPdCBH4Tf1g563KTwquiv8YygdJgWWkYnZM2VyX5Ch9d"
+        ]
+      },
+      "BTC_ETH_WUSDT": {
         "mango_group_pk": "6NsLVpG2pdxn2rEFkmHHYjkY5QP5qG4RN1fRcSqDVxPC",
         "mint_pks": [
           "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
@@ -176,14 +207,14 @@
           "71CtEComq2XdhGNbXBuYPmosAjMCPSedcgbNi5jDaGbR"
         ],
         "spot_market_symbols": {
-          "BTC/USDT": "5r8FfnbNYcQbS1m4CYmoHYGjBtu6bxfo6UJHNRfzPiYH",
-          "ETH/USDT": "71CtEComq2XdhGNbXBuYPmosAjMCPSedcgbNi5jDaGbR"
+          "BTC/WUSDT": "5r8FfnbNYcQbS1m4CYmoHYGjBtu6bxfo6UJHNRfzPiYH",
+          "ETH/WUSDT": "71CtEComq2XdhGNbXBuYPmosAjMCPSedcgbNi5jDaGbR"
         },
         "srm_vault_pk": "Fn6VHzE2PkJBeJAtCd6T5PP4ni79SqAdnFozFewgh8i6",
         "symbols": {
           "BTC": "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
           "ETH": "2FPyTwcZLUg1MDrwsyoP4D6s1tM7hAkHYRjkNb5w6Pxk",
-          "USDT": "BQcdHdAQW1hczDbBi9hiegXAR7A98Q9jx3X3iBBBDiq4"
+          "WUSDT": "BQcdHdAQW1hczDbBi9hiegXAR7A98Q9jx3X3iBBBDiq4"
         },
         "vault_pks": [
           "FF8h6eCSqoGQyuYmh3BzxdaTfomCBPrCctRq9Yo6nCcd",
@@ -192,17 +223,22 @@
         ]
       }
     },
-    "mango_program_id": "JD3bq9hGdy38PuWQ4h2YJpELmHVGPPfFSuFkpzAd9zfu",
+    "mango_program_id": "32YaLZeyUHhdFaGSemTncUEcZEEGjKart8NX1XG2k3fs",
     "oracles": {
       "BTC/USDT": "HWh11EWkVHHZoRV6D6WzfRSna4yFv8ZvwcqDk74oDnSs",
-      "ETH/USDT": "AcYcDG74nxeFHxuqeD5RRWTMWKi77QVx7t9bEy8Y4eyN"
+      "BTC/WUSDT": "HWh11EWkVHHZoRV6D6WzfRSna4yFv8ZvwcqDk74oDnSs",
+      "ETH/USDT": "AcYcDG74nxeFHxuqeD5RRWTMWKi77QVx7t9bEy8Y4eyN",
+      "ETH/WUSDT": "AcYcDG74nxeFHxuqeD5RRWTMWKi77QVx7t9bEy8Y4eyN"
     },
     "spot_markets": {
       "BTC/USDC": "CVfYa8RGXnuDBeGmniCcdkBwoLqVxh92xB1JqgRQx3F",
-      "BTC/USDT": "5r8FfnbNYcQbS1m4CYmoHYGjBtu6bxfo6UJHNRfzPiYH",
+      "BTC/USDT": "C1EuT9VokAKLiW7i2ASnZUvxDoKuKkCpDDeNxAptuNe4",
+      "BTC/WUSDT": "5r8FfnbNYcQbS1m4CYmoHYGjBtu6bxfo6UJHNRfzPiYH",
       "ETH/USDC": "H5uzEytiByuXt964KampmuNCurNDwkVVypkym75J2DQW",
-      "ETH/USDT": "71CtEComq2XdhGNbXBuYPmosAjMCPSedcgbNi5jDaGbR",
-      "SOL/USDT": "7xLk17EQQ5KLDLDe44wCmupJKJjTGd8hs3eSVVhCx932",
+      "ETH/USDT": "7dLVkUfBVfCGkFhSXDCq1ukM9usathSgS716t643iFGF",
+      "ETH/WUSDT": "71CtEComq2XdhGNbXBuYPmosAjMCPSedcgbNi5jDaGbR",
+      "SOL/USDT": "HWHvQhFmJB3NUcu1aihKmrKegfVxBEHzwVX6yZCKEsi1",
+      "SOL/WUSDT": "7xLk17EQQ5KLDLDe44wCmupJKJjTGd8hs3eSVVhCx932",
       "SRM/USDC": "CDdR97S8y96v3To93aKvi3nCnjUrbuVSuumw8FLvbVeg"
     },
     "symbols": {
@@ -211,7 +247,8 @@
       "MSRM": "MSRMcoVyrFxnSgo5uXwone5SKcGhT1KEJMFEkMEWf9L",
       "SRM": "SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt",
       "USDC": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "USDT": "BQcdHdAQW1hczDbBi9hiegXAR7A98Q9jx3X3iBBBDiq4"
+      "USDT": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+      "WUSDT": "BQcdHdAQW1hczDbBi9hiegXAR7A98Q9jx3X3iBBBDiq4"
     }
   },
   "testnet": {
