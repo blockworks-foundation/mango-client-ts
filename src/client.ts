@@ -213,6 +213,7 @@ export class MarginAccount {
   ): string {
     const lines = [
       `MarginAccount: ${this.publicKey.toBase58()}`,
+      `Owner: ${this.owner.toBase58()}`,
       `${"Token".padEnd(5)} ${"Assets".padEnd(10)} ${"Deposits".padEnd(10)} ${"Borrows".padEnd(10)}`,
     ]
 
@@ -321,7 +322,7 @@ export class MarginAccount {
     return assetsVal
   }
 
-  getLiabsVal(mangoGroup: MangoGroup, prices: number[]) {
+  getLiabsVal(mangoGroup: MangoGroup, prices: number[]): number {
     let liabsVal = 0
     for (let i = 0; i < NUM_TOKENS; i++) {
       liabsVal += this.getUiBorrow(mangoGroup, i) * prices[i]

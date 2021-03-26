@@ -1,6 +1,5 @@
 import { MangoClient, MangoGroup } from './client';
 import IDS from './ids.json';
-import { Account, Connection, PublicKey } from '@solana/web3.js';
 
 export { MangoClient, MangoGroup, MarginAccount, tokenToDecimals } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
@@ -9,12 +8,7 @@ export * from './utils'
 
 export { IDS }
 
-import { homedir } from 'os'
-import * as fs from 'fs';
-import { Aggregator } from './schema';
-import { sleep } from './utils';
-
-
+//
 // async function tests() {
 //   const cluster = "mainnet-beta";
 //   const client = new MangoClient();
@@ -52,7 +46,25 @@ import { sleep } from './utils';
 //
 //   async function getMarginAccountDetails() {
 //     const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk);
-//     console.log(mangoGroup.indexes[2].deposit, mangoGroup.indexes[2].borrow)
+//     const marginAccountPk = new PublicKey("Et4ieruYqyBAzfTpGqbFgYpddFXdFaGDtLDqFqs665Ui")
+//     const marginAccount = await client.getMarginAccount(connection, marginAccountPk, mangoGroup.dexProgramId)
+//     const prices = await mangoGroup.getPrices(connection)
+//
+//     console.log(marginAccount.toPrettyString(mangoGroup, prices))
+//
+//     for (let i = 0; i < NUM_TOKENS; i++) {
+//       console.log(i, marginAccount.getUiDeposit(mangoGroup, i), marginAccount.getUiBorrow(mangoGroup, i))
+//     }
+//     for (let i = 0; i < NUM_MARKETS; i++) {
+//       let openOrdersAccount = marginAccount.openOrdersAccounts[i]
+//       if (openOrdersAccount === undefined) {
+//         continue
+//       }
+//
+//       console.log(i, nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_MARKETS]),
+//         nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]))
+//     }
+//
 //   }
 //   await getMarginAccountDetails()
 //   // await testSolink()
