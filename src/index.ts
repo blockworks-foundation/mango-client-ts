@@ -1,5 +1,6 @@
 import { MangoClient, MangoGroup } from './client';
 import IDS from './ids.json';
+import { Account, Connection, PublicKey } from '@solana/web3.js';
 
 export { MangoClient, MangoGroup, MarginAccount, tokenToDecimals } from './client';
 export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
@@ -8,7 +9,13 @@ export * from './utils'
 
 export { IDS }
 
-//
+import { homedir } from 'os'
+import * as fs from 'fs';
+import { Aggregator } from './schema';
+import { nativeToUi, sleep, uiToNative } from './utils';
+import { NUM_MARKETS, NUM_TOKENS } from './layout';
+
+
 // async function tests() {
 //   const cluster = "mainnet-beta";
 //   const client = new MangoClient();
@@ -46,23 +53,29 @@ export { IDS }
 //
 //   async function getMarginAccountDetails() {
 //     const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk);
-//     const marginAccountPk = new PublicKey("Et4ieruYqyBAzfTpGqbFgYpddFXdFaGDtLDqFqs665Ui")
+//     const marginAccountPk = new PublicKey("BSFaizvArm1dpVGwJvrsqbWTpT8nh3xD7ERrdHuaY1C1")
 //     const marginAccount = await client.getMarginAccount(connection, marginAccountPk, mangoGroup.dexProgramId)
 //     const prices = await mangoGroup.getPrices(connection)
 //
 //     console.log(marginAccount.toPrettyString(mangoGroup, prices))
 //
-//     for (let i = 0; i < NUM_TOKENS; i++) {
-//       console.log(i, marginAccount.getUiDeposit(mangoGroup, i), marginAccount.getUiBorrow(mangoGroup, i))
-//     }
 //     for (let i = 0; i < NUM_MARKETS; i++) {
 //       let openOrdersAccount = marginAccount.openOrdersAccounts[i]
 //       if (openOrdersAccount === undefined) {
 //         continue
 //       }
 //
-//       console.log(i, nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_MARKETS]),
-//         nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]))
+//       for (const oid of openOrdersAccount.orders) {
+//         console.log(oid.toString())
+//       }
+//       console.log(i,
+//         nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_MARKETS]),
+//         nativeToUi(openOrdersAccount.quoteTokenFree.toNumber(), mangoGroup.mintDecimals[NUM_MARKETS]),
+//
+//         nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]),
+//         nativeToUi(openOrdersAccount.baseTokenFree.toNumber(), mangoGroup.mintDecimals[i])
+//
+//       )
 //     }
 //
 //   }

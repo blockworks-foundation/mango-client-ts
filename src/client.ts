@@ -188,8 +188,6 @@ export class MarginAccount {
     return nativeToUi(this.getNativeBorrow(mangoGroup, tokenIndex), mangoGroup.mintDecimals[tokenIndex])
   }
 
-
-
   async loadOpenOrders(
     connection: Connection,
     dexProgramId: PublicKey
@@ -772,6 +770,92 @@ export class MangoClient {
       ...tokenAccs.map( (pubkey) => ( { isSigner: false, isWritable: true, pubkey })),
     ]
     const data = encodeMangoInstruction({Liquidate: {depositQuantities: depositsBN}})
+    const instruction = new TransactionInstruction( { keys, data, programId })
+    const transaction = new Transaction()
+    transaction.add(instruction)
+    const additionalSigners = []
+
+    return await this.sendTransaction(connection, transaction, liqor, additionalSigners)
+  }
+
+  async forceCancelOrders(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    liqeeMarginAccount: MarginAccount,
+    liqor: Account,
+    spotMarket: Market,
+
+  ): Promise<TransactionSignature> {
+
+    const marketIndex = mangoGroup.getMarketIndex(spotMarket)
+    const dexSigner = await PublicKey.createProgramAddress(
+      [
+        spotMarket.publicKey.toBuffer(),
+        spotMarket['_decoded'].vaultSignerNonce.toArrayLike(Buffer, 'le', 8)
+      ],
+      spotMarket.programId
+    )
+
+    const keys = [
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
+      { isSigner: true, isWritable: false, pubkey: liqor.publicKey },
+      { isSigner: false,  isWritable: true, pubkey: liqeeMarginAccount.publicKey },
+      { isSigner: false,  isWritable: true, pubkey: mangoGroup.vaults[marketIndex] },
+      { isSigner: false,  isWritable: true, pubkey: mangoGroup.vaults[NUM_TOKENS-1] },
+      { isSigner: false,  isWritable: true, pubkey: spotMarket.publicKey },
+      { isSigner: false,  isWritable: true, pubkey: spotMarket.bidsAddress },
+      { isSigner: false,  isWritable: true, pubkey: spotMarket.asksAddress },
+      { isSigner: false,  isWritable: false, pubkey: mangoGroup.signerKey },
+      { isSigner: false,  isWritable: true, pubkey: spotMarket['_decoded'].eventQueue },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].baseVault },
+      { isSigner: false, isWritable: true, pubkey: spotMarket['_decoded'].quoteVault },
+      { isSigner: false, isWritable: false, pubkey: dexSigner },
+      { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
+      { isSigner: false, isWritable: false, pubkey: mangoGroup.dexProgramId },
+      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+      ...liqeeMarginAccount.openOrders.map( (pubkey) => ( { isSigner: false, isWritable: true, pubkey })),
+      ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
+    ]
+
+    const data = encodeMangoInstruction({ForceCancelOrders: {}})
+    const instruction = new TransactionInstruction( { keys, data, programId })
+
+    const transaction = new Transaction()
+    transaction.add(instruction)
+    const additionalSigners = []
+
+    return await this.sendTransaction(connection, transaction, liqor, additionalSigners)
+  }
+
+  async partialLiquidate(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    liqeeMarginAccount: MarginAccount,
+    liqor: Account,
+    liqorInTokenWallet: PublicKey,
+    liqorOutTokenWallet: PublicKey,
+    inTokenIndex: number,
+    outTokenIndex: number,
+    maxDeposit: number
+  ): Promise<TransactionSignature> {
+    const maxDepositBn: BN = uiToNative(maxDeposit, mangoGroup.mintDecimals[inTokenIndex])
+
+    const keys = [
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
+      { isSigner: true, isWritable: false, pubkey: liqor.publicKey },
+      { isSigner: false, isWritable: true, pubkey: liqorInTokenWallet },
+      { isSigner: false, isWritable: true, pubkey: liqorOutTokenWallet },
+      { isSigner: false,  isWritable: true, pubkey: liqeeMarginAccount.publicKey },
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.vaults[inTokenIndex] },
+      { isSigner: false, isWritable: true, pubkey: mangoGroup.vaults[outTokenIndex] },
+      { isSigner: false, isWritable: false, pubkey: mangoGroup.signerKey },
+      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+      ...liqeeMarginAccount.openOrders.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
+      ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
+    ]
+    const data = encodeMangoInstruction({PartialLiquidate: {maxDeposit: maxDepositBn}})
 
 
     const instruction = new TransactionInstruction( { keys, data, programId })
@@ -782,6 +866,7 @@ export class MangoClient {
 
     return await this.sendTransaction(connection, transaction, liqor, additionalSigners)
   }
+
 
   async depositSrm(
     connection: Connection,
