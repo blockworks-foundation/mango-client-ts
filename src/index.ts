@@ -1,141 +1,87 @@
-import fs from 'fs';
-import { homedir } from 'os';
 import { MangoClient, MangoGroup } from './client';
 import IDS from './ids.json';
-import { Connection, PublicKey, Account } from '@solana/web3.js';
-import { nativeToUi } from './utils';
+import { Account, Connection, PublicKey } from '@solana/web3.js';
+
+export { MangoClient, MangoGroup, MarginAccount, tokenToDecimals } from './client';
+export { MangoIndexLayout, MarginAccountLayout, MangoGroupLayout } from './layout';
+export * from './layout';
+export * from './utils'
+
+export { IDS }
+
+import { homedir } from 'os'
+import * as fs from 'fs';
+import { Aggregator } from './schema';
+import { nativeToUi, sleep, uiToNative } from './utils';
 import { NUM_MARKETS, NUM_TOKENS } from './layout';
 
-export {
-  MangoClient,
-  MangoGroup,
-  MarginAccount,
-  tokenToDecimals,
-} from './client';
-export {
-  MangoIndexLayout,
-  MarginAccountLayout,
-  MangoGroupLayout,
-} from './layout';
-export * from './layout';
-export * from './utils';
-
-export { IDS };
 
 // async function tests() {
-//   const cluster = 'devnet';
+//   const cluster = "mainnet-beta";
 //   const client = new MangoClient();
-//   const clusterIds = IDS[cluster];
-
-//   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip');
-//   const mangoGroupPk = new PublicKey(
-//     clusterIds.mango_groups['BTC_ETH_USDT'].mango_group_pk,
-//   );
+//   const clusterIds = IDS[cluster]
+//
+//   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip')
+//   const mangoGroupPk = new PublicKey(clusterIds.mango_groups['BTC_ETH_USDT'].mango_group_pk);
 //   const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
-
-//   const keyPairPath =
-//     process.env.KEYPAIR || homedir() + '/.config/solana/id.json';
-//   const payer = new Account(JSON.parse(fs.readFileSync(keyPairPath, 'utf-8')));
-
-// async function testSolink() {
-
-//   const oraclePk = new PublicKey(IDS[cluster].oracles['ETH/USDT'])
-//   const agg = await Aggregator.loadWithConnection(oraclePk, connection)
-
-//   // const agg = await Aggregator.loadWithConnection(oraclePk, connection)
-//   console.log(agg.answer.median.toNumber(), agg.answer.updatedAt.toNumber(), agg.round.id.toNumber())
-
-// }
-
-// async function testDepositSrm() {
-//   const srmVaultPk = new PublicKey(clusterIds['mango_groups']['BTC_ETH_USDT']['srm_vault_pk'])
-//   const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk, srmVaultPk)
-//   const srmAccountPk = new PublicKey("6utvndL8EEjpwK5QVtguErncQEPVbkuyABmXu6FeygeV")
-//   const mangoSrmAccountPk = await client.depositSrm(connection, mangoProgramId, mangoGroup, payer, srmAccountPk, 100)
-//   console.log(mangoSrmAccountPk.toBase58())
-//   await sleep(2000)
-//   const mangoSrmAccount = await client.getMangoSrmAccount(connection, mangoSrmAccountPk)
-//   const txid = await client.withdrawSrm(connection, mangoProgramId, mangoGroup, mangoSrmAccount, payer, srmAccountPk, 50)
-//   console.log('success', txid)
-// }
-
-// async function getMarginAccountDetails() {
-//   const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk);
-//   const marginAccountPk = new PublicKey(
-//     '5pmKq6D67vdUam6KMoMNa1euaqDCScqCehtcTyhC4Koh',
-//   );
-
-//   console.log('ma:', mangoGroup.dexProgramId.toString());
-//   const marginAccount = await client.getMarginAccount(
-//     connection,
-//     marginAccountPk,
-//     mangoGroup.dexProgramId,
-//   );
-//   const prices = await mangoGroup.getPrices(connection);
-
-//   console.log(marginAccount.toPrettyString(mangoGroup, prices));
-
-//   for (let i = 0; i < NUM_TOKENS; i++) {
-//     console.log(
-//       i,
-//       marginAccount.getUiDeposit(mangoGroup, i),
-//       marginAccount.getUiBorrow(mangoGroup, i),
-//     );
+//
+//   const keyPairPath = process.env.KEYPAIR || homedir() + '/.config/solana/id.json'
+//   const payer = new Account(JSON.parse(fs.readFileSync(keyPairPath, 'utf-8')))
+//
+//
+//   async function testSolink() {
+//
+//     const oraclePk = new PublicKey(IDS[cluster].oracles['ETH/USDT'])
+//     const agg = await Aggregator.loadWithConnection(oraclePk, connection)
+//
+//     // const agg = await Aggregator.loadWithConnection(oraclePk, connection)
+//     console.log(agg.answer.median.toNumber(), agg.answer.updatedAt.toNumber(), agg.round.id.toNumber())
+//
 //   }
-//   for (let i = 0; i < NUM_MARKETS; i++) {
-//     let openOrdersAccount = marginAccount.openOrdersAccounts[i];
-//     if (openOrdersAccount === undefined) {
-//       continue;
+//
+//   async function testDepositSrm() {
+//     const srmVaultPk = new PublicKey(clusterIds['mango_groups']['BTC_ETH_USDT']['srm_vault_pk'])
+//     const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk, srmVaultPk)
+//     const srmAccountPk = new PublicKey("6utvndL8EEjpwK5QVtguErncQEPVbkuyABmXu6FeygeV")
+//     const mangoSrmAccountPk = await client.depositSrm(connection, mangoProgramId, mangoGroup, payer, srmAccountPk, 100)
+//     console.log(mangoSrmAccountPk.toBase58())
+//     await sleep(2000)
+//     const mangoSrmAccount = await client.getMangoSrmAccount(connection, mangoSrmAccountPk)
+//     const txid = await client.withdrawSrm(connection, mangoProgramId, mangoGroup, mangoSrmAccount, payer, srmAccountPk, 50)
+//     console.log('success', txid)
+//   }
+//
+//   async function getMarginAccountDetails() {
+//     const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk);
+//     const marginAccountPk = new PublicKey("BSFaizvArm1dpVGwJvrsqbWTpT8nh3xD7ERrdHuaY1C1")
+//     const marginAccount = await client.getMarginAccount(connection, marginAccountPk, mangoGroup.dexProgramId)
+//     const prices = await mangoGroup.getPrices(connection)
+//
+//     console.log(marginAccount.toPrettyString(mangoGroup, prices))
+//
+//     for (let i = 0; i < NUM_MARKETS; i++) {
+//       let openOrdersAccount = marginAccount.openOrdersAccounts[i]
+//       if (openOrdersAccount === undefined) {
+//         continue
+//       }
+//
+//       for (const oid of openOrdersAccount.orders) {
+//         console.log(oid.toString())
+//       }
+//       console.log(i,
+//         nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_MARKETS]),
+//         nativeToUi(openOrdersAccount.quoteTokenFree.toNumber(), mangoGroup.mintDecimals[NUM_MARKETS]),
+//
+//         nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]),
+//         nativeToUi(openOrdersAccount.baseTokenFree.toNumber(), mangoGroup.mintDecimals[i])
+//
+//       )
 //     }
-
-//     console.log(
-//       i,
-//       nativeToUi(
-//         openOrdersAccount.quoteTokenTotal.toNumber(),
-//         mangoGroup.mintDecimals[NUM_MARKETS],
-//       ),
-//       nativeToUi(
-//         openOrdersAccount.baseTokenTotal.toNumber(),
-//         mangoGroup.mintDecimals[i],
-//       ),
-//     );
+//
 //   }
+//   await getMarginAccountDetails()
+//   // await testSolink()
+//   // testDepositSrm()
 // }
-
-// async function testDeposit() {
-//   const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk);
-//   const marginAccountPk = new PublicKey(
-//     '5pmKq6D67vdUam6KMoMNa1euaqDCScqCehtcTyhC4Koh',
-//   );
-
-//   const marginAccount = await client.getMarginAccount(
-//     connection,
-//     marginAccountPk,
-//     mangoGroup.dexProgramId,
-//   );
-
-//   console.log('starting deposit');
-//   try {
-//     await client.deposit(
-//       connection,
-//       mangoProgramId,
-//       mangoGroup,
-//       marginAccount,
-//       payer,
-//       new PublicKey('7KBVenLz5WNH4PA5MdGkJNpDDyNKnBQTwnz1UqJv9GUm'),
-//       new PublicKey('FNYRWcdcJn1YjWstQ7SGmSizgmERECfoknwk2cf1sQMe'),
-//       1000,
-//     );
-//   } catch (e) {
-//     console.log('deposit error:', e);
-//   }
-//   console.log('deposit complete');
-// }
-
-// await testDeposit();
-// await getMarginAccountDetails();
-// await testSolink()
-// testDepositSrm()
-// }
-
-// tests();
+//
+// tests()

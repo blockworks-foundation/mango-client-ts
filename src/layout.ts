@@ -155,7 +155,8 @@ export const MarginAccountLayout = struct([
   seq(U64F64(), NUM_TOKENS, 'deposits'),
   seq(U64F64(), NUM_TOKENS, 'borrows'),
   seq(publicKeyLayout(), NUM_MARKETS, 'openOrders'),
-  seq(u8(), 8, 'padding')
+  u8('beingLiquidated'),
+  seq(u8(), 7, 'padding')
 ]);
 
 export const MangoSrmAccountLayout = struct([
@@ -260,6 +261,8 @@ MangoInstructionLayout.addVariant(14,
   ),
   'PlaceAndSettle'
 )
+MangoInstructionLayout.addVariant(15, struct([]), 'ForceCancelOrders')
+MangoInstructionLayout.addVariant(16, struct([u64('maxDeposit')]), 'PartialLiquidate')
 
 // @ts-ignore
 const instructionMaxSpan = Math.max(...Object.values(MangoInstructionLayout.registry).map((r) => r.span));
