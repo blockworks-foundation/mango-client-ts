@@ -203,6 +203,7 @@ export function makePartialLiquidateInstruction(
     { isSigner: false, isWritable: true, pubkey: inTokenVault },
     { isSigner: false, isWritable: true, pubkey: outTokenVault },
     { isSigner: false, isWritable: false, pubkey: signerKey },
+    { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
     { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
     ...openOrders.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
     ...oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
