@@ -166,6 +166,19 @@ export const MangoSrmAccountLayout = struct([
   u64('amount')
 ]);
 
+export const AccountLayout = struct([
+  publicKeyLayout('mint'),
+  publicKeyLayout('owner'),
+  u64('amount'),
+  u32('delegateOption'),
+  publicKeyLayout('delegate'),
+  u8('state'),
+  u32('isNativeOption'),
+  u64('isNative'),
+  u64('delegatedAmount'),
+  u32('closeAuthorityOption'),
+  publicKeyLayout('closeAuthority')
+]);
 
 class EnumLayout extends UInt {
   values: any;
@@ -271,3 +284,5 @@ export function encodeMangoInstruction(data) {
   const span = MangoInstructionLayout.encode(data, b);
   return b.slice(0, span);
 }
+
+
