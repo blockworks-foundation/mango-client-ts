@@ -401,6 +401,7 @@ export class MangoClient {
     const signers = [payer].concat(additionalSigners)
     transaction.sign(...signers)
     const rawTransaction = transaction.serialize()
+    console.log('Transaction size:', rawTransaction.length)
     const startTime = getUnixTs();
 
     const txid: TransactionSignature = await connection.sendRawTransaction(
