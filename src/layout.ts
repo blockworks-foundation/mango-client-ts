@@ -274,7 +274,7 @@ MangoInstructionLayout.addVariant(14,
   ),
   'PlaceAndSettle'
 )
-MangoInstructionLayout.addVariant(15, struct([]), 'ForceCancelOrders')
+MangoInstructionLayout.addVariant(15, struct([u8('limit')]), 'ForceCancelOrders')
 MangoInstructionLayout.addVariant(16, struct([u64('maxDeposit')]), 'PartialLiquidate')
 
 // @ts-ignore
