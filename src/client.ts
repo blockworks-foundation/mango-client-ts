@@ -168,6 +168,8 @@ export class MarginAccount {
   owner!: PublicKey;
   deposits!: number[];
   borrows!: number[];
+  beingLiquidated!: boolean;
+
   openOrders!: PublicKey[];
   openOrdersAccounts: (OpenOrders | undefined)[]  // undefined if an openOrdersAccount not yet initialized and has zeroKey
   // TODO keep updated with websocket
