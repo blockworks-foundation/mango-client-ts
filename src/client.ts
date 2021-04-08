@@ -792,9 +792,10 @@ export class MangoClient {
     liqeeMarginAccount: MarginAccount,
     liqor: Account,
     spotMarket: Market,
-
+    limit: number
   ): Promise<TransactionSignature> {
 
+    const limitBn = new BN(limit)
     const marketIndex = mangoGroup.getMarketIndex(spotMarket)
     const dexSigner = await PublicKey.createProgramAddress(
       [
@@ -822,6 +823,7 @@ export class MangoClient {
       mangoGroup.dexProgramId,
       liqeeMarginAccount.openOrders,
       mangoGroup.oracles,
+      limitBn
     )
 
     const transaction = new Transaction()

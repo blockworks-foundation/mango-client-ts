@@ -152,7 +152,8 @@ export function makeForceCancelOrdersInstruction(
   dexSigner: PublicKey,
   dexProgramId: PublicKey,
   openOrders: PublicKey[],
-  oracles: PublicKey[]
+  oracles: PublicKey[],
+  limit: BN
 ): TransactionInstruction {
 
   const keys = [
@@ -176,7 +177,7 @@ export function makeForceCancelOrdersInstruction(
     ...oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
   ]
 
-  const data = encodeMangoInstruction({ForceCancelOrders: {}})
+  const data = encodeMangoInstruction({ForceCancelOrders: { limit }})
   return new TransactionInstruction( { keys, data, programId })
 }
 
