@@ -155,7 +155,8 @@ export const MarginAccountLayout = struct([
   seq(U64F64(), NUM_TOKENS, 'deposits'),
   seq(U64F64(), NUM_TOKENS, 'borrows'),
   seq(publicKeyLayout(), NUM_MARKETS, 'openOrders'),
-  seq(u8(), 8, 'padding')
+  u8('beingLiquidated'),
+  seq(u8(), 7, 'padding')
 ]);
 
 export const MangoSrmAccountLayout = struct([
@@ -165,6 +166,19 @@ export const MangoSrmAccountLayout = struct([
   u64('amount')
 ]);
 
+export const AccountLayout = struct([
+  publicKeyLayout('mint'),
+  publicKeyLayout('owner'),
+  u64('amount'),
+  u32('delegateOption'),
+  publicKeyLayout('delegate'),
+  u8('state'),
+  u32('isNativeOption'),
+  u64('isNative'),
+  u64('delegatedAmount'),
+  u32('closeAuthorityOption'),
+  publicKeyLayout('closeAuthority')
+]);
 
 class EnumLayout extends UInt {
   values: any;
@@ -260,6 +274,8 @@ MangoInstructionLayout.addVariant(14,
   ),
   'PlaceAndSettle'
 )
+MangoInstructionLayout.addVariant(15, struct([u8('limit')]), 'ForceCancelOrders')
+MangoInstructionLayout.addVariant(16, struct([u64('maxDeposit')]), 'PartialLiquidate')
 
 // @ts-ignore
 const instructionMaxSpan = Math.max(...Object.values(MangoInstructionLayout.registry).map((r) => r.span));
@@ -268,3 +284,5 @@ export function encodeMangoInstruction(data) {
   const span = MangoInstructionLayout.encode(data, b);
   return b.slice(0, span);
 }
+
+

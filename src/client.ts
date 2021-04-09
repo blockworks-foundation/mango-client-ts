@@ -39,7 +39,11 @@ import { getFeeRates, getFeeTier, Market, OpenOrders, Orderbook } from '@project
 import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
-import { makeCancelOrderInstruction, makeSettleFundsInstruction } from './instruction';
+import {
+  makeCancelOrderInstruction,
+  makeForceCancelOrdersInstruction, makePartialLiquidateInstruction,
+  makeSettleFundsInstruction,
+} from './instruction';
 import { Aggregator } from './schema';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
@@ -164,6 +168,8 @@ export class MarginAccount {
   owner!: PublicKey;
   deposits!: number[];
   borrows!: number[];
+  beingLiquidated!: boolean;
+
   openOrders!: PublicKey[];
   openOrdersAccounts: (OpenOrders | undefined)[]  // undefined if an openOrdersAccount not yet initialized and has zeroKey
   // TODO keep updated with websocket
@@ -187,8 +193,6 @@ export class MarginAccount {
   getUiBorrow(mangoGroup: MangoGroup, tokenIndex: number): number {  // insufficient precision
     return nativeToUi(this.getNativeBorrow(mangoGroup, tokenIndex), mangoGroup.mintDecimals[tokenIndex])
   }
-
-
 
   async loadOpenOrders(
     connection: Connection,
@@ -399,6 +403,7 @@ export class MangoClient {
     const signers = [payer].concat(additionalSigners)
     transaction.sign(...signers)
     const rawTransaction = transaction.serialize()
+    console.log('Transaction size:', rawTransaction.length)
     const startTime = getUnixTs();
 
     const txid: TransactionSignature = await connection.sendRawTransaction(
@@ -772,10 +777,88 @@ export class MangoClient {
       ...tokenAccs.map( (pubkey) => ( { isSigner: false, isWritable: true, pubkey })),
     ]
     const data = encodeMangoInstruction({Liquidate: {depositQuantities: depositsBN}})
-
-
     const instruction = new TransactionInstruction( { keys, data, programId })
+    const transaction = new Transaction()
+    transaction.add(instruction)
+    const additionalSigners = []
 
+    return await this.sendTransaction(connection, transaction, liqor, additionalSigners)
+  }
+
+  async forceCancelOrders(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    liqeeMarginAccount: MarginAccount,
+    liqor: Account,
+    spotMarket: Market,
+    limit: number
+  ): Promise<TransactionSignature> {
+
+    const limitBn = new BN(limit)
+    const marketIndex = mangoGroup.getMarketIndex(spotMarket)
+    const dexSigner = await PublicKey.createProgramAddress(
+      [
+        spotMarket.publicKey.toBuffer(),
+        spotMarket['_decoded'].vaultSignerNonce.toArrayLike(Buffer, 'le', 8)
+      ],
+      spotMarket.programId
+    )
+
+    const instruction = makeForceCancelOrdersInstruction(
+      programId,
+      mangoGroup.publicKey,
+      liqor.publicKey,
+      liqeeMarginAccount.publicKey,
+      mangoGroup.vaults[marketIndex],
+      mangoGroup.vaults[NUM_TOKENS-1],
+      spotMarket.publicKey,
+      spotMarket.bidsAddress,
+      spotMarket.asksAddress,
+      mangoGroup.signerKey,
+      spotMarket['_decoded'].eventQueue,
+      spotMarket['_decoded'].baseVault,
+      spotMarket['_decoded'].quoteVault,
+      dexSigner,
+      mangoGroup.dexProgramId,
+      liqeeMarginAccount.openOrders,
+      mangoGroup.oracles,
+      limitBn
+    )
+
+    const transaction = new Transaction()
+    transaction.add(instruction)
+    const additionalSigners = []
+    return await this.sendTransaction(connection, transaction, liqor, additionalSigners)
+  }
+
+  async partialLiquidate(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    liqeeMarginAccount: MarginAccount,
+    liqor: Account,
+    liqorInTokenWallet: PublicKey,
+    liqorOutTokenWallet: PublicKey,
+    inTokenIndex: number,
+    outTokenIndex: number,
+    maxDeposit: number
+  ): Promise<TransactionSignature> {
+    const maxDepositBn: BN = uiToNative(maxDeposit, mangoGroup.mintDecimals[inTokenIndex])
+    const instruction = makePartialLiquidateInstruction(
+      programId,
+      mangoGroup.publicKey,
+      liqor.publicKey,
+      liqorInTokenWallet,
+      liqorOutTokenWallet,
+      liqeeMarginAccount.publicKey,
+      mangoGroup.vaults[inTokenIndex],
+      mangoGroup.vaults[outTokenIndex],
+      mangoGroup.signerKey,
+      liqeeMarginAccount.openOrders,
+      mangoGroup.oracles,
+      maxDepositBn
+    )
     const transaction = new Transaction()
     transaction.add(instruction)
     const additionalSigners = []

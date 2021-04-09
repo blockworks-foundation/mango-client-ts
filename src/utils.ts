@@ -11,6 +11,7 @@ import BN from 'bn.js';
 import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
 import { blob, struct, u8, nu64 } from 'buffer-layout';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { AccountLayout } from './layout';
 
 export const zeroKey = new PublicKey(new Uint8Array(32))
 
@@ -228,6 +229,18 @@ export function parseTokenAccountData(
     owner: new PublicKey(owner),
     amount,
   };
+}
+
+export function parseTokenAccount(
+  data: Buffer
+): { mint: PublicKey; owner: PublicKey; amount: BN } {
+
+  const decoded = AccountLayout.decode(data)
+  return {
+    mint: decoded.mint,
+    owner: decoded.owner,
+    amount: decoded.amount
+  }
 }
 
 export async function getMultipleAccounts(
