@@ -106,4 +106,4 @@ async function tests() {
   // testDepositSrm()
 }
 
-//tests()
+tests()
