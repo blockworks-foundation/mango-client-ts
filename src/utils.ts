@@ -3,7 +3,7 @@ import {
   AccountInfo, Commitment,
   Connection,
   PublicKey, RpcResponseAndContext, SimulatedTransactionResponse,
-  SystemProgram, Transaction,
+  SystemProgram, Transaction, TransactionConfirmationStatus,
   TransactionInstruction,
   TransactionSignature,
 } from '@solana/web3.js';
@@ -49,8 +49,18 @@ export async function awaitTransactionSignatureConfirmation(
   txid: TransactionSignature,
   timeout: number,
   connection: Connection,
+  confirmLevel: TransactionConfirmationStatus
 ) {
   let done = false;
+
+  const confirmLevels: (TransactionConfirmationStatus | null)[] = ['finalized']
+  if (confirmLevel === 'confirmed') {
+    confirmLevels.push('confirmed')
+  } else if (confirmLevel === 'processed') {
+    confirmLevels.push('confirmed')
+    confirmLevels.push('processed')
+  }
+
   const result = await new Promise((resolve, reject) => {
     (async () => {
       setTimeout(() => {
@@ -95,7 +105,7 @@ export async function awaitTransactionSignatureConfirmation(
                 console.log('REST error for', txid, result);
                 done = true;
                 reject(result.err);
-              } else if (!(result.confirmations || result.confirmationStatus === "confirmed" || result.confirmationStatus === "finalized")) {
+              } else if (!(result.confirmations || confirmLevels.includes(result.confirmationStatus))) {
                 console.log('REST not confirmed', txid, result);
               } else {
                 console.log('REST confirmed', txid, result);
@@ -168,9 +178,7 @@ export function uiToNative(amount: number, decimals: number): BN {
 }
 
 export function nativeToUi(amount: number, decimals: number): number {
-
   return amount / Math.pow(10, decimals)
-
 }
 
 

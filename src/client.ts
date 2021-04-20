@@ -6,7 +6,7 @@ import {
   SimulatedTransactionResponse,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
-  Transaction,
+  Transaction, TransactionConfirmationStatus,
   TransactionInstruction,
   TransactionSignature,
 } from '@solana/web3.js';
@@ -388,6 +388,10 @@ export class MangoSrmAccount {
 }
 
 export class MangoClient {
+  confirmLevel: TransactionConfirmationStatus;
+  constructor(confirmLevel: TransactionConfirmationStatus = 'processed') {
+    this.confirmLevel = confirmLevel
+  }
 
   async sendTransaction(
     connection: Connection,
@@ -403,7 +407,6 @@ export class MangoClient {
     const signers = [payer].concat(additionalSigners)
     transaction.sign(...signers)
     const rawTransaction = transaction.serialize()
-    console.log('Transaction size:', rawTransaction.length)
     const startTime = getUnixTs();
 
     const txid: TransactionSignature = await connection.sendRawTransaction(
@@ -425,7 +428,7 @@ export class MangoClient {
     })();
 
     try {
-      await awaitTransactionSignatureConfirmation(txid, timeout, connection);
+      await awaitTransactionSignatureConfirmation(txid, timeout, connection, this.confirmLevel);
     } catch (err) {
       if (err.timeout) {
         throw new Error('Timed out awaiting confirmation on transaction');
