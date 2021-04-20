@@ -1,6 +1,6 @@
 {
   "name": "@blockworks-foundation/mango-client",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Library for interacting with Mango Markets' solana smart contracts.",
   "repository": "blockworks-foundation/mango-client-ts",
   "author": {
