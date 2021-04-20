@@ -40,9 +40,11 @@ import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
 import {
+  makeBorrowInstruction,
   makeCancelOrderInstruction,
   makeForceCancelOrdersInstruction, makePartialLiquidateInstruction,
   makeSettleFundsInstruction,
+  makeWithdrawInstruction,
 } from './instruction';
 import { Aggregator } from './schema';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
@@ -574,22 +576,18 @@ export class MangoClient {
     const tokenIndex = mangoGroup.getTokenIndex(token)
     const nativeQuantity = uiToNative(quantity, mangoGroup.mintDecimals[tokenIndex])
 
-    const keys = [
-      { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
-      { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
-      { isSigner: true, isWritable: false, pubkey: owner.publicKey },
-      { isSigner: false, isWritable: true,  pubkey: tokenAcc },
-      { isSigner: false, isWritable: true,  pubkey: mangoGroup.vaults[tokenIndex] },
-      { isSigner: false, isWritable: false,  pubkey: mangoGroup.signerKey },
-      { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
-      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
-      ...marginAccount.openOrders.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
-      ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey }))
-    ]
-    const data = encodeMangoInstruction({Withdraw: {quantity: nativeQuantity}})
-
-
-    const instruction = new TransactionInstruction( { keys, data, programId })
+    const instruction = makeWithdrawInstruction(
+      programId,
+      mangoGroup.publicKey,
+      marginAccount.publicKey,
+      owner.publicKey,
+      mangoGroup.signerKey,
+      tokenAcc,
+      mangoGroup.vaults[tokenIndex],
+      marginAccount.openOrders,
+      mangoGroup.oracles,
+      nativeQuantity,
+    );
 
     const transaction = new Transaction()
     transaction.add(instruction)
@@ -611,24 +609,81 @@ export class MangoClient {
     const tokenIndex = mangoGroup.getTokenIndex(token)
     const nativeQuantity = uiToNative(quantity, mangoGroup.mintDecimals[tokenIndex])
 
-    const keys = [
-      { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey},
-      { isSigner: false,  isWritable: true, pubkey: marginAccount.publicKey },
-      { isSigner: true, isWritable: false, pubkey: owner.publicKey },
-      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
-      ...marginAccount.openOrders.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
-      ...mangoGroup.oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
-    ]
-    const data = encodeMangoInstruction({Borrow: {tokenIndex: new BN(tokenIndex), quantity: nativeQuantity}})
-
-
-    const instruction = new TransactionInstruction( { keys, data, programId })
+    const instruction = makeBorrowInstruction(
+      programId,
+      mangoGroup.publicKey,
+      marginAccount.publicKey,
+      owner.publicKey,
+      tokenIndex,
+      marginAccount.openOrders,
+      mangoGroup.oracles,
+      nativeQuantity,
+    );
 
     const transaction = new Transaction()
     transaction.add(instruction)
     const additionalSigners = []
 
     return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+  }
+
+  async borrowAndWithdraw(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    marginAccount: MarginAccount,
+    wallet: Wallet | Account,
+    token: PublicKey,
+    tokenAcc: PublicKey,
+  
+    withdrawQuantity: number
+  ): Promise<TransactionSignature> {
+    const transaction = new Transaction()
+    const tokenIndex = mangoGroup.getTokenIndex(token)
+    const tokenBalance = marginAccount.getUiDeposit(mangoGroup, tokenIndex)
+    const borrowQuantity = withdrawQuantity - tokenBalance
+  
+    const nativeBorrowQuantity = uiToNative(
+      borrowQuantity,
+      mangoGroup.mintDecimals[tokenIndex]
+    )
+  
+    const borrowInstruction = makeBorrowInstruction(
+      programId,
+      mangoGroup.publicKey,
+      marginAccount.publicKey,
+      wallet.publicKey,
+      tokenIndex,
+      marginAccount.openOrders,
+      mangoGroup.oracles,
+      nativeBorrowQuantity,
+    );
+    transaction.add(borrowInstruction);
+
+    // uiToNative() uses Math.round resulting in rounding
+    // errors, so we use Math.floor here instead
+    const nativeWithdrawQuantity = new BN(
+      Math.floor(
+        withdrawQuantity * Math.pow(10, mangoGroup.mintDecimals[tokenIndex]),
+      ) * 0.98,
+    );
+
+    const withdrawInstruction = makeWithdrawInstruction(
+      programId,
+      mangoGroup.publicKey,
+      marginAccount.publicKey,
+      wallet.publicKey,
+      mangoGroup.signerKey,
+      tokenAcc,
+      mangoGroup.vaults[tokenIndex],
+      marginAccount.openOrders,
+      mangoGroup.oracles,
+      nativeWithdrawQuantity,
+    );
+    transaction.add(withdrawInstruction);
+
+    const signers = []
+    return await this.sendTransaction(connection, transaction, wallet, signers)
   }
 
   async settleBorrow(

@@ -115,6 +115,85 @@ export function makeSettleFundsInstruction(
   return new TransactionInstruction({ keys, data, programId });
 }
 
+export function makeBorrowInstruction(
+  programId: PublicKey,
+  mangoGroupPk: PublicKey,
+  marginAccountPk: PublicKey,
+  walletPk: PublicKey,
+  tokenIndex: number,
+  openOrders: PublicKey[],
+  oracles: PublicKey[],
+  nativeQuantity: BN,
+): TransactionInstruction {
+  const borrowKeys = [
+    { isSigner: false, isWritable: true, pubkey: mangoGroupPk },
+    { isSigner: false, isWritable: true, pubkey: marginAccountPk },
+    { isSigner: true, isWritable: false, pubkey: walletPk },
+    { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+    ...openOrders.map((pubkey) => ({
+      isSigner: false,
+      isWritable: false,
+      pubkey,
+    })),
+    ...oracles.map((pubkey) => ({
+      isSigner: false,
+      isWritable: false,
+      pubkey,
+    })),
+  ];
+  const borrowData = encodeMangoInstruction({
+    Borrow: { tokenIndex: new BN(tokenIndex), quantity: nativeQuantity },
+  });
+
+  return new TransactionInstruction({
+    keys: borrowKeys,
+    data: borrowData,
+    programId,
+  });
+}
+
+export function makeWithdrawInstruction(
+  programId: PublicKey,
+  mangoGroupPk: PublicKey,
+  marginAccountPk: PublicKey,
+  walletPk: PublicKey,
+  signerKey: PublicKey,
+  tokenAccPk: PublicKey,
+  vaultPk: PublicKey,
+  openOrders: PublicKey[],
+  oracles: PublicKey[],
+  nativeQuantity: BN,
+): TransactionInstruction {
+  const withdrawKeys = [
+    { isSigner: false, isWritable: true, pubkey: mangoGroupPk },
+    { isSigner: false, isWritable: true, pubkey: marginAccountPk },
+    { isSigner: true, isWritable: false, pubkey: walletPk },
+    { isSigner: false, isWritable: true, pubkey: tokenAccPk },
+    { isSigner: false, isWritable: true, pubkey: vaultPk },
+    { isSigner: false, isWritable: false, pubkey: signerKey },
+    { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
+    { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+    ...openOrders.map((pubkey) => ({
+      isSigner: false,
+      isWritable: false,
+      pubkey,
+    })),
+    ...oracles.map((pubkey) => ({
+      isSigner: false,
+      isWritable: false,
+      pubkey,
+    })),
+  ];
+  const withdrawData = encodeMangoInstruction({
+    Withdraw: { quantity: nativeQuantity },
+  });
+  return new TransactionInstruction({
+    keys: withdrawKeys,
+    data: withdrawData,
+    programId,
+  });
+}
+
 export function makeSettleBorrowInstruction(
   programId: PublicKey,
   mangoGroupPk: PublicKey,
@@ -153,32 +232,39 @@ export function makeForceCancelOrdersInstruction(
   dexProgramId: PublicKey,
   openOrders: PublicKey[],
   oracles: PublicKey[],
-  limit: BN
+  limit: BN,
 ): TransactionInstruction {
-
   const keys = [
-    { isSigner: false, isWritable: true, pubkey: mangoGroup},
+    { isSigner: false, isWritable: true, pubkey: mangoGroup },
     { isSigner: true, isWritable: false, pubkey: liqor },
-    { isSigner: false,  isWritable: true, pubkey: liqeeMarginAccount },
-    { isSigner: false,  isWritable: true, pubkey: baseVault },
-    { isSigner: false,  isWritable: true, pubkey: quoteVault },
-    { isSigner: false,  isWritable: true, pubkey: spotMarket },
-    { isSigner: false,  isWritable: true, pubkey: bids },
-    { isSigner: false,  isWritable: true, pubkey: asks },
-    { isSigner: false,  isWritable: false, pubkey: signerKey },
-    { isSigner: false,  isWritable: true, pubkey: dexEventQueue },
+    { isSigner: false, isWritable: true, pubkey: liqeeMarginAccount },
+    { isSigner: false, isWritable: true, pubkey: baseVault },
+    { isSigner: false, isWritable: true, pubkey: quoteVault },
+    { isSigner: false, isWritable: true, pubkey: spotMarket },
+    { isSigner: false, isWritable: true, pubkey: bids },
+    { isSigner: false, isWritable: true, pubkey: asks },
+    { isSigner: false, isWritable: false, pubkey: signerKey },
+    { isSigner: false, isWritable: true, pubkey: dexEventQueue },
     { isSigner: false, isWritable: true, pubkey: dexBaseVault },
     { isSigner: false, isWritable: true, pubkey: dexQuoteVault },
     { isSigner: false, isWritable: false, pubkey: dexSigner },
     { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
     { isSigner: false, isWritable: false, pubkey: dexProgramId },
     { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
-    ...openOrders.map( (pubkey) => ( { isSigner: false, isWritable: true, pubkey })),
-    ...oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
-  ]
+    ...openOrders.map((pubkey) => ({
+      isSigner: false,
+      isWritable: true,
+      pubkey,
+    })),
+    ...oracles.map((pubkey) => ({
+      isSigner: false,
+      isWritable: false,
+      pubkey,
+    })),
+  ];
 
-  const data = encodeMangoInstruction({ForceCancelOrders: { limit }})
-  return new TransactionInstruction( { keys, data, programId })
+  const data = encodeMangoInstruction({ ForceCancelOrders: { limit } });
+  return new TransactionInstruction({ keys, data, programId });
 }
 
 export function makePartialLiquidateInstruction(
@@ -193,23 +279,31 @@ export function makePartialLiquidateInstruction(
   signerKey: PublicKey,
   openOrders: PublicKey[],
   oracles: PublicKey[],
-  maxDeposit: BN
+  maxDeposit: BN,
 ): TransactionInstruction {
   const keys = [
     { isSigner: false, isWritable: true, pubkey: mangoGroup },
     { isSigner: true, isWritable: false, pubkey: liqor },
     { isSigner: false, isWritable: true, pubkey: liqorInTokenWallet },
     { isSigner: false, isWritable: true, pubkey: liqorOutTokenWallet },
-    { isSigner: false,  isWritable: true, pubkey: liqeeMarginAccount },
+    { isSigner: false, isWritable: true, pubkey: liqeeMarginAccount },
     { isSigner: false, isWritable: true, pubkey: inTokenVault },
     { isSigner: false, isWritable: true, pubkey: outTokenVault },
     { isSigner: false, isWritable: false, pubkey: signerKey },
     { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
     { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
-    ...openOrders.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
-    ...oracles.map( (pubkey) => ( { isSigner: false, isWritable: false, pubkey })),
-  ]
-  const data = encodeMangoInstruction({PartialLiquidate: { maxDeposit }})
+    ...openOrders.map((pubkey) => ({
+      isSigner: false,
+      isWritable: false,
+      pubkey,
+    })),
+    ...oracles.map((pubkey) => ({
+      isSigner: false,
+      isWritable: false,
+      pubkey,
+    })),
+  ];
+  const data = encodeMangoInstruction({ PartialLiquidate: { maxDeposit } });
 
-  return new TransactionInstruction( { keys, data, programId })
+  return new TransactionInstruction({ keys, data, programId });
 }
