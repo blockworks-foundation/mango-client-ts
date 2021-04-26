@@ -47,7 +47,8 @@
           "Avpn6H3Tu2kJqCouYVpJgqU17iKRR9e2eEjVydQpPuyM",
           "GRPxtA2TdS8PaGK4E9utnFo7QGf4jLt7RRqbkQXR5fsU",
           "6gmXb2hRKeSRD1vvGwVtAVJSH8fBH7SitseyMnC3cat3"
-        ]
+        ],
+        "deprecated": true
       },
       "BTC_ETH_USDT": {
         "mango_group_pk": "H7T5VdS3x68VTFak9h34Q6qQzECeF9PcPL82qyfiUrcH",
@@ -78,7 +79,8 @@
           "4ntkC6t3h75T5SWTKcgHHy9NQeengcydyn4NQtrb5aSZ",
           "6kdcJ3fTNmFRozBn3Yi6S9WgjzUPo6ZQg6LXQzomTjmj",
           "7LTGV36ixZBp3gPDowvFQx3HKdVgcLX3TDzGVeWsTiy8"
-        ]
+        ],
+        "deprecated": false
       },
       "BTC_ETH_WUSDT": {
         "mango_group_pk": "6WZGjqRi9XKgkqZdsYwit4ASVDQ1iiHqkiDvVgY1n2uW",
@@ -109,7 +111,8 @@
           "Gf4Z19ygbzmBVSXcyvwZQPdrGs8k5TLPPSikU3hZzq8k",
           "5AUNwSv8hdwJVhUuaBtsFadtJQfiudSZcY6U9fNoRd2A",
           "41r2LvZZDECzm3sdxuP9AcyXZ9FPXqoTjbmnPfBG7ofn"
-        ]
+        ],
+        "deprecated": true
       },
       "SOL_SRM_USDT": {
         "mango_group_pk": "AgL7ohkNH6MDz891j2vfoZnyWF9yBw6jnQ6w5xje2jmB",
@@ -140,7 +143,8 @@
           "BAxwvH4Ty6nmD1y78j7vgWeCPQCWu2wxASFSFTfEv274",
           "4fuuKNY2Jswe1BtSroxBWSdz6nJLnh2vMpzWPhv6FuNj",
           "HvLuw8Z26xXgD9gMZT6oawnzBrcvtZxhbJsDzd3LX494"
-        ]
+        ],
+        "deprecated": false
       }
     },
     "mango_program_id": "32YaLZeyUHhdFaGSemTncUEcZEEGjKart8NX1XG2k3fs",
