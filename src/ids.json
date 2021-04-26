@@ -114,12 +114,14 @@
     },
     "mango_program_id": "32YaLZeyUHhdFaGSemTncUEcZEEGjKart8NX1XG2k3fs",
     "oracles": {
-      "BTC/USDC": "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
-      "BTC/USDT": "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
-      "BTC/WUSDT": "EHasrbBk5mFnTYPjmdNzDoa7cEBH3yN8D4DLJn7Q41hY",
-      "ETH/USDC": "3ynBi9nQyKoEJwC47cmXviLSgHaaXQBKRxukatYYLN1Y",
-      "ETH/USDT": "3ynBi9nQyKoEJwC47cmXviLSgHaaXQBKRxukatYYLN1Y",
-      "ETH/WUSDT": "3ynBi9nQyKoEJwC47cmXviLSgHaaXQBKRxukatYYLN1Y"
+      "BTC/USDC": "6Xvk6VC423bbhwnCfMyPfE4C1vytoqsVMUY1Lbqeh6pf",
+      "BTC/USDT": "6Xvk6VC423bbhwnCfMyPfE4C1vytoqsVMUY1Lbqeh6pf",
+      "BTC/WUSDT": "6Xvk6VC423bbhwnCfMyPfE4C1vytoqsVMUY1Lbqeh6pf",
+      "ETH/USDC": "4CoKvk3NUXYiHKGbQvihadw6TC8LTN1qjfadPcsaURbW",
+      "ETH/USDT": "4CoKvk3NUXYiHKGbQvihadw6TC8LTN1qjfadPcsaURbW",
+      "ETH/WUSDT": "4CoKvk3NUXYiHKGbQvihadw6TC8LTN1qjfadPcsaURbW",
+      "SOL/USDT": "Ej5FrNjhXaePK7cVMZtSooatzXMeunNsjxrnubefEyNC",
+      "SRM/USDT": "GR9tYpi8CM8u8sdRaJZoP32KoWBphyoWV3xoNt4XwmRV"
     },
     "spot_markets": {
       "BTC/USDC": "FKysSZkCCh41G1SCxpE7Cb7eaLofYBhEneLzHFz6JvjH",
@@ -136,7 +138,8 @@
       "SRM": "9FbAMDvXqNjPqZSYt4EWTguJuDrGkfvwr3gSFpiSbX9S",
       "USDC": "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7",
       "USDT": "7KBVenLz5WNH4PA5MdGkJNpDDyNKnBQTwnz1UqJv9GUm",
-      "WUSDT": "7tSPGVhneTBWZjLGJGZb9V2UntC7T98cwtSLtgcXjeSs"
+      "WUSDT": "7tSPGVhneTBWZjLGJGZb9V2UntC7T98cwtSLtgcXjeSs",
+      "SOL": "So11111111111111111111111111111111111111112"
     }
   },
   "localnet": {
