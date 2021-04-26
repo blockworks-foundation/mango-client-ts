@@ -110,6 +110,37 @@
           "5AUNwSv8hdwJVhUuaBtsFadtJQfiudSZcY6U9fNoRd2A",
           "41r2LvZZDECzm3sdxuP9AcyXZ9FPXqoTjbmnPfBG7ofn"
         ]
+      },
+      "SOL_SRM_USDT": {
+        "mango_group_pk": "AgL7ohkNH6MDz891j2vfoZnyWF9yBw6jnQ6w5xje2jmB",
+        "mint_pks": [
+          "So11111111111111111111111111111111111111112",
+          "9FbAMDvXqNjPqZSYt4EWTguJuDrGkfvwr3gSFpiSbX9S",
+          "7KBVenLz5WNH4PA5MdGkJNpDDyNKnBQTwnz1UqJv9GUm"
+        ],
+        "oracle_pks": [
+          "Ej5FrNjhXaePK7cVMZtSooatzXMeunNsjxrnubefEyNC",
+          "GR9tYpi8CM8u8sdRaJZoP32KoWBphyoWV3xoNt4XwmRV"
+        ],
+        "spot_market_pks": [
+          "HC4YdcKLZrwPpaT7oPaA88VwK4KGZZmQvMgKa8UYqEzU",
+          "4KnsA9Soy15uPS3LTrjhRMAk51KeH6WBxUqXH5DJrGNH"
+        ],
+        "spot_market_symbols": {
+          "SOL/USDT": "HC4YdcKLZrwPpaT7oPaA88VwK4KGZZmQvMgKa8UYqEzU",
+          "SRM/USDT": "4KnsA9Soy15uPS3LTrjhRMAk51KeH6WBxUqXH5DJrGNH"
+        },
+        "srm_vault_pk": "bnJ8EwZwxVVTbiyfwmCNCrfKdNJ6kP37DS77FU8ZzXf",
+        "symbols": {
+          "SOL": "So11111111111111111111111111111111111111112",
+          "SRM": "9FbAMDvXqNjPqZSYt4EWTguJuDrGkfvwr3gSFpiSbX9S",
+          "USDT": "7KBVenLz5WNH4PA5MdGkJNpDDyNKnBQTwnz1UqJv9GUm"
+        },
+        "vault_pks": [
+          "BAxwvH4Ty6nmD1y78j7vgWeCPQCWu2wxASFSFTfEv274",
+          "4fuuKNY2Jswe1BtSroxBWSdz6nJLnh2vMpzWPhv6FuNj",
+          "HvLuw8Z26xXgD9gMZT6oawnzBrcvtZxhbJsDzd3LX494"
+        ]
       }
     },
     "mango_program_id": "32YaLZeyUHhdFaGSemTncUEcZEEGjKart8NX1XG2k3fs",
@@ -129,17 +160,19 @@
       "BTC/WUSDT": "ELXP9wTE4apvK9sxAqtCtMidbAvJJDrNVg4wL6jqQEBA",
       "ETH/USDC": "BYz5dJegg11x94jS2R7ZTCgaJwimvupmkjeYDm9Y3UwP",
       "ETH/USDT": "4UQq7c8FdwGkb2TghHVgJShHMJwS4YzjvA3yiF6zArJD",
-      "ETH/WUSDT": "97mbLfi4S56y5Vg2LCF4Z7ru8jD1QjHa5SH3eyFYrMdg"
+      "ETH/WUSDT": "97mbLfi4S56y5Vg2LCF4Z7ru8jD1QjHa5SH3eyFYrMdg",
+      "SOL/USDT": "HC4YdcKLZrwPpaT7oPaA88VwK4KGZZmQvMgKa8UYqEzU",
+      "SRM/USDT": "4KnsA9Soy15uPS3LTrjhRMAk51KeH6WBxUqXH5DJrGNH"
     },
     "symbols": {
       "BTC": "C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6",
       "ETH": "8p968u9m7jZzKSsqxFDqki69MjqdFkwPM9FN4AN8hvHR",
       "MSRM": "934bNdNw9QfE8dXD4mKQiKajYURfSkPhxfYZzpvmygca",
+      "SOL": "So11111111111111111111111111111111111111112",
       "SRM": "9FbAMDvXqNjPqZSYt4EWTguJuDrGkfvwr3gSFpiSbX9S",
       "USDC": "Fq939Y5hycK62ZGwBjftLY2VyxqAQ8f1MxRqBMdAaBS7",
       "USDT": "7KBVenLz5WNH4PA5MdGkJNpDDyNKnBQTwnz1UqJv9GUm",
-      "WUSDT": "7tSPGVhneTBWZjLGJGZb9V2UntC7T98cwtSLtgcXjeSs",
-      "SOL": "So11111111111111111111111111111111111111112"
+      "WUSDT": "7tSPGVhneTBWZjLGJGZb9V2UntC7T98cwtSLtgcXjeSs"
     }
   },
   "localnet": {
