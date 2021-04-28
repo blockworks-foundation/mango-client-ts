@@ -269,15 +269,11 @@
       "SRM/USDT": "76FmEELjApbgiyPjrNGBsUpWPDyNGq21LzmgUoSuVETC"
     },
     "spot_markets": {
-      "BTC/USDC": "CVfYa8RGXnuDBeGmniCcdkBwoLqVxh92xB1JqgRQx3F",
       "BTC/USDT": "C1EuT9VokAKLiW7i2ASnZUvxDoKuKkCpDDeNxAptuNe4",
       "BTC/WUSDT": "5r8FfnbNYcQbS1m4CYmoHYGjBtu6bxfo6UJHNRfzPiYH",
-      "ETH/USDC": "H5uzEytiByuXt964KampmuNCurNDwkVVypkym75J2DQW",
       "ETH/USDT": "7dLVkUfBVfCGkFhSXDCq1ukM9usathSgS716t643iFGF",
       "ETH/WUSDT": "71CtEComq2XdhGNbXBuYPmosAjMCPSedcgbNi5jDaGbR",
       "SOL/USDT": "HWHvQhFmJB3NUcu1aihKmrKegfVxBEHzwVX6yZCKEsi1",
-      "SOL/WUSDT": "7xLk17EQQ5KLDLDe44wCmupJKJjTGd8hs3eSVVhCx932",
-      "SRM/USDC": "CDdR97S8y96v3To93aKvi3nCnjUrbuVSuumw8FLvbVeg",
       "SRM/USDT": "AtNnsY1AyRERWJ8xCskfz38YdvruWVJQUVXgScC1iPb"
     },
     "symbols": {
