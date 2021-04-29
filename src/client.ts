@@ -184,10 +184,10 @@ export class MarginAccount {
   }
 
   getNativeDeposit(mangoGroup: MangoGroup, tokenIndex: number): number {  // insufficient precision
-    return Math.round(mangoGroup.indexes[tokenIndex].deposit * this.deposits[tokenIndex])
+    return mangoGroup.indexes[tokenIndex].deposit * this.deposits[tokenIndex]
   }
   getNativeBorrow(mangoGroup: MangoGroup, tokenIndex: number): number {  // insufficient precision
-    return Math.round(mangoGroup.indexes[tokenIndex].borrow * this.borrows[tokenIndex])
+    return mangoGroup.indexes[tokenIndex].borrow * this.borrows[tokenIndex]
   }
   getUiDeposit(mangoGroup: MangoGroup, tokenIndex: number): number {  // insufficient precision
     return nativeToUi(this.getNativeDeposit(mangoGroup, tokenIndex), mangoGroup.mintDecimals[tokenIndex])
