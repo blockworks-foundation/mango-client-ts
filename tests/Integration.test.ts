@@ -362,11 +362,11 @@ describe('place & cancel orders', async() => {
       await client.placeAndSettle(connection, mangoProgramId, mangoGroup, marginAccount, spotMarket, owner, 'buy', 10, 1);
     }
     await updateMarginTokenAccountsAndDeposits();
-    deposits.map((x, i) => expect(Math.round(x)).to.be.a('number').and.equal(deposits[i + 1] ? 0 : 80));
+    deposits.map((x, i) => expect(Math.round(x)).to.be.a('number').and.equal(deposits[i + 1] ? 100 : 80));
     console.info(deposits);
     // TODO: Add a check that an order is open
   })
   it('should successfully cancel a single order for each token in mangoGroup', async () => {
-    // TODO: Add test functionality
+    // TODO: Add cancelOrder functionality tests
   })
 })
