@@ -26,6 +26,7 @@ const FAUCET_PROGRAM_ID = new PublicKey(
 
 const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip');
 const mangoGroupName = 'SOL_SRM_USDT';
+const mangoGroupSymbols = mangoGroupName.split('_');
 const mangoGroupIds = clusterIds.mango_groups[mangoGroupName];
 const mangoGroupPk = new PublicKey(mangoGroupIds.mango_group_pk);
 const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
@@ -277,19 +278,38 @@ const performDepositOrWithdrawal = async (marginAccount: MarginAccount, type: st
   ));
 }
 
-const getAndDecodeBidsAndAsks = async(spotMarket: Market) => {
+const getAndDecodeBidsAndAsks = async(spotMarket: Market): Promise<any> => {
   const bidData = (await connection.getAccountInfo(spotMarket['_decoded'].bids))?.data;
   const bidOrderBook = bidData ? Orderbook.decode(spotMarket, Buffer.from(bidData)): [];
   const askData = (await connection.getAccountInfo(spotMarket['_decoded'].asks))?.data;
   const askOrderBook = askData ? Orderbook.decode(spotMarket, Buffer.from(askData)): [];
   return {bidOrderBook, askOrderBook};
 }
-const getAndDecodeBidsAndAsksForOwner = async(spotMarket: Market, openOrdersAccount: OpenOrders) => {
+const getAndDecodeBidsAndAsksForOwner = async(spotMarket: Market, openOrdersAccount: OpenOrders): Promise<any> => {
   const { bidOrderBook, askOrderBook } = await getAndDecodeBidsAndAsks(spotMarket);
   const openOrdersForOwner = [...bidOrderBook, ...askOrderBook].filter((o) =>
     o.openOrdersAddress.equals(openOrdersAccount.address)
   )
   return openOrdersForOwner;
+}
+const getBidOrAskPriceEdge = async (spotMarket, bidOrAsk, maxOrMin) => {
+  const { bidOrderBook, askOrderBook } = await getAndDecodeBidsAndAsks(spotMarket);
+  const [orderBookSide, orderBookOtherSide] = (bidOrAsk === 'bid' ? [bidOrderBook, askOrderBook] : [askOrderBook, bidOrderBook]);
+  const orderBookSidePrices: number[] = [...orderBookSide].map(x => x.price);
+  if (!orderBookSidePrices.length) {
+    // NOTE: This is a very arbitrary error prevention mechanism if one or both sides of the order book are empty
+    const orderBookOtherSidePrices: number[] = [...orderBookOtherSide].map(x => x.price);
+    if (bidOrAsk === 'bid') {
+      orderBookSidePrices.push(orderBookOtherSidePrices.length ? Math.min(...orderBookOtherSidePrices) / 2 : 10); // TODO: Maybe have a default value
+    } else {
+      orderBookSidePrices.push(orderBookOtherSidePrices.length ? Math.max(...orderBookOtherSidePrices) + 10 : 10); // TODO: Maybe have a default value
+    }
+  }
+  if (maxOrMin === 'min') {
+    return Math.min(...orderBookSidePrices);
+  } else {
+    return Math.max(...orderBookSidePrices);
+  }
 }
 
 let owner: Account;
@@ -389,6 +409,45 @@ describe('place & cancel orders', async() => {
   })
 
   it('should successfully cancel a single buy order for each token in mangoGroup', async () => {
+    for (let [spotMarketSymbol, spotMarketAddress] of mangoGroupSpotMarkets) {
+      const spotMarket = await Market.load(connection, new PublicKey(spotMarketAddress), { skipPreflight: true, commitment: 'singleGossip'}, dexProgramId);
+      const marketIndex = mangoGroup.getMarketIndex(spotMarket);
+      const openOrdersAccount = marginAccount.openOrdersAccounts[marketIndex];
+      if (!openOrdersAccount) throw new Error(`openOrdersAccount not found for ${spotMarketSymbol}`);
+      let openOrdersForOwner = await getAndDecodeBidsAndAsksForOwner(spotMarket, openOrdersAccount);
+      await client.cancelOrder(connection, mangoProgramId, mangoGroup, marginAccount, owner, spotMarket, openOrdersForOwner[0]);
+      await client.settleFunds(connection, mangoProgramId, mangoGroup, marginAccount, owner, spotMarket);
+      openOrdersForOwner = await getAndDecodeBidsAndAsksForOwner(spotMarket, openOrdersAccount);
+      expect(openOrdersForOwner).to.be.an('array').that.is.empty;;
+    }
+    await updateMarginTokenAccountsAndDeposits();
+    deposits.map(x => expect(Math.round(x)).to.be.a('number').and.equal(testAmount));
+  });
+
+  it('should successfully place a single sell order for each token in mangoGroup', async () => {
+    // This needs to run synchronously
+    const calculatedDeposits = JSON.parse(JSON.stringify(deposits));
+    for (let [spotMarketSymbol, spotMarketAddress] of mangoGroupSpotMarkets) {
+      const [baseSymbol, _] = spotMarketSymbol.split('/');
+      const spotMarket = await Market.load(connection, new PublicKey(spotMarketAddress), { skipPreflight: true, commitment: 'singleGossip'}, dexProgramId);
+      const minAsk = await getBidOrAskPriceEdge(spotMarket, 'ask', 'min');
+      await client.placeAndSettle(connection, mangoProgramId, mangoGroup, marginAccount, spotMarket, owner, 'sell', minAsk, 1);
+      await updateMarginTokenAccountsAndDeposits();
+      const marketIndex = mangoGroup.getMarketIndex(spotMarket);
+      const openOrdersAccount = marginAccount.openOrdersAccounts[marketIndex];
+      if (!openOrdersAccount) throw new Error(`openOrdersAccount not found for ${spotMarketSymbol}`);
+      const openOrdersForOwner = await getAndDecodeBidsAndAsksForOwner(spotMarket, openOrdersAccount);
+      expect(openOrdersForOwner).to.be.an('array').and.to.have.lengthOf(1);
+      expect(openOrdersForOwner[0]).to.be.an('object').and.to.have.property('side', 'sell');
+      expect(openOrdersForOwner[0]).to.be.an('object').and.to.have.property('price', minAsk);
+      expect(openOrdersForOwner[0]).to.be.an('object').and.to.have.property('size', 1);
+      const depositIndex = mangoGroupSymbols.findIndex(x => x === baseSymbol);
+      calculatedDeposits[depositIndex] -= 1;
+    }
+    deposits.map((x, i) => expect(Math.round(x)).to.be.a('number').and.equal(Math.round(calculatedDeposits[i])));
+  })
+
+  it('should successfully cancel a single sell order for each token in mangoGroup', async () => {
     for (let [spotMarketSymbol, spotMarketAddress] of mangoGroupSpotMarkets) {
       const spotMarket = await Market.load(connection, new PublicKey(spotMarketAddress), { skipPreflight: true, commitment: 'singleGossip'}, dexProgramId);
       const marketIndex = mangoGroup.getMarketIndex(spotMarket);
