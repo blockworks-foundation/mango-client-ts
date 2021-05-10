@@ -1,8 +1,8 @@
-import { MangoClient, MangoGroup, MarginAccount } from '../src/client';
+  import { MangoClient, MangoGroup, MarginAccount } from '../src/client';
 import IDS from '../src/ids.json';
 import { sleep } from '../src/utils';
 import { Account, Connection, PublicKey, SystemProgram, Transaction, TransactionInstruction, TransactionSignature } from '@solana/web3.js';
-import { Market, TokenInstructions } from '@project-serum/serum';
+import { Market, TokenInstructions, OpenOrders, Orderbook } from '@project-serum/serum';
 import { u64, NATIVE_MINT } from "@solana/spl-token";
 import { token } from '@project-serum/common';
 import { expect } from 'chai';
@@ -277,6 +277,21 @@ const performDepositOrWithdrawal = async (marginAccount: MarginAccount, type: st
   ));
 }
 
+const getAndDecodeBidsAndAsks = async(spotMarket: Market) => {
+  const bidData = (await connection.getAccountInfo(spotMarket['_decoded'].bids))?.data;
+  const bidOrderBook = bidData ? Orderbook.decode(spotMarket, Buffer.from(bidData)): [];
+  const askData = (await connection.getAccountInfo(spotMarket['_decoded'].asks))?.data;
+  const askOrderBook = askData ? Orderbook.decode(spotMarket, Buffer.from(askData)): [];
+  return {bidOrderBook, askOrderBook};
+}
+const getAndDecodeBidsAndAsksForOwner = async(spotMarket: Market, openOrdersAccount: OpenOrders) => {
+  const { bidOrderBook, askOrderBook } = await getAndDecodeBidsAndAsks(spotMarket);
+  const openOrdersForOwner = [...bidOrderBook, ...askOrderBook].filter((o) =>
+    o.openOrdersAddress.equals(openOrdersAccount.address)
+  )
+  return openOrdersForOwner;
+}
+
 let owner: Account;
 let ownerPk: PublicKey;
 let mangoGroup: MangoGroup;
@@ -354,19 +369,38 @@ describe('place & cancel orders', async() => {
     await updateMarginTokenAccountsAndDeposits();
     deposits.map(x => expect(Math.round(x)).to.be.a('number').and.equal(testAmount));
   })
+
   it('should successfully place a single buy order for each token in mangoGroup', async () => {
     // This needs to run synchronously
-    for (let [_, spotMarketAddress] of mangoGroupSpotMarkets) {
-      await updateMarginTokenAccountsAndDeposits();
+    for (let [spotMarketSymbol, spotMarketAddress] of mangoGroupSpotMarkets) {
       const spotMarket = await Market.load(connection, new PublicKey(spotMarketAddress), { skipPreflight: true, commitment: 'singleGossip'}, dexProgramId);
+      const marketIndex = mangoGroup.getMarketIndex(spotMarket);
       await client.placeAndSettle(connection, mangoProgramId, mangoGroup, marginAccount, spotMarket, owner, 'buy', 10, 1);
+      await updateMarginTokenAccountsAndDeposits();
+      const openOrdersAccount = marginAccount.openOrdersAccounts[marketIndex];
+      if (!openOrdersAccount) throw new Error(`openOrdersAccount not found for ${spotMarketSymbol}`);
+      const openOrdersForOwner = await getAndDecodeBidsAndAsksForOwner(spotMarket, openOrdersAccount);
+      expect(openOrdersForOwner).to.be.an('array').and.to.have.lengthOf(1);
+      expect(openOrdersForOwner[0]).to.be.an('object').and.to.have.property('side', 'buy');
+      expect(openOrdersForOwner[0]).to.be.an('object').and.to.have.property('price', 10);
+      expect(openOrdersForOwner[0]).to.be.an('object').and.to.have.property('size', 1);
+    }
+    deposits.map((x, i) => expect(Math.round(x)).to.be.a('number').and.equal(deposits[i + 1] ? testAmount : testAmount - 20));
+  })
+
+  it('should successfully cancel a single buy order for each token in mangoGroup', async () => {
+    for (let [spotMarketSymbol, spotMarketAddress] of mangoGroupSpotMarkets) {
+      const spotMarket = await Market.load(connection, new PublicKey(spotMarketAddress), { skipPreflight: true, commitment: 'singleGossip'}, dexProgramId);
+      const marketIndex = mangoGroup.getMarketIndex(spotMarket);
+      const openOrdersAccount = marginAccount.openOrdersAccounts[marketIndex];
+      if (!openOrdersAccount) throw new Error(`openOrdersAccount not found for ${spotMarketSymbol}`);
+      let openOrdersForOwner = await getAndDecodeBidsAndAsksForOwner(spotMarket, openOrdersAccount);
+      await client.cancelOrder(connection, mangoProgramId, mangoGroup, marginAccount, owner, spotMarket, openOrdersForOwner[0]);
+      await client.settleFunds(connection, mangoProgramId, mangoGroup, marginAccount, owner, spotMarket);
+      openOrdersForOwner = await getAndDecodeBidsAndAsksForOwner(spotMarket, openOrdersAccount);
+      expect(openOrdersForOwner).to.be.an('array').that.is.empty;;
     }
     await updateMarginTokenAccountsAndDeposits();
-    deposits.map((x, i) => expect(Math.round(x)).to.be.a('number').and.equal(deposits[i + 1] ? 100 : 80));
-    console.info(deposits);
-    // TODO: Add a check that an order is open
-  })
-  it('should successfully cancel a single order for each token in mangoGroup', async () => {
-    // TODO: Add cancelOrder functionality tests
-  })
+    deposits.map(x => expect(Math.round(x)).to.be.a('number').and.equal(testAmount));
+  });
 })
