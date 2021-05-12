@@ -253,13 +253,14 @@ export function parseTokenAccount(
 
 export async function getMultipleAccounts(
   connection: Connection,
-  publicKeys: PublicKey[]
-
+  publicKeys: PublicKey[],
+  commitment?: Commitment
 ): Promise<{ publicKey: PublicKey; accountInfo: AccountInfo<Buffer> }[]> {
   const publickKeyStrs = publicKeys.map((pk) => (pk.toBase58()));
 
+  const args = commitment ? [publickKeyStrs, {commitment}] : [publickKeyStrs];
   // @ts-ignore
-  const resp = await connection._rpcRequest('getMultipleAccounts', [publickKeyStrs]);
+  const resp = await connection._rpcRequest('getMultipleAccounts', args);
   if (resp.error) {
     throw new Error(resp.error.message);
   }
