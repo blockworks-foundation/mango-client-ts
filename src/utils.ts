@@ -9,9 +9,17 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
-import { blob, struct, u8, nu64 } from 'buffer-layout';
+import { bits, blob, struct, u8, u32, nu64 } from 'buffer-layout';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { AccountLayout } from './layout';
+
+import {
+  accountFlagsLayout,
+  publicKeyLayout,
+  u128,
+  u64,
+  zeros,
+} from '@project-serum/serum/lib/layout';
 
 export const zeroKey = new PublicKey(new Uint8Array(32))
 
@@ -304,3 +312,60 @@ export async function findLargestTokenAccountForOwner(
     throw new Error("No accounts for this token")
   }
 }
+
+const EVENT_QUEUE_HEADER = struct([
+  blob(5),
+
+  accountFlagsLayout('accountFlags'),
+  u32('head'),
+  zeros(4),
+  u32('count'),
+  zeros(4),
+  u32('seqNum'),
+  zeros(4),
+]);
+
+const EVENT_FLAGS = bits(u8(), false, 'eventFlags');
+EVENT_FLAGS.addBoolean('fill');
+EVENT_FLAGS.addBoolean('out');
+EVENT_FLAGS.addBoolean('bid');
+EVENT_FLAGS.addBoolean('maker');
+
+const EVENT = struct([
+  EVENT_FLAGS,
+  u8('openOrdersSlot'),
+  u8('feeTier'),
+  blob(5),
+  u64('nativeQuantityReleased'), // Amount the user received
+  u64('nativeQuantityPaid'), // Amount the user paid
+  u64('nativeFeeOrRebate'),
+  u128('orderId'),
+  publicKeyLayout('openOrders'),
+  u64('clientOrderId'),
+]);
+
+
+export function decodeRecentEvents(
+  buffer: Buffer,
+  lastSeenSeqNum?: number,
+) {
+  const header = EVENT_QUEUE_HEADER.decode(buffer);
+  const nodes: any[] = [];
+
+  if (lastSeenSeqNum !== undefined) {
+    const allocLen = Math.floor(
+      (buffer.length - EVENT_QUEUE_HEADER.span) / EVENT.span,
+    );
+
+    const newEventsCount = header.seqNum - lastSeenSeqNum
+
+    for (let i = newEventsCount; i > 0; --i) {
+      const nodeIndex = (header.head + header.count + allocLen - i) % allocLen
+      const decodedItem = EVENT.decode(buffer, EVENT_QUEUE_HEADER.span + nodeIndex * EVENT.span)
+      nodes.push(decodedItem)
+    }
+  }
+
+  return { header, nodes };
+}
+
