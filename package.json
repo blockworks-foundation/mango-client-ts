@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "ts-node src/index.ts",
+    "start": "ts-node src/tests.ts",
     "clean": "rm -rf lib",
     "prepare": "run-s clean build",
     "postinstall": "tsc --outDir ./build",
