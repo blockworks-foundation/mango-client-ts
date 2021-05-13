@@ -1,6 +1,6 @@
 {
   "name": "@blockworks-foundation/mango-client",
-  "version": "0.1.17",
+  "version": "0.1.19",
   "description": "Library for interacting with Mango Markets' solana smart contracts.",
   "repository": "blockworks-foundation/mango-client-ts",
   "author": {
@@ -20,7 +20,6 @@
     "start": "ts-node src/tests.ts",
     "clean": "rm -rf lib",
     "prepare": "run-s clean build",
-    "postinstall": "tsc --outDir ./build",
     "shell": "node -e \"$(< shell)\" -i --experimental-repl-await",
     "test": "run-s test:unit test:lint test:build",
     "test:build": "run-s build",
