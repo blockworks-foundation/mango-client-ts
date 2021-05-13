@@ -1,6 +1,6 @@
 {
   "name": "@blockworks-foundation/mango-client",
-  "version": "0.1.17",
+  "version": "0.1.19",
   "description": "Library for interacting with Mango Markets' solana smart contracts.",
   "repository": "blockworks-foundation/mango-client-ts",
   "author": {
@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "ts-node src/index.ts",
+    "start": "ts-node src/tests.ts",
     "clean": "rm -rf lib",
     "prepare": "run-s clean build",
     "shell": "node -e \"$(< shell)\" -i --experimental-repl-await",
@@ -57,7 +57,7 @@
   "dependencies": {
     "@project-serum/serum": "^0.13.20",
     "@project-serum/sol-wallet-adapter": "^0.1.4",
-    "@solana/spl-token": "0.0.13",
+    "@solana/spl-token": "^0.0.13",
     "@solana/web3.js": "^0.90.0",
     "bn.js": "^5.1.2",
     "borsh": "https://github.com/defactojob/borsh-js#field-mapper",
