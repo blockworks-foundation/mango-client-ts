@@ -1335,23 +1335,27 @@ export class MangoClient {
   async getAllMarginAccounts(
     connection: Connection,
     programId: PublicKey,
-    mangoGroup: MangoGroup
+    mangoGroup: MangoGroup,
+    filters?: [any]
   ): Promise<MarginAccount[]> {
 
-    const filters = [
+    const marginAccountsFilters = [
       {
         memcmp: {
           offset: MarginAccountLayout.offsetOf('mangoGroup'),
           bytes: mangoGroup.publicKey.toBase58(),
         }
       },
-
       {
         dataSize: MarginAccountLayout.span,
       },
     ];
 
-    const marginAccountsProms = getFilteredProgramAccounts(connection, programId, filters)
+    if(filters && filters.length) {
+      marginAccountsFilters.push(...filters);
+    }
+
+    const marginAccountsProms = getFilteredProgramAccounts(connection, programId, marginAccountsFilters)
       .then((accounts) => (
         accounts.map(({ publicKey, accountInfo }) =>
           new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
@@ -1398,6 +1402,19 @@ export class MangoClient {
     }
 
     return marginAccounts
+  }
+
+  async getAllMarginAccountsWithBorrows(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup
+  ): Promise<MarginAccount[]> {
+    return await this.getAllMarginAccounts(connection, programId, mangoGroup, [{
+      memcmp: {
+        offset: MarginAccountLayout.offsetOf('hasBorrows'),
+        bytes: 1
+      }
+    }])
   }
 
   async getMarginAccountsForOwner(
