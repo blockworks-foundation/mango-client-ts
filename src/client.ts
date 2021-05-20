@@ -35,7 +35,14 @@ import {
   uiToNative,
   zeroKey,
 } from './utils';
-import { getFeeRates, getFeeTier, Market, OpenOrders, Orderbook } from '@project-serum/serum';
+import { 
+  getFeeRates, 
+  getFeeTier, 
+  Market, 
+  OpenOrders, 
+  Orderbook,
+  TOKEN_MINTS
+} from '@project-serum/serum';
 import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
@@ -52,11 +59,12 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 export const tokenToDecimals = {
   "BTC": 4,
   "ETH": 3,
+  "SOL": 2,
+  "SRM": 2,
   "USDT": 2,
-  "USDC": 2
+  "USDC": 2,
+  "WUSDT": 2,
 }
-
-
 
 export class MangoGroup {
   publicKey: PublicKey;
@@ -158,6 +166,9 @@ export class MangoGroup {
   getUiTotalBorrow(tokenIndex: number): number {
     return nativeToUi(this.totalBorrows[tokenIndex] * this.indexes[tokenIndex].borrow, this.mintDecimals[tokenIndex])
   }
+  getTokenSymbol(tokenIndex: number): string {
+    return TOKEN_MINTS.find((m) => m.address.toString() === this.tokens[tokenIndex].toString())?.name || '';
+  }
 }
 
 export class MarginAccount {
@@ -223,16 +234,14 @@ export class MarginAccount {
       `${"Token".padEnd(5)} ${"Assets".padEnd(10)} ${"Deposits".padEnd(10)} ${"Borrows".padEnd(10)}`,
     ]
 
-
-    const tokenNames = ["BTC", "ETH", "USDT"]  // TODO pull this from somewhere
-
     for (let i = 0; i < mangoGroup.tokens.length; i++) {
-      const decimals = tokenToDecimals[tokenNames[i]]
+      const tokenSymbol = mangoGroup.getTokenSymbol(i)
+      const decimals = tokenToDecimals[tokenSymbol]
       const assetStr = this.getAssets(mangoGroup)[i].toFixed(decimals).toString().padEnd(10)
       const depositStr = this.getUiDeposit(mangoGroup, i).toFixed(decimals).toString().padEnd(10)
       const borrowStr = this.getUiBorrow(mangoGroup, i).toFixed(decimals).toString().padEnd(10)
       lines.push(
-        `${tokenNames[i].padEnd(5)} ${assetStr} ${depositStr} ${borrowStr}`
+        `${tokenSymbol.padEnd(5)} ${assetStr} ${depositStr} ${borrowStr}`
       )
     }
 
@@ -1326,23 +1335,27 @@ export class MangoClient {
   async getAllMarginAccounts(
     connection: Connection,
     programId: PublicKey,
-    mangoGroup: MangoGroup
+    mangoGroup: MangoGroup,
+    filters?: [any]
   ): Promise<MarginAccount[]> {
 
-    const filters = [
+    const marginAccountsFilters = [
       {
         memcmp: {
           offset: MarginAccountLayout.offsetOf('mangoGroup'),
           bytes: mangoGroup.publicKey.toBase58(),
         }
       },
-
       {
         dataSize: MarginAccountLayout.span,
       },
     ];
 
-    const marginAccountsProms = getFilteredProgramAccounts(connection, programId, filters)
+    if(filters && filters.length) {
+      marginAccountsFilters.push(...filters);
+    }
+
+    const marginAccountsProms = getFilteredProgramAccounts(connection, programId, marginAccountsFilters)
       .then((accounts) => (
         accounts.map(({ publicKey, accountInfo }) =>
           new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
@@ -1389,6 +1402,19 @@ export class MangoClient {
     }
 
     return marginAccounts
+  }
+
+  async getAllMarginAccountsWithBorrows(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup
+  ): Promise<MarginAccount[]> {
+    return await this.getAllMarginAccounts(connection, programId, mangoGroup, [{
+      memcmp: {
+        offset: MarginAccountLayout.offsetOf('hasBorrows'),
+        bytes: 1
+      }
+    }])
   }
 
   async getMarginAccountsForOwner(
