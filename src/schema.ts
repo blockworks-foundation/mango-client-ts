@@ -30,7 +30,7 @@ const pubkeyMapper = {
 
 // support strings that can be contained in at most 32 bytes
 const str32Mapper = {
-  encode: (str: String) => {
+  encode: (str: string) => {
     str = str.substr(0, 32).padEnd(32)
     return Buffer.from(str, "utf8").slice(0, 32) // truncate at 32 bytes
   },
