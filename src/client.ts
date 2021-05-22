@@ -169,6 +169,9 @@ export class MangoGroup {
   getTokenSymbol(tokenIndex: number): string {
     return TOKEN_MINTS.find((m) => m.address.toString() === this.tokens[tokenIndex].toString())?.name || '';
   }
+  getTokenDecimals(tokenIndex: number): number {    
+    return tokenToDecimals[this.getTokenSymbol(tokenIndex)]
+  }
 }
 
 export class MarginAccount {
