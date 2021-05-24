@@ -21,7 +21,7 @@
     "clean": "rm -rf lib",
     "prepare": "run-s clean build",
     "shell": "node -e \"$(< shell)\" -i --experimental-repl-await",
-    "test": "run-s test:unit test:lint test:build",
+    "test": "mocha -r ts-node/register tests/Stateless.test.ts --timeout 0",
     "test:build": "run-s build",
     "test:lint": "eslint src",
     "test:unit": "jest",
@@ -32,7 +32,7 @@
     "@types/bn.js": "^4.11.6",
     "@types/chai": "^4.2.14",
     "@types/jest": "^26.0.9",
-    "@types/mocha": "^8.2.0",
+    "@types/mocha": "^8.2.2",
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",
     "babel-eslint": "^10.0.3",
@@ -55,13 +55,16 @@
     "trailingComma": "all"
   },
   "dependencies": {
+    "@project-serum/common": "^0.0.1-beta.3",
     "@project-serum/serum": "^0.13.20",
     "@project-serum/sol-wallet-adapter": "^0.1.4",
-    "@solana/spl-token": "^0.0.13",
-    "@solana/web3.js": "^0.90.0",
+    "@solana/spl-token": "0.0.13",
+    "@solana/web3.js": "^0.95.0",
     "bn.js": "^5.1.2",
     "borsh": "https://github.com/defactojob/borsh-js#field-mapper",
-    "buffer-layout": "^1.2.0"
+    "buffer-layout": "^1.2.0",
+    "dotenv": "^10.0.0",
+    "mocha": "^8.4.0"
   },
   "browserslist": [
     ">0.2%",
