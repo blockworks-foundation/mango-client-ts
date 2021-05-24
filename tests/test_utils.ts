@@ -4,7 +4,7 @@ import { Market, TokenInstructions, OpenOrders, Orderbook } from '@project-serum
 import { token } from '@project-serum/common';
 import { u64, NATIVE_MINT } from "@solana/spl-token";
 import { sleep } from '../src/utils';
-import fs from 'fs';
+
 console.log = function () {}; // NOTE: Disable all unnecessary logging
 
 const FAUCET_PROGRAM_ID = new PublicKey(
