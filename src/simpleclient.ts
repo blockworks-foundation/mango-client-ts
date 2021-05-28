@@ -12,11 +12,23 @@ import fs from 'fs';
 import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
 import { MangoGroup } from '../lib';
 import { Order } from '@project-serum/serum/lib/market';
-import { nativeToUi } from './utils';
+import { ceilToDecimal, groupBy, nativeToUi, uid } from './utils';
 import BN from 'bn.js';
 import fetch from 'node-fetch';
 
 // github issue - https://github.com/blockworks-foundation/mango-client-ts/issues/14
+
+type TokenSymbol = string;
+type SpotMarketSymbol = string;
+type OpenOrdersAsString = string;
+
+interface OpenOrderForPnl {
+  nativeQuantityReleased: number;
+  nativeQuantityPaid: number;
+  side: 'sell' | 'buy';
+  size: number;
+  openOrders: OpenOrdersAsString;
+}
 
 export class MarketBalance {
   constructor(
@@ -72,15 +84,6 @@ export class Ohlcv {
   ) {}
 }
 
-function ceilToDecimal(value: number, decimals: number | undefined | null) {
-  return decimals
-    ? Math.ceil(value * 10 ** decimals) / 10 ** decimals
-    : Math.ceil(value);
-}
-
-type TokenSymbol = string;
-type SpotMarketSymbol = string;
-
 type Resolution =
   | '1'
   | '3'
@@ -92,10 +95,6 @@ type Resolution =
   | '180'
   | '240'
   | '1D';
-
-function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
-  return value !== null && value !== undefined;
-}
 
 /**
  * a simpler more cex-style client with sensible (hopefully ;)) defaults
@@ -203,7 +202,7 @@ export class SimpleClient {
     return market;
   }
 
-  private async getMarginAccountsForOwner(): Promise<MarginAccount[]> {
+  private async getMarginAccountForOwner(): Promise<MarginAccount> {
     const prices = await this.mangoGroup.getPrices(this.connection);
     const marginAccounts = await this.client.getMarginAccountsForOwner(
       this.connection,
@@ -211,19 +210,33 @@ export class SimpleClient {
       this.mangoGroup,
       this.payer,
     );
-    return marginAccounts.sort((a, b) =>
-      a.computeValue(this.mangoGroup, prices) >
-      b.computeValue(this.mangoGroup, prices)
-        ? -1
-        : 1,
+
+    if (marginAccounts.length > 0) {
+      return marginAccounts.sort((a, b) =>
+        a.computeValue(this.mangoGroup, prices) >
+        b.computeValue(this.mangoGroup, prices)
+          ? -1
+          : 1,
+      )[0];
+    }
+
+    this.client.initMarginAccount(
+      this.connection,
+      this.programId,
+      this.mangoGroup,
+      this.payer,
     );
+    return await this.client.getMarginAccountsForOwner(
+      this.connection,
+      this.programId,
+      this.mangoGroup,
+      this.payer,
+    )[0];
   }
 
-  // todo: is the name misleading? should it be just
-  // getOrdersAccountForSymbol or getAccountForSymbol?
   private async getOpenOrdersAccountForSymbol(
     marketSymbol: SpotMarketSymbol,
-  ): Promise<OpenOrders[]> {
+  ): Promise<OpenOrders | undefined> {
     if (Object.keys(this.spotMarketMappings).indexOf(marketSymbol) === -1) {
       throw new Error(`unknown spot market ${marketSymbol}`);
     }
@@ -233,10 +246,8 @@ export class SimpleClient {
     );
 
     const marketIndex = this.mangoGroup.getMarketIndex(market!);
-    const marginAccounts = await this.getMarginAccountsForOwner();
-    return marginAccounts
-      .map((marginAccount) => marginAccount.openOrdersAccounts[marketIndex])
-      .filter(notEmpty);
+    const marginAccount = await this.getMarginAccountForOwner();
+    return marginAccount.openOrdersAccounts[marketIndex];
   }
 
   private async cancelOrder(
@@ -258,7 +269,7 @@ export class SimpleClient {
   private async cancelOrdersForMarginAccount(
     marginAccount: MarginAccount,
     symbol?: SpotMarketSymbol,
-    orderId?: string,
+    clientId?: string,
   ) {
     let orders;
     let market;
@@ -276,11 +287,12 @@ export class SimpleClient {
 
     market = this.getMarketForSymbol(symbol!);
     orders = await this.getOpenOrders(symbol!);
-    // note: orderId could not even belong to his margin account
+    // note: clientId could not even belong to his margin account
     // in that case ordersToCancel would be empty
-    const ordersToCancel = orderId
-      ? orders.filter((o) => o.orderId.toString() === orderId)
-      : orders;
+    const ordersToCancel =
+      clientId !== undefined
+        ? orders.filter((o) => o.clientId.toString() === clientId)
+        : orders;
 
     await Promise.all(
       ordersToCancel.map((order) =>
@@ -293,97 +305,155 @@ export class SimpleClient {
 
   async placeOrder(
     symbol: SpotMarketSymbol,
+    type: 'market' | 'limit',
     side: 'buy' | 'sell',
     quantity: number,
-    price: number,
-  ): Promise<TransactionSignature> {
+    price?: number,
+    orderType?: 'ioc' | 'postOnly' | 'limit',
+  ): Promise<string> {
     if (!symbol.trim()) {
       throw new Error(`invalid symbol ${symbol}`);
     }
     if (!Number.isFinite(quantity) || quantity <= 0) {
       throw new Error(`invalid quantity ${quantity}`);
     }
-    if (!Number.isFinite(price) || price <= 0) {
+    if ((type === 'limit' && !Number.isFinite(price)) || price! <= 0) {
       throw new Error(`invalid price ${price}`);
+    }
+
+    if (type === 'market') {
+      const orderBook = await this.getOrderBook(symbol);
+      let acc = 0;
+      let selectedOrder;
+      for (const order of orderBook) {
+        acc += order.size;
+        if (acc >= quantity) {
+          selectedOrder = order;
+          break;
+        }
+      }
+
+      if (side === 'buy') {
+        price = selectedOrder.price * 1.05;
+      } else {
+        price = selectedOrder.price * 0.95;
+      }
     }
 
     const market = this.getMarketForSymbol(symbol);
 
-    const marginAccounts = await this.getMarginAccountsForOwner();
-    // todo: rather choose margin account with largest balance for base or
-    // quote currency based on trade side
-    const marginAccountWithLargestBalance = marginAccounts[0];
+    const marginAccount = await this.getMarginAccountForOwner();
 
-    return this.client.placeOrder(
+    const clientId = new BN(uid());
+
+    orderType = orderType === undefined ? 'limit' : orderType;
+
+    await this.client.placeOrder(
       this.connection,
       this.programId,
       this.mangoGroup,
-      marginAccountWithLargestBalance,
+      marginAccount,
       market,
       this.payer,
       side,
-      price,
+      price!,
       quantity,
+      orderType,
+      clientId,
     );
+
+    return clientId.toString();
   }
 
   async getOpenOrders(
     symbol: SpotMarketSymbol,
-    orderId?: string,
+    clientId?: string,
   ): Promise<Order[]> {
-    const openOrderAccounts = await this.getOpenOrdersAccountForSymbol(symbol);
-    const orders: Order[] = await this.getOrderBook(symbol);
+    const openOrderAccount = await this.getOpenOrdersAccountForSymbol(symbol);
+    if (openOrderAccount === undefined) {
+      return [];
+    }
 
-    orders.filter((o) =>
-      openOrderAccounts.find((account) =>
-        account?.address.equals(o.openOrdersAddress),
-      ),
+    let orders: Order[] = await this.getOrderBook(symbol);
+    orders = orders.filter((o) =>
+      openOrderAccount.address.equals(o.openOrdersAddress),
     );
 
-    if (orderId) {
-      return orders.filter((o) => o.orderId.toString() === orderId);
+    if (clientId) {
+      return orders.filter(
+        (o) => o.clientId && o.clientId.toString() === clientId,
+      );
     }
 
     return orders;
   }
 
-  async cancelOrders(symbol?: SpotMarketSymbol, orderId?: string) {
-    const marginAccounts = await this.getMarginAccountsForOwner();
-    for (const marginAccount of marginAccounts) {
-      await this.cancelOrdersForMarginAccount(marginAccount, symbol, orderId);
-    }
+  async cancelOrders(symbol?: SpotMarketSymbol, clientId?: string) {
+    const marginAccount = await this.getMarginAccountForOwner();
+    await this.cancelOrdersForMarginAccount(marginAccount, symbol, clientId);
   }
 
-  async getTradeHistory(symbol: SpotMarketSymbol): Promise<Order[]> {
+  async getTradeHistory(symbol: SpotMarketSymbol): Promise<OpenOrderForPnl[]> {
     if (!symbol.trim()) {
       throw new Error(`invalid symbol ${symbol}`);
     }
-    const market = this.getMarketForSymbol(symbol);
 
-    const fills = await market.loadFills(this.connection, 10_000);
-    const filteredFills = fills.filter((fill) => fill && fill.openOrders);
-    const openOrdersAccountForSymbol = await this.getOpenOrdersAccountForSymbol(
-      symbol,
+    const openOrdersAccount = await this.getOpenOrdersAccountForSymbol(symbol);
+    if (openOrdersAccount === undefined) {
+      return [];
+    }
+
+    // e.g. https://stark-fjord-45757.herokuapp.com/trades/open_orders/G5rZ4Qfv5SxpJegVng5FuZftDrJkzLkxQUNjEXuoczX5
+    //     {
+    //         "id": 2267328,
+    //         "loadTimestamp": "2021-04-28T03:36:20.573Z",
+    //         "address": "C1EuT9VokAKLiW7i2ASnZUvxDoKuKkCpDDeNxAptuNe4",
+    //         "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    //         "baseCurrency": "BTC",
+    //         "quoteCurrency": "USDT",
+    //         "fill": true,
+    //         "out": false,
+    //         "bid": false,
+    //         "maker": false,
+    //         "openOrderSlot": "6",
+    //         "feeTier": "0",
+    //         "nativeQuantityReleased": "93207112",
+    //         "nativeQuantityPaid": "1700",
+    //         "nativeFeeOrRebate": "205508",
+    //         "orderId": "9555524110645989995606320",
+    //         "openOrders": "G5rZ4Qfv5SxpJegVng5FuZftDrJkzLkxQUNjEXuoczX5",
+    //         "clientOrderId": "0",
+    //         "uuid": "0040cdbdb0667fd5f75c2538e4097c5090e7b15d8cf9a5e7db7a54c3c212d27a",
+    //         "source": "1",
+    //         "baseTokenDecimals": 6,
+    //         "quoteTokenDecimals": 6,
+    //         "side": "sell",
+    //         "price": 54948.6,
+    //         "feeCost": 0.205508,
+    //         "size": 0.0017
+    //     }
+    const response = await fetch(
+      `https://stark-fjord-45757.herokuapp.com/trades/open_orders/${openOrdersAccount.address.toBase58()}`,
     );
-    const openOrderAccounts = openOrdersAccountForSymbol.filter(
-      (account) => account && account.address,
-    );
-    return filteredFills.filter((fill) =>
-      openOrderAccounts.find(
-        (account) => account!.address.equals(fill.openOrders) !== undefined,
-      ),
-    );
+    const parsedResponse = await response.json();
+    const trades: OpenOrderForPnl[] = parsedResponse?.data
+      ? parsedResponse.data
+      : [];
+    return trades
+      .filter((trade) =>
+        openOrdersAccount.address.equals(new PublicKey(trade.openOrders)),
+      )
+      .map((trade) => ({ ...trade, marketName: symbol }));
   }
 
   /**
    * returns balances, simple and mango specific details
    */
-  async getBalances(): Promise<Balance[]> {
-    const marginAccounts = await this.getMarginAccountsForOwner();
-    return marginAccounts.map((marginAccount) => {
-      const marginAccountBalances = Object.keys(
-        this.mangoGroupTokenMappings,
-      ).map((tokenSymbol) => {
+  async getBalance(): Promise<Balance> {
+    const marginAccount = await this.getMarginAccountForOwner();
+
+    const marginAccountBalances = Object.keys(this.mangoGroupTokenMappings).map(
+      (tokenSymbol) => {
         const tokenIndex = this.mangoGroup.getTokenIndex(
           this.mangoGroupTokenMappings[tokenSymbol],
         );
@@ -402,84 +472,136 @@ export class SimpleClient {
           uiDepositDisplay,
           uiBorrowDisplay,
         );
-      });
+      },
+    );
 
-      const marketBalances = this.mangoGroup.spotMarkets.map((marketPk) => {
-        const market = this.markets.find((market) =>
-          market.publicKey.equals(marketPk),
-        );
-        if (market === undefined) {
-          throw new Error(`market for ${marketPk.toBase58()} not found`);
-        }
+    const marketBalances = this.mangoGroup.spotMarkets.map((marketPk) => {
+      const market = this.markets.find((market) =>
+        market.publicKey.equals(marketPk),
+      );
+      if (market === undefined) {
+        throw new Error(`market for ${marketPk.toBase58()} not found`);
+      }
 
-        const token = Object.entries(this.mangoGroupTokenMappings).find(
-          (entry) => {
-            return entry[1].equals(market.baseMintAddress);
-          },
-        );
+      const token = Object.entries(this.mangoGroupTokenMappings).find(
+        (entry) => {
+          return entry[1].equals(market.baseMintAddress);
+        },
+      );
 
-        const tokenIndex = this.mangoGroup.getTokenIndex(
-          market.baseMintAddress,
-        );
-        const openOrders: OpenOrders =
-          marginAccount.openOrdersAccounts[tokenIndex]!;
-        const nativeBaseFree = openOrders?.baseTokenFree || new BN(0);
-        const nativeBaseLocked = openOrders
-          ? openOrders.baseTokenTotal.sub(nativeBaseFree)
-          : new BN(0);
-        const nativeBaseUnsettled = openOrders?.baseTokenFree || new BN(0);
-        const orders = nativeToUi(
-          nativeBaseLocked.toNumber(),
-          this.mangoGroup.mintDecimals[tokenIndex],
-        );
-        const unsettled = nativeToUi(
-          nativeBaseUnsettled.toNumber(),
-          this.mangoGroup.mintDecimals[tokenIndex],
-        );
+      const tokenIndex = this.mangoGroup.getTokenIndex(market.baseMintAddress);
+      const openOrders: OpenOrders =
+        marginAccount.openOrdersAccounts[tokenIndex]!;
+      const nativeBaseFree = openOrders?.baseTokenFree || new BN(0);
+      const nativeBaseLocked = openOrders
+        ? openOrders.baseTokenTotal.sub(nativeBaseFree)
+        : new BN(0);
+      const nativeBaseUnsettled = openOrders?.baseTokenFree || new BN(0);
+      const orders = nativeToUi(
+        nativeBaseLocked.toNumber(),
+        this.mangoGroup.mintDecimals[tokenIndex],
+      );
+      const unsettled = nativeToUi(
+        nativeBaseUnsettled.toNumber(),
+        this.mangoGroup.mintDecimals[tokenIndex],
+      );
 
-        const quoteToken = Object.entries(this.mangoGroupTokenMappings).find(
-          (entry) => {
-            return entry[1].equals(market.quoteMintAddress);
-          },
-        );
-        const quoteCurrencyIndex = this.mangoGroup.getTokenIndex(
-          market.quoteMintAddress,
-        );
-        const nativeQuoteFree = openOrders?.quoteTokenFree || new BN(0);
-        const nativeQuoteLocked = openOrders
-          ? openOrders!.quoteTokenTotal.sub(nativeQuoteFree)
-          : new BN(0);
-        const nativeQuoteUnsettled = openOrders?.quoteTokenFree || new BN(0);
-        const ordersQuote = nativeToUi(
-          nativeQuoteLocked.toNumber(),
-          this.mangoGroup.mintDecimals[quoteCurrencyIndex],
-        );
-        const unsettledQuote = nativeToUi(
-          nativeQuoteUnsettled.toNumber(),
-          this.mangoGroup.mintDecimals[quoteCurrencyIndex],
-        );
+      const quoteToken = Object.entries(this.mangoGroupTokenMappings).find(
+        (entry) => {
+          return entry[1].equals(market.quoteMintAddress);
+        },
+      );
+      const quoteCurrencyIndex = this.mangoGroup.getTokenIndex(
+        market.quoteMintAddress,
+      );
+      const nativeQuoteFree = openOrders?.quoteTokenFree || new BN(0);
+      const nativeQuoteLocked = openOrders
+        ? openOrders!.quoteTokenTotal.sub(nativeQuoteFree)
+        : new BN(0);
+      const nativeQuoteUnsettled = openOrders?.quoteTokenFree || new BN(0);
+      const ordersQuote = nativeToUi(
+        nativeQuoteLocked.toNumber(),
+        this.mangoGroup.mintDecimals[quoteCurrencyIndex],
+      );
+      const unsettledQuote = nativeToUi(
+        nativeQuoteUnsettled.toNumber(),
+        this.mangoGroup.mintDecimals[quoteCurrencyIndex],
+      );
 
-        return new MarketBalance(
-          token![0],
-          orders,
-          unsettled,
-          quoteToken![0],
-          ordersQuote,
-          unsettledQuote,
-        );
-      });
-
-      return new Balance(
-        marginAccount.publicKey,
-        marginAccountBalances,
-        marketBalances,
+      return new MarketBalance(
+        token![0],
+        orders,
+        unsettled,
+        quoteToken![0],
+        ordersQuote,
+        unsettledQuote,
       );
     });
+
+    return new Balance(
+      marginAccount.publicKey,
+      marginAccountBalances,
+      marketBalances,
+    );
   }
 
   async getPnl() {
-    // todo
-    throw new Error('not implemented');
+    // grab trade history
+    let tradeHistory: OpenOrderForPnl[] = [];
+    for (const [spotMarketSymbol, unused] of Object.entries(
+      this.spotMarketMappings,
+    )) {
+      const tradeHistoryForSymbol = await this.getTradeHistory(
+        spotMarketSymbol,
+      );
+      tradeHistory = tradeHistory.concat(tradeHistoryForSymbol);
+    }
+
+    const profitAndLoss = {};
+
+    // compute profit and loss for all markets
+    const groupedTrades = groupBy(tradeHistory, (trade) => trade.marketName);
+    groupedTrades.forEach((val, key) => {
+      profitAndLoss[key] = val.reduce(
+        (acc, current) =>
+          (current.side === 'sell' ? current.size * -1 : current.size) + acc,
+        0,
+      );
+    });
+
+    // compute profit and loss for usdc
+    const totalNativeUsdc = tradeHistory.reduce((acc, current) => {
+      const usdcAmount =
+        current.side === 'sell'
+          ? current.nativeQuantityReleased
+          : current.nativeQuantityPaid * -1;
+      return usdcAmount + acc;
+    }, 0);
+    (profitAndLoss as any).USDC = nativeToUi(
+      totalNativeUsdc,
+      this.mangoGroup.mintDecimals[2],
+    );
+
+    // compute final pnl
+    let total = 0;
+    const prices = await this.mangoGroup.getPrices(this.connection);
+    const assetIndex = {
+      'BTC/USDC': 0,
+      'BTC/WUSDC': 0,
+      'ETH/USDC': 1,
+      'ETH/WUSDC': 1,
+      'SOL/USDC': 1,
+      'SOL/WUSDC': 1,
+      'SRM/USDC': 1,
+      'SRM/WUSDC': 1,
+      USDC: 2,
+      WUSDC: 2,
+    };
+    for (const assetName of Object.keys(profitAndLoss)) {
+      total = total + profitAndLoss[assetName] * prices[assetIndex[assetName]];
+    }
+
+    return total.toFixed(2);
   }
 
   /**
@@ -558,4 +680,37 @@ export class SimpleClient {
     }
     return ohlcvs;
   }
+
+  // async debug() {
+  //   const marginAccountForOwner = await this.getMarginAccountForOwner();
+  //   console.log(
+  //     `margin account - ${marginAccountForOwner.publicKey.toBase58()}`,
+  //   );
+  //
+  //   const balance = await this.getBalance();
+  //   balance.marginAccountBalances.map((bal) => {
+  //     console.log(
+  //       ` - balance for ${bal.tokenSymbol}, deposited ${bal.deposited}, borrowed ${bal.borrowed}`,
+  //     );
+  //   });
+  //
+  //   for (const symbol of Object.keys(this.spotMarketMappings)) {
+  //     const openOrdersAccountForSymbol =
+  //       await this.getOpenOrdersAccountForSymbol(symbol);
+  //     if (openOrdersAccountForSymbol === undefined) {
+  //       continue;
+  //     }
+  //     console.log(
+  //       ` - symbol ${symbol}, open orders account ${openOrdersAccountForSymbol?.publicKey.toBase58()}`,
+  //     );
+  //
+  //     const openOrders = await this.getOpenOrders(symbol);
+  //     if (openOrders === undefined) {
+  //       continue;
+  //     }
+  //     for (const order of openOrders) {
+  //       console.log(`  - orderId  ${order.orderId}, clientId ${order.clientId}`);
+  //     }
+  //   }
+  // }
 }
