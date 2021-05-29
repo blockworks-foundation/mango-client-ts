@@ -1,4 +1,4 @@
-import { MangoClient, MarginAccount } from './client';
+import { MangoClient, MangoGroup, MarginAccount } from './client';
 import IDS from './ids.json';
 import {
   Account,
@@ -10,7 +10,6 @@ import {
 import os from 'os';
 import fs from 'fs';
 import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
-import { MangoGroup } from '../lib';
 import { Order } from '@project-serum/serum/lib/market';
 import { ceilToDecimal, groupBy, nativeToUi, uid } from './utils';
 import BN from 'bn.js';
@@ -51,7 +50,7 @@ export class MarginAccountBalance {
 
 export class Balance {
   constructor(
-    public marginAccountPublicKey: PublicKey,
+    public marginAccountPublicKey: string,
     public marginAccountBalances: MarginAccountBalance[],
     public marketBalances: MarketBalance[],
   ) {}
@@ -104,14 +103,16 @@ export class SimpleClient {
     private client: MangoClient,
     private connection: Connection,
     private programId: PublicKey,
+    private dexProgramId: PublicKey,
     private mangoGroup: MangoGroup,
     private markets: Market[],
     private mangoGroupTokenMappings: Map<TokenSymbol, PublicKey>,
     private spotMarketMappings: Map<SpotMarketSymbol, PublicKey>,
     private payer: Account,
+    private marginAccountPk: string,
   ) {}
 
-  public static async create() {
+  public static async create(marginAccountPk: string) {
     const cluster = process.env.CLUSTER || 'mainnet-beta';
     const mangoGroupName = 'BTC_ETH_SOL_SRM_USDC';
 
@@ -178,11 +179,13 @@ export class SimpleClient {
       client,
       connection,
       programId,
+      dexProgramId,
       mangoGroup,
       markets,
       mangoGroupTokenMappings,
       mangoGroupSportMarketMappings,
       payer,
+      marginAccountPk,
     );
   }
 
@@ -203,35 +206,11 @@ export class SimpleClient {
   }
 
   private async getMarginAccountForOwner(): Promise<MarginAccount> {
-    const prices = await this.mangoGroup.getPrices(this.connection);
-    const marginAccounts = await this.client.getMarginAccountsForOwner(
+    return await this.client.getMarginAccount(
       this.connection,
-      this.programId,
-      this.mangoGroup,
-      this.payer,
+      new PublicKey(this.marginAccountPk),
+      this.dexProgramId,
     );
-
-    if (marginAccounts.length > 0) {
-      return marginAccounts.sort((a, b) =>
-        a.computeValue(this.mangoGroup, prices) >
-        b.computeValue(this.mangoGroup, prices)
-          ? -1
-          : 1,
-      )[0];
-    }
-
-    this.client.initMarginAccount(
-      this.connection,
-      this.programId,
-      this.mangoGroup,
-      this.payer,
-    );
-    return await this.client.getMarginAccountsForOwner(
-      this.connection,
-      this.programId,
-      this.mangoGroup,
-      this.payer,
-    )[0];
   }
 
   private async getOpenOrdersAccountForSymbol(
@@ -539,7 +518,7 @@ export class SimpleClient {
     });
 
     return new Balance(
-      marginAccount.publicKey,
+      marginAccount.publicKey.toBase58(),
       marginAccountBalances,
       marketBalances,
     );
@@ -714,3 +693,13 @@ export class SimpleClient {
   //   }
   // }
 }
+
+async function test() {
+  process.env.CLUSTER = 'devnet';
+  const sc = await SimpleClient.create(
+    'tBhXVv9JVJL8tApoBxEcKEgs7Ngd1FgdYGwBTarN4Ux',
+  );
+  console.log(JSON.stringify(await sc.getBalance(), null, 2));
+}
+
+test();

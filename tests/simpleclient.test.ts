@@ -17,8 +17,8 @@ import expect from 'expect';
 process.env.CLUSTER = 'devnet';
 const marketSymbol = 'BTC/USDC';
 const lowPriceThatDoesntTrigger = 1;
-const keyFilePath =
-  process.env.KEYPAIR || os.homedir() + '/.config/solana/id.json';
+const keyFilePath = process.env.KEYPAIR || __dirname + 'id.json.bak';
+const marginAccountPk = 'tBhXVv9JVJL8tApoBxEcKEgs7Ngd1FgdYGwBTarN4Ux';
 
 describe('test simple client', async () => {
   (!fs.existsSync(keyFilePath) ? it : it.skip)(
@@ -160,7 +160,7 @@ describe('test simple client', async () => {
   (process.env.CLUSTER === 'devnet' ? it : it.skip)(
     'clean slate for devnet',
     async () => {
-      const sc = await SimpleClient.create();
+      const sc = await SimpleClient.create(marginAccountPk);
       await cleanup(sc);
       const orders = await sc.getOpenOrders(marketSymbol);
       expect(orders.length).toBe(0);
@@ -168,7 +168,7 @@ describe('test simple client', async () => {
   );
 
   it('test place order', async () => {
-    const sc = await SimpleClient.create();
+    const sc = await SimpleClient.create(marginAccountPk);
 
     const ordersBeforePlacement = await sc.getOpenOrders(marketSymbol);
     expect(ordersBeforePlacement.length).toBe(0);
@@ -195,7 +195,7 @@ describe('test simple client', async () => {
 
   //
   it('test cancel a specific order', async () => {
-    const sc = await SimpleClient.create();
+    const sc = await SimpleClient.create(marginAccountPk);
     const txClientId = await sc.placeOrder(
       marketSymbol,
       'limit',
@@ -215,7 +215,7 @@ describe('test simple client', async () => {
   });
 
   it('test balances', async () => {
-    const sc = await SimpleClient.create();
+    const sc = await SimpleClient.create(marginAccountPk);
     const balance: Balance = await sc.getBalance();
     balance.marginAccountBalances.map((marginAccountBalance) => {
       expect(marginAccountBalance.deposited).toBeGreaterThan(0);
@@ -225,20 +225,20 @@ describe('test simple client', async () => {
   (process.env.CLUSTER === 'mainnet-beta' ? it : it.skip)(
     'test trade history',
     async () => {
-      const sc = await SimpleClient.create();
+      const sc = await SimpleClient.create(marginAccountPk);
       const tradeHistory = await sc.getTradeHistory(marketSymbol);
       expect(tradeHistory.length).toBeGreaterThan(0);
     },
   );
 
   it('test tickers', async () => {
-    const sc = await SimpleClient.create();
+    const sc = await SimpleClient.create(marginAccountPk);
     const tickers = await sc.getTickers();
     expect(tickers.length).toBeGreaterThan(0);
   });
 
   it('test ohlcv', async () => {
-    const sc = await SimpleClient.create();
+    const sc = await SimpleClient.create(marginAccountPk);
     const to = Date.now();
     const yday = to - 24 * 60 * 60 * 1000;
     const ohlcvs = await sc.getOhlcv(marketSymbol, '1D', yday, to);
@@ -246,7 +246,7 @@ describe('test simple client', async () => {
   });
 
   (process.env.CLUSTER === 'mainnet-beta' ? it : it.skip)('pnl', async () => {
-    const sc = await SimpleClient.create();
+    const sc = await SimpleClient.create(marginAccountPk);
     const pnl = await sc.getPnl();
     expect(pnl).toBeGreaterThan(0);
   });
