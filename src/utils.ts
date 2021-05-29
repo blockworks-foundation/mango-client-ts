@@ -394,7 +394,3 @@ export function ceilToDecimal(value: number, decimals: number | undefined | null
     : Math.ceil(value);
 }
 
-export function uid():number{
-  return Date.now();
-}
-

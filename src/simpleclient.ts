@@ -1,17 +1,11 @@
 import { MangoClient, MangoGroup, MarginAccount } from './client';
 import IDS from './ids.json';
-import {
-  Account,
-  Commitment,
-  Connection,
-  PublicKey,
-  TransactionSignature,
-} from '@solana/web3.js';
+import { Account, Commitment, Connection, PublicKey, TransactionSignature } from '@solana/web3.js';
 import os from 'os';
 import fs from 'fs';
 import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
 import { Order } from '@project-serum/serum/lib/market';
-import { ceilToDecimal, groupBy, nativeToUi, uid } from './utils';
+import { ceilToDecimal, groupBy, nativeToUi } from './utils';
 import BN from 'bn.js';
 import fetch from 'node-fetch';
 
@@ -316,7 +310,7 @@ export class SimpleClient {
 
     const marginAccount = await this.getMarginAccountForOwner();
 
-    const clientId = new BN(uid());
+    const clientId = new BN(Date.now());
 
     orderType = orderType === undefined ? 'limit' : orderType;
 
