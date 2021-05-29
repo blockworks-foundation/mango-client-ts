@@ -15,10 +15,13 @@ import fs from 'fs';
 import expect from 'expect';
 
 process.env.CLUSTER = 'devnet';
+process.env.KEYPAIR = __dirname + '/' + 'id.json.bak';
+
 const marketSymbol = 'BTC/USDC';
 const lowPriceThatDoesntTrigger = 1;
-const keyFilePath = process.env.KEYPAIR || __dirname + 'id.json.bak';
 const marginAccountPk = 'tBhXVv9JVJL8tApoBxEcKEgs7Ngd1FgdYGwBTarN4Ux';
+const keyFilePath =
+  process.env.KEYPAIR || os.homedir() + '/.config/solana/id.json';
 
 describe('test simple client', async () => {
   (!fs.existsSync(keyFilePath) ? it : it.skip)(
@@ -231,23 +234,32 @@ describe('test simple client', async () => {
     },
   );
 
-  it('test tickers', async () => {
-    const sc = await SimpleClient.create(marginAccountPk);
-    const tickers = await sc.getTickers();
-    expect(tickers.length).toBeGreaterThan(0);
-  });
+  (process.env.CLUSTER === 'mainnet-beta' ? it : it.skip)(
+    'test tickers',
+    async () => {
+      const sc = await SimpleClient.create(marginAccountPk);
+      const tickers = await sc.getTickers();
+      expect(tickers.length).toBeGreaterThan(0);
+    },
+  );
 
-  it('test ohlcv', async () => {
-    const sc = await SimpleClient.create(marginAccountPk);
-    const to = Date.now();
-    const yday = to - 24 * 60 * 60 * 1000;
-    const ohlcvs = await sc.getOhlcv(marketSymbol, '1D', yday, to);
-    expect(ohlcvs.length).toBeGreaterThan(0);
-  });
+  (process.env.CLUSTER === 'mainnet-beta' ? it : it.skip)(
+    'test ohlcv',
+    async () => {
+      const sc = await SimpleClient.create(marginAccountPk);
+      const to = Date.now();
+      const yday = to - 24 * 60 * 60 * 1000;
+      const ohlcvs = await sc.getOhlcv(marketSymbol, '1D', yday, to);
+      expect(ohlcvs.length).toBeGreaterThan(0);
+    },
+  );
 
-  (process.env.CLUSTER === 'mainnet-beta' ? it : it.skip)('pnl', async () => {
-    const sc = await SimpleClient.create(marginAccountPk);
-    const pnl = await sc.getPnl();
-    expect(pnl).toBeGreaterThan(0);
-  });
+  (process.env.CLUSTER === 'mainnet-beta' ? it : it.skip)(
+    'test pnl',
+    async () => {
+      const sc = await SimpleClient.create(marginAccountPk);
+      const pnl = await sc.getPnl();
+      expect(pnl).toBeGreaterThan(0);
+    },
+  );
 });
