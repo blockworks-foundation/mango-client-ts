@@ -216,14 +216,7 @@ export class SimpleClient {
   private async getOpenOrdersAccountForSymbol(
     marketSymbol: SpotMarketSymbol,
   ): Promise<OpenOrders | undefined> {
-    if (Object.keys(this.spotMarketMappings).indexOf(marketSymbol) === -1) {
-      throw new Error(`unknown spot market ${marketSymbol}`);
-    }
-    const marketAddress = this.spotMarketMappings[marketSymbol];
-    const market = this.markets.find((market) =>
-      market.publicKey.equals(marketAddress),
-    );
-
+    const market = this.getMarketForSymbol(marketSymbol);
     const marketIndex = this.mangoGroup.getMarketIndex(market!);
     const marginAccount = await this.getMarginAccountForOwner();
     return marginAccount.openOrdersAccounts[marketIndex];
