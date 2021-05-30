@@ -1,6 +1,12 @@
 import { MangoClient, MangoGroup, MarginAccount } from './client';
 import IDS from './ids.json';
-import { Account, Commitment, Connection, PublicKey, TransactionSignature } from '@solana/web3.js';
+import {
+  Account,
+  Commitment,
+  Connection,
+  PublicKey,
+  TransactionSignature,
+} from '@solana/web3.js';
 import os from 'os';
 import fs from 'fs';
 import { Market, OpenOrders, Orderbook } from '@project-serum/serum';
@@ -88,6 +94,13 @@ type Resolution =
   | '180'
   | '240'
   | '1D';
+
+class EmptyOrderBookError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'EmptyOrderBookError';
+  }
+}
 
 /**
  * a simpler more cex-style client with sensible (hopefully ;)) defaults
@@ -291,6 +304,11 @@ export class SimpleClient {
       const orderBook = await this.getOrderBook(symbol);
       let acc = 0;
       let selectedOrder;
+      if (orderBook.length === 0) {
+        throw new EmptyOrderBookError(
+          'Empty order book encountered when placing a market order!',
+        );
+      }
       for (const order of orderBook) {
         acc += order.size;
         if (acc >= quantity) {
@@ -298,7 +316,6 @@ export class SimpleClient {
           break;
         }
       }
-
       if (side === 'buy') {
         price = selectedOrder.price * 1.05;
       } else {
