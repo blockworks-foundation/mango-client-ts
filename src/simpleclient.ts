@@ -680,13 +680,3 @@ export class SimpleClient {
   //   }
   // }
 }
-
-async function test() {
-  process.env.CLUSTER = 'devnet';
-  const sc = await SimpleClient.create(
-    'tBhXVv9JVJL8tApoBxEcKEgs7Ngd1FgdYGwBTarN4Ux',
-  );
-  console.log(JSON.stringify(await sc.getBalance(), null, 2));
-}
-
-test();
