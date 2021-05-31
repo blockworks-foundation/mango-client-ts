@@ -276,7 +276,7 @@ async function stressTestLiquidation(mangoGroupSpotMarket: any, orderQuantity: n
   for (let i = 0; i < orderQuantity; i++) {
     console.info(`Placing a buy order of ${orderSize} ${baseSymbol} for ${orderPrice} ${quoteSymbol} = ~${neededQuoteAmount} ${quoteSymbol} - ${i + 1}/${orderQuantity}`);
     liqeeMarginAccount = await client.getMarginAccount(connection, liqeeMarginAccountPk, dexProgramId);
-    await client.placeAndSettle(connection, mangoProgramId, mangoGroup, liqeeMarginAccount, spotMarket, liqeeOwner, 'buy', orderPrice, orderSize);
+    await client.placeAndSettle(connection, mangoProgramId, mangoGroup, liqeeMarginAccount, spotMarket, liqeeOwner, 'buy', orderPrice * 2, orderSize);
   }
 
   liqeeMarginAccount = await client.getMarginAccount(connection, liqeeMarginAccountPk, dexProgramId);
@@ -434,9 +434,9 @@ describe('stress testing partial liquidation', async() => {
   // before(async () => {
   //   await cleanOrderBook(mangoGroupSpotMarket);
   // });
-  // it('should partially liquidate an account with 1 open order', async() => {
-  //   await stressTestLiquidation(mangoGroupSpotMarket, 1, true);
-  // });
+  it('should partially liquidate an account with 1 open order', async() => {
+    await stressTestLiquidation(mangoGroupSpotMarket, 1, true);
+  });
   // it('should partially liquidate an account with 10 open orders', async() => {
   //   await stressTestLiquidation(mangoGroupSpotMarket, 10, true);
   // });
