@@ -27,6 +27,22 @@ export async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function getDecimalCount(value: number): number {
+  if (
+    !isNaN(value) &&
+    Math.floor(value) !== value &&
+    value.toString().includes('.')
+  )
+    return value.toString().split('.')[1].length || 0;
+  if (
+    !isNaN(value) &&
+    Math.floor(value) !== value &&
+    value.toString().includes('e')
+  )
+    return parseInt(value.toString().split('e-')[1] || '0');
+  return 0;
+}
+
 export async function simulateTransaction(
   connection: Connection,
   transaction: Transaction,
@@ -368,4 +384,3 @@ export function decodeRecentEvents(
 
   return { header, nodes };
 }
-

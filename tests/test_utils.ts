@@ -1,9 +1,10 @@
-import { MangoClient, MangoGroup, MarginAccount } from '../src/client';
-import { Account, Connection, PublicKey, SystemProgram, Transaction, TransactionInstruction, TransactionSignature, TransferParams } from '@solana/web3.js';
+import { MangoClient, MangoGroup } from '../src/client';
+import { Account, Connection, PublicKey, SystemProgram, Transaction, TransactionInstruction, TransactionSignature } from '@solana/web3.js';
 import { Market, TokenInstructions, OpenOrders, Orderbook } from '@project-serum/serum';
+import { Order } from '@project-serum/serum/lib/market';
 import { token } from '@project-serum/common';
 import { u64, NATIVE_MINT } from "@solana/spl-token";
-import { sleep } from '../src/utils';
+import { sleep, getDecimalCount } from '../src/utils';
 
 console.log = function () {}; // NOTE: Disable all unnecessary logging
 
@@ -20,6 +21,7 @@ export async function _sendTransaction (
   transaction: Transaction,
   signers: Account[],
 ): Promise<TransactionSignature> {
+  await sleep(1000)
   const signature = await connection.sendTransaction(transaction, signers);
   try {
     await connection.confirmTransaction(signature);
@@ -115,6 +117,18 @@ export async function createWalletAndRequestAirdrop(
   return owner;
 }
 
+export async function getSpotMarketDetails(
+  connection: Connection,
+  mangoGroupSpotMarket: any,
+  dexProgramId: PublicKey
+): Promise<{spotMarket: Market, baseSymbol: string, quoteSymbol: string, minSize: number, minPrice: number}> {
+  const [spotMarketSymbol, spotMarketAddress] = mangoGroupSpotMarket;
+  const [baseSymbol, quoteSymbol] = spotMarketSymbol.split('/');
+  const spotMarket = await Market.load(connection, new PublicKey(spotMarketAddress), { skipPreflight: true, commitment: 'singleGossip'}, dexProgramId);
+  const { minSize, minPrice } = getMinSizeAndPriceForMarket(spotMarket);
+  return { spotMarket, baseSymbol, quoteSymbol, minSize: minSize as number, minPrice: minPrice as number };
+}
+
 export async function createMangoGroupSymbolMappings (
   connection: Connection,
   mangoGroupIds: any,
@@ -126,28 +140,6 @@ export async function createMangoGroupSymbolMappings (
     mangoGroupTokenMappings[tokenMint] = { tokenMint: new PublicKey(tokenMint), tokenName, decimals: tokenSupply.value.decimals };
   }
   return mangoGroupTokenMappings;
-}
-
-export async function getOwnedTokenAccounts(
-  connection: Connection,
-  owner: Account,
-): Promise<any[]> {
-  const ownedTokenAccounts = await token.getOwnedTokenAccounts(connection, owner.publicKey);
-  return ownedTokenAccounts;
-}
-
-export async function updateMarginTokenAccountsAndDeposits(
-  connection: Connection,
-  owner: Account,
-  client: MangoClient,
-  mangoGroup: MangoGroup,
-  marginAccountPk: PublicKey | null,
-  state: any,
-  dexProgramId: PublicKey,
-): Promise<void>{
-  state.ownedTokenAccounts = await token.getOwnedTokenAccounts(connection, owner.publicKey);
-  state.marginAccount = (marginAccountPk) ? await client.getMarginAccount(connection, marginAccountPk, dexProgramId) : null;
-  state.deposits = (state.marginAccount) ? state.marginAccount.getDeposits(mangoGroup) : [];
 }
 
 export async function buildAirdropTokensIx(
@@ -188,24 +180,6 @@ export async function airdropTokens(
   return tokenDestinationPublicKey.toBase58();
 };
 
-export async function airdropToken(
-  connection: Connection,
-  owner: Account,
-  tokenName: string,
-  mangoGroupTokenMappings: any,
-  faucetIds: any,
-  amount: number
-): Promise<void> {
-  if (tokenName !== 'SOL') throw new Error('This airdrop is function is not meant for SOL');
-  const ownedTokenAccounts = await token.getOwnedTokenAccounts(connection, owner.publicKey);
-  const tokenMapping: any = Object.values(mangoGroupTokenMappings).find((x: any) => x.tokenName === tokenName);
-  const { tokenMint, decimals } = tokenMapping;
-  const ownedTokenAccount = ownedTokenAccounts.find((x: any) => x.account.mint.equals(tokenMint));
-  if (!ownedTokenAccount) throw new Error(`Token account doesn't exist for ${tokenName}`);
-  const multiplier = Math.pow(10, decimals);
-  await airdropTokens(connection, owner, faucetIds[tokenName], ownedTokenAccount.publicKey, tokenMint, new u64(amount * multiplier));
-}
-
 export async function airdropSol(
   connection: Connection,
   owner: Account,
@@ -223,26 +197,56 @@ export async function airdropSol(
   await _sendTransaction(connection, tx, signers);
 }
 
-export async function airdropMangoGroupTokens(
+export function getMinSizeAndPriceForMarket(
+  spotMarket: Market
+): { minSize : string | number, minPrice: string | number} {
+  const minSize = spotMarket?.minOrderSize?.toFixed(getDecimalCount(spotMarket.minOrderSize)) || spotMarket?.minOrderSize;
+  const minPrice = spotMarket?.tickSize?.toFixed(getDecimalCount(spotMarket.tickSize)) || spotMarket?.tickSize;
+  return { minSize, minPrice };
+}
+
+export async function placeOrderUsingSerumDex(
   connection: Connection,
   owner: Account,
-  mangoGroup: MangoGroup,
-  mangoGroupTokenMappings: any,
-  ownedTokenAccounts: any,
-  faucetIds: any
-): Promise<void> {
-  (await Promise.all(
-    mangoGroup.tokens.map(async (mint: PublicKey) => {
-      const {tokenName, decimals} = mangoGroupTokenMappings[mint.toString()];
-      if (tokenName) {
-        const ownedTokenAccount = ownedTokenAccounts.find((x: any) => x.account.mint.equals(mint));
-        if (tokenName !== 'SOL') {
-          const multiplier = Math.pow(10, decimals);
-          await airdropTokens(connection, owner, faucetIds[tokenName], ownedTokenAccount.publicKey, mint, new u64(100 * multiplier));
-        }
-      }
-    })
-  ));
+  spotMarket: Market,
+  baseCurrencyAccount: PublicKey,
+  quoteCurrencyAccount: PublicKey,
+  orderParams: any
+): Promise<string> {
+  const { side, price, size, orderType = 'limit', feeDiscountPubkey = undefined } = orderParams;
+  const { minSize, minPrice } = getMinSizeAndPriceForMarket(spotMarket);
+  const isIncrement = (num: number, step: number) => Math.abs((num / step) % 1) < 1e-5 || Math.abs(((num / step) % 1) - 1) < 1e-5;
+  if (isNaN(price)) throw Error('Invalid price');
+  if (isNaN(size)) throw Error('Invalid size');
+  if (!spotMarket) throw Error('Invalid market');
+  if (!isIncrement(size, spotMarket.minOrderSize)) throw Error(`Size must be an increment of ${minSize}`);
+  if (size < spotMarket.minOrderSize) throw Error('Size too small');
+  if (!isIncrement(price, spotMarket.tickSize)) throw Error(`Price must be an increment of ${minPrice}`);
+  if (price < spotMarket.tickSize) throw Error('Price too small');
+  const transaction = new Transaction();
+  const signers: Account[] = [owner];
+  const payer = side === 'sell' ? baseCurrencyAccount : quoteCurrencyAccount;
+  if (!payer) throw Error('Associated account for spend currency is missing');
+  const params = { owner: owner.publicKey, payer, side, price, size, orderType, feeDiscountPubkey: feeDiscountPubkey || null};
+  let { transaction: placeOrderTx, signers: placeOrderSigners } = await spotMarket.makePlaceOrderTransaction( connection, params, 120_000, 120_000 );
+  transaction.add(placeOrderTx);
+  signers.push(...placeOrderSigners);
+  return await _sendTransaction(connection, transaction, signers);
+}
+
+export async function cancelOrdersUsingSerumDex(
+  connection: Connection,
+  owner: Account,
+  spotMarket: Market,
+  orders: Order[]
+): Promise<string>{
+  const transaction = new Transaction();
+  orders.forEach((order) => {
+    transaction.add(
+      spotMarket.makeCancelOrderInstruction(connection, owner.publicKey, order),
+    );
+  });
+  return await _sendTransaction(connection, transaction, [owner]);
 }
 
 export async function createTokenAccountWithBalance(
@@ -251,44 +255,26 @@ export async function createTokenAccountWithBalance(
   tokenName: string,
   mangoGroupTokenMappings: any,
   faucetIds: any,
-  amount: number
+  amount: number,
+  wrappedSol: boolean = true,
 ) {
   const tokenMapping: any = Object.values(mangoGroupTokenMappings).find((x: any) => x.tokenName === tokenName);
   const { tokenMint, decimals } = tokenMapping;
   const multiplier = Math.pow(10, decimals);
   const processedAmount = amount * multiplier;
+  let ownedTokenAccountPk: PublicKey | null = null;
   if (tokenName === 'SOL') {
     await airdropSol(connection, owner, amount);
-    await createWrappedNativeAccount(connection, owner, processedAmount);
+    if (wrappedSol) {
+      ownedTokenAccountPk = await createWrappedNativeAccount(connection, owner, processedAmount);
+    }
   } else {
-    await createTokenAccount(connection, tokenMint, owner);
+    ownedTokenAccountPk = await createTokenAccount(connection, tokenMint, owner);
     if (amount > 0) {
-      const ownedTokenAccounts = await token.getOwnedTokenAccounts(connection, owner.publicKey);
-      const ownedTokenAccount = ownedTokenAccounts.find((x: any) => x.account.mint.equals(tokenMint));
-      if (!ownedTokenAccount) throw new Error(`Token account doesn't exist for ${tokenName}`);
-      await airdropTokens(connection, owner, faucetIds[tokenName], ownedTokenAccount.publicKey, tokenMint, new u64(processedAmount));
+      await airdropTokens(connection, owner, faucetIds[tokenName], ownedTokenAccountPk, tokenMint, new u64(processedAmount));
     }
   }
-}
-
-export async function createTokenAccountsForMangoGroupTokens (
-  connection: Connection,
-  owner: Account,
-  mangoGroup: MangoGroup,
-  mangoGroupTokenMappings: any,
-) {
-  (await Promise.all(
-    mangoGroup.tokens.map(async (mint: PublicKey) => {
-      const {tokenName} = mangoGroupTokenMappings[mint.toString()];
-      if (tokenName) {
-        if (tokenName === 'SOL') {
-          await createWrappedNativeAccount(connection, owner, 100 * 1e9);
-        } else {
-          await createTokenAccount(connection, mint, owner);
-        }
-      }
-    })
-  ));
+  return ownedTokenAccountPk;
 }
 
 export async function performSingleDepositOrWithdrawal (
@@ -309,32 +295,11 @@ export async function performSingleDepositOrWithdrawal (
   const ownedTokenAccount = ownedTokenAccounts.find((x: any) => x.account.mint.equals(tokenMint));
   if (!ownedTokenAccount) throw new Error(`Token account doesn't exist for ${tokenName}`);
   if (type === 'deposit') {
+    // TODO: Add wrapped SOL functionality here instead of creating an account for Wrapped SOL in default
     await client.deposit(connection, mangoProgramId, mangoGroup, marginAccount, owner, tokenMint, ownedTokenAccount.publicKey, Number(amount));
   } else if (type === 'withdraw') {
     await client.withdraw(connection, mangoProgramId, mangoGroup, marginAccount, owner, tokenMint, ownedTokenAccount.publicKey, Number(amount));
   }
-}
-
-export async function performDepositOrWithdrawal (
-  connection: Connection,
-  owner: Account,
-  client: MangoClient,
-  mangoGroup: MangoGroup,
-  mangoProgramId: PublicKey,
-  state: any,
-  type: string,
-  amount: number
-) {
-  (await Promise.all(
-    mangoGroup.tokens.map(async (mint: PublicKey) => {
-      const ownedTokenAccount = state.ownedTokenAccounts.find((x: any) => x.account.mint.equals(mint));
-      if (type === 'deposit') {
-        await client.deposit(connection, mangoProgramId, mangoGroup, state.marginAccount, owner, mint, ownedTokenAccount.publicKey, Number(amount));
-      } else if (type === 'withdraw') {
-        await client.withdraw(connection, mangoProgramId, mangoGroup, state.marginAccount, owner, mint, ownedTokenAccount.publicKey, Number(amount));
-      }
-    })
-  ));
 }
 
 export async function getAndDecodeBidsAndAsks (
@@ -367,6 +332,7 @@ export async function getBidOrAskPriceEdge(
   bidOrAsk: string,
   maxOrMin: string
 ): Promise<number>{
+  // TODO: Refactor this function to use minSize and minPrice prices
   const { bidOrderBook, askOrderBook } = await getAndDecodeBidsAndAsks(connection, spotMarket);
   const [orderBookSide, orderBookOtherSide] = (bidOrAsk === 'bid' ? [bidOrderBook, askOrderBook] : [askOrderBook, bidOrderBook]);
   const orderBookSidePrices: number[] = [...orderBookSide].map(x => x.price);
@@ -397,7 +363,7 @@ export async function getOrderSizeAndPrice(
   // NOTE: Always use minOrderSize
   const tokenMapping: any = Object.values(mangoGroupTokenMappings).find((x: any) => x.tokenName === baseSymbol);
   const { decimals } = tokenMapping;
-  const [stepSize, orderSize] = (decimals === 6) ? [0.01, 1] : [10, 0.01];
+  const [stepSize, orderSize] = (decimals === 6) ? [0.1, 1] : [1, 0.1];
   const edge = (side === 'buy') ? ['bid', 'max'] : ['ask', 'min'];
   const orderPrice: number = Math.max(await getBidOrAskPriceEdge(connection, spotMarket, edge[0], edge[1]), stepSize);
   return [orderSize, orderPrice, stepSize];
