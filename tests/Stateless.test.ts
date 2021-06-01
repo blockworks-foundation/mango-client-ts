@@ -268,6 +268,7 @@ async function stressTestLiquidation(params: {
     matchLeveragedOrder = false,
     side = 'buy'
   } = params;
+  console.info("shouldCreateNewLiqor:", shouldCreateNewLiqor)
   console.info("orderQuantity:", orderQuantity)
   let bna: any, allAsks: any[], allBids: any[], prices: number[];
   const liqeeOwner = customLiqeeOwner || await createWalletAndRequestAirdrop(connection, 5);
@@ -295,18 +296,38 @@ async function stressTestLiquidation(params: {
   for (let i = 0; i < orderQuantity; i++) {
     console.info(`Placing a ${side} order of ${finalOrderSize} ${baseSymbol} for ${finalOrderPrice} ${quoteSymbol} = ~${neededQuoteAmount} ${quoteSymbol} - ${i + 1}/${orderQuantity}`);
     liqeeMarginAccount = await client.getMarginAccount(connection, liqeeMarginAccountPk, dexProgramId);
+    console.info("Deposits init:", liqeeMarginAccount.getAssets(mangoGroup));
+    console.info("Assets init:", liqeeMarginAccount.getAssets(mangoGroup));
+    console.info("Liabs init:", liqeeMarginAccount.getLiabs(mangoGroup));
+    await client.placeAndSettle(connection, mangoProgramId, mangoGroup, liqeeMarginAccount, spotMarket, liqeeOwner, side, finalOrderPrice, finalOrderSize);
+    console.info("Sleeep!!!")
+    await sleep(5000);
+    liqeeMarginAccount = await client.getMarginAccount(connection, liqeeMarginAccountPk, dexProgramId);
     console.info("Deposits:", liqeeMarginAccount.getAssets(mangoGroup));
     console.info("Assets:", liqeeMarginAccount.getAssets(mangoGroup));
-    await client.placeAndSettle(connection, mangoProgramId, mangoGroup, liqeeMarginAccount, spotMarket, liqeeOwner, side, finalOrderPrice, finalOrderSize);
+    console.info("Assets Val:", liqeeMarginAccount.getAssetsVal(mangoGroup, prices));
+    console.info("Liabs:", liqeeMarginAccount.getLiabs(mangoGroup));
   }
 
-  if (matchLeveragedOrder) cleanOrderBook(mangoGroupSpotMarket);
-
+  if (matchLeveragedOrder) await cleanOrderBook(mangoGroupSpotMarket);
+  console.info("Sleeep!!!")
+  await sleep(10000);
   liqeeMarginAccount = await client.getMarginAccount(connection, liqeeMarginAccountPk, dexProgramId);
   console.info("collRatio before price change:", liqeeMarginAccount.getCollateralRatio(mangoGroup, prices));
+  console.info("Assets before:", liqeeMarginAccount.getAssets(mangoGroup));
+  console.info("Assets Val before:", liqeeMarginAccount.getAssetsVal(mangoGroup, prices));
+  console.info("Deposits before:", liqeeMarginAccount.getDeposits(mangoGroup));
+  console.info("Liabs before:", liqeeMarginAccount.getLiabs(mangoGroup));
+  console.info(prices);
   const adjustedPrice = (side === 'buy') ? finalOrderPrice / leverageCoefficient : finalOrderPrice * leverageCoefficient;
   prices = await requestPriceChange(mangoGroup, adjustedPrice, baseSymbol);
+  liqeeMarginAccount = await client.getMarginAccount(connection, liqeeMarginAccountPk, dexProgramId);
   console.info("collRatio after price change:", liqeeMarginAccount.getCollateralRatio(mangoGroup, prices));
+  console.info("Assets after:", liqeeMarginAccount.getAssets(mangoGroup));
+  console.info("Assets Val after:", liqeeMarginAccount.getAssetsVal(mangoGroup, prices));
+  console.info("Deposits after:", liqeeMarginAccount.getDeposits(mangoGroup));
+  console.info("Liabs after:", liqeeMarginAccount.getLiabs(mangoGroup));
+  console.info(prices);
 
   let liqorOwner = new Account();
 
@@ -350,9 +371,9 @@ const mangoGroupIds = clusterIds.mango_groups[mangoGroupName];
 const mangoGroupSpotMarkets: [string, string][] = Object.entries(mangoGroupIds.spot_market_symbols);
 const mangoGroupPk = new PublicKey(mangoGroupIds.mango_group_pk);
 
-// const mangoGroupSpotMarket = mangoGroupSpotMarkets[0]; //BTC/USDC
+const mangoGroupSpotMarket = mangoGroupSpotMarkets[0]; //BTC/USDC
 // const mangoGroupSpotMarket = mangoGroupSpotMarkets[1]; //ETH/USDC
-const mangoGroupSpotMarket = mangoGroupSpotMarkets[2]; //SOL/USDC
+// const mangoGroupSpotMarket = mangoGroupSpotMarkets[2]; //SOL/USDC
 // const mangoGroupSpotMarket = mangoGroupSpotMarkets[3]; //SRM/USDC
 
 describe('stress test order limits', async() => {
@@ -422,6 +443,10 @@ describe('stress testing partial liquidation', async() => {
   it('should partially liquidate an account with 128 open orders', async() => {
     await stressTestLiquidation({mangoGroupSpotMarket, orderQuantity: 128, shouldPartialLiquidate: true});
   });
+it ('should test socialized loss with 1 borrows', async() => {
+  const mangoGroupSpotMarketBTC = mangoGroupSpotMarkets[0]; //BTC/USDC
+  await stressTestLiquidation({ mangoGroupSpotMarket: mangoGroupSpotMarketBTC, shouldPartialLiquidate: true, shouldFinishLiquidationInTest: true, customOrderPrice: 20, customOrderSize: 1, matchLeveragedOrder: false, shouldCreateNewLiqor: true, leverageCoefficient: 30 });
+})
   it ('should test socialized loss with 4 borrows', async() => {
     const mangoGroupSpotMarketETH = mangoGroupSpotMarkets[1]; //ETH/USDC
     const { liqeeOwner } = await stressTestLiquidation({ mangoGroupSpotMarket: mangoGroupSpotMarketETH, shouldPartialLiquidate: true, shouldFinishLiquidationInTest: false, customOrderPrice: 10, customOrderSize: 1, shouldCreateNewLiqor: false });
@@ -430,7 +455,7 @@ describe('stress testing partial liquidation', async() => {
     const mangoGroupSpotMarketSRM = mangoGroupSpotMarkets[3]; //SRM/USDC
     await stressTestLiquidation({ mangoGroupSpotMarket: mangoGroupSpotMarketSRM, customLiqeeOwner: liqeeOwner, shouldPartialLiquidate: true, shouldFinishLiquidationInTest: false, customOrderPrice: 10, customOrderSize: 1, shouldCreateNewLiqor: false });
     const mangoGroupSpotMarketBTC = mangoGroupSpotMarkets[0]; //BTC/USDC
-    await stressTestLiquidation({ mangoGroupSpotMarket: mangoGroupSpotMarketBTC, customLiqeeOwner: liqeeOwner, shouldPartialLiquidate: true, shouldFinishLiquidationInTest: true, customOrderPrice: 10, customOrderSize: 1, matchLeveragedOrder: true, shouldCreateNewLiqor: false });
+    await stressTestLiquidation({ mangoGroupSpotMarket: mangoGroupSpotMarketBTC, customLiqeeOwner: liqeeOwner, shouldPartialLiquidate: true, shouldFinishLiquidationInTest: true, customOrderPrice: 10, customOrderSize: 1, matchLeveragedOrder: true, shouldCreateNewLiqor: true });
   })
 });
 
