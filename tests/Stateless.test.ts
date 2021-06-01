@@ -348,6 +348,8 @@ async function stressTestLiquidation(params: {
       ));
       let liquidationTxHash: string;
       if (shouldPartialLiquidate) {
+        const forceCancelTx = await client.forceCancelOrders(connection, mangoProgramId, mangoGroup, liqeeMarginAccount, liqorOwner, spotMarket, 5)
+        console.log('forceCancelTxHash', forceCancelTx)
         liquidationTxHash = await client.partialLiquidate(connection, mangoProgramId, mangoGroup, liqeeMarginAccount, liqorOwner, tokenWallets[quoteSymbolIndex], tokenWallets[baseSymbolIndex], quoteSymbolIndex, baseSymbolIndex, neededQuoteAmountForAllTrades);
       } else {
         const depositQuantities = new Array(tokenWallets.length).fill(0);
