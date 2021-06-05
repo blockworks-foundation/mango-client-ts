@@ -47,6 +47,7 @@ import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import Wallet from '@project-serum/sol-wallet-adapter';
 import {
+  makeAddMarginAccountInfoInstruction,
   makeBorrowInstruction,
   makeCancelOrderInstruction,
   makeForceCancelOrdersInstruction, makePartialLiquidateInstruction,
@@ -1303,6 +1304,27 @@ export class MangoClient {
     return await this.sendTransaction(connection, transaction, owner, additionalSigners)
   }
 
+  async addMarginAccountInfo(
+    connection: Connection,
+    programId: PublicKey,
+    mangoGroup: MangoGroup,
+    marginAccount: MarginAccount,
+    owner: Account,
+    info: string
+  ): Promise<TransactionSignature> {
+    const instruction = makeAddMarginAccountInfoInstruction(
+      programId,
+      mangoGroup.publicKey,
+      owner.publicKey,
+      marginAccount.publicKey,
+      info
+    )
+    const transaction = new Transaction()
+    transaction.add(instruction)
+    const additionalSigners = []
+
+    return await this.sendTransaction(connection, transaction, owner, additionalSigners)
+  }
   async getMangoGroup(
     connection: Connection,
     mangoGroupPk: PublicKey,
@@ -1500,5 +1522,7 @@ export class MangoClient {
 
     return srmAccounts
   }
+
+
 }
 

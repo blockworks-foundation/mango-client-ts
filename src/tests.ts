@@ -13,6 +13,7 @@ import {
   parseTokenAccountData,
   sleep
 } from './utils'
+import { NUM_TOKENS } from './layout';
 
 async function tests() {
   const cluster = "mainnet-beta";
@@ -20,7 +21,7 @@ async function tests() {
   const clusterIds = IDS[cluster]
 
   const connection = new Connection(IDS.cluster_urls[cluster], 'processed' as Commitment)
-  const mangoGroupPk = new PublicKey(clusterIds.mango_groups['BTC_ETH_USDT'].mango_group_pk);
+  const mangoGroupPk = new PublicKey(clusterIds.mango_groups['BTC_ETH_SOL_SRM_USDC'].mango_group_pk);
   const mangoProgramId = new PublicKey(clusterIds.mango_program_id);
 
   const keyPairPath = process.env.KEYPAIR || os.homedir() + '/.config/solana/id.json'
@@ -52,19 +53,19 @@ async function tests() {
   }
   */
 
-  /*
   async function getMarginAccountDetails() {
     const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk);
-    const marginAccountPk = new PublicKey("6vAry8oHVvWqPJV6SMzzJ9EcQr5kkQYHef6ui2ewaagQ")
+    const marginAccountPk = new PublicKey("Ga6xNLmkq3Mw95kUWPip2xnUGGEWnFmeiYFxjaZ1GFse")
     const marginAccount = await client.getMarginAccount(connection, marginAccountPk, mangoGroup.dexProgramId)
     const prices = await mangoGroup.getPrices(connection)
 
     console.log(marginAccount.toPrettyString(mangoGroup, prices))
     console.log(marginAccount.beingLiquidated)
-    console.log(marginAccount.getUiDeposit(mangoGroup, 0), marginAccount.getUiBorrow(mangoGroup, 0))
-    console.log(marginAccount.getUiDeposit(mangoGroup, 1), marginAccount.getUiBorrow(mangoGroup, 1))
-    console.log(marginAccount.getUiDeposit(mangoGroup, 2), marginAccount.getUiBorrow(mangoGroup, 2))
     console.log(marginAccount.getCollateralRatio(mangoGroup, prices))
+
+    for (let i = 0; i < NUM_TOKENS; i++) {
+      console.log(marginAccount.getUiDeposit(mangoGroup, i), marginAccount.getUiBorrow(mangoGroup, i))
+    }
     // for (let i = 0; i < NUM_MARKETS; i++) {
     //   let openOrdersAccount = marginAccount.openOrdersAccounts[i]
     //   if (openOrdersAccount === undefined) {
@@ -85,7 +86,6 @@ async function tests() {
     // }
 
   }
-  */
 
   async function testMarketOrderDex() {
     const NUM_MARKETS = 2;
@@ -165,12 +165,10 @@ async function tests() {
     }
   }
 
-  /*
   await getMarginAccountDetails()
-  await testSolink()
-  await testDepositSrm()
-  */
-  await testMarketOrderDex()
+  // await testSolink()
+  // await testDepositSrm()
+  // await testMarketOrderDex()
 }
 
 tests()
