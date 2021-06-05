@@ -60,8 +60,8 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 export const tokenToDecimals = {
   "BTC": 4,
   "ETH": 3,
-  "SOL": 2,
-  "SRM": 2,
+  "SOL": 1,
+  "SRM": 1,
   "USDT": 2,
   "USDC": 2,
   "WUSDT": 2,
