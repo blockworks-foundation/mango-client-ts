@@ -22,6 +22,7 @@
     "prepare": "run-s clean build",
     "shell": "node -e \"$(< shell)\" -i --experimental-repl-await",
     "test": "mocha -r ts-node/register tests/Stateless.test.ts --timeout 0",
+    "test-simple-client": "mocha -r ts-node/register tests/simpleclient.test.ts --timeout 0",
     "test:build": "run-s build",
     "test:lint": "eslint src",
     "test:unit": "jest",
