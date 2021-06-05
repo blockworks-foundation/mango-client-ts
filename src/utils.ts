@@ -126,7 +126,7 @@ export async function awaitTransactionSignatureConfirmation(
               if (!result) {
                 // console.log('REST null result for', txid, result);
               } else if (result.err) {
-                console.log('REST error for', txid, result.err);
+                console.log('REST error for', txid, result);
                 done = true;
                 reject(result.err);
               } else if (!(result.confirmations || confirmLevels.includes(result.confirmationStatus))) {
@@ -384,29 +384,3 @@ export function decodeRecentEvents(
 
   return { header, nodes };
 }
-
-export function groupBy(list, keyGetter) {
-  const map = new Map()
-  list.forEach((item) => {
-    const key = keyGetter(item)
-    const collection = map.get(key)
-    if (!collection) {
-      map.set(key, [item])
-    } else {
-      collection.push(item)
-    }
-  })
-  return map
-}
-
-export function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
-  return value !== null && value !== undefined;
-}
-
-
-export function ceilToDecimal(value: number, decimals: number | undefined | null) {
-  return decimals
-    ? Math.ceil(value * 10 ** decimals) / 10 ** decimals
-    : Math.ceil(value);
-}
-

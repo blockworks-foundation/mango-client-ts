@@ -10,10 +10,7 @@
     "noImplicitAny": false,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "jsx": "react",
-    "lib": [
-      "dom"
-    ]
+    "jsx": "react"
   },
   "include": ["./tests/**/*", "./src/**/*"],
   "exclude": ["./tests/**/*.test.js", "./src/**/*.test.js", "node_modules", "**/node_modules"]
