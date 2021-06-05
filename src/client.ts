@@ -189,7 +189,7 @@ export class MarginAccount {
 
   openOrders!: PublicKey[];
   openOrdersAccounts: (OpenOrders | undefined)[]  // undefined if an openOrdersAccount not yet initialized and has zeroKey
-  // TODO keep updated with websocket
+
 
   constructor(publicKey: PublicKey, decoded: any) {
     this.publicKey = publicKey
