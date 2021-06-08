@@ -2,12 +2,13 @@ import { bits, BitStructure, Blob, Layout, seq, struct, u32, u8, u16, UInt, unio
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
-export const NUM_TOKENS = 3;
+export const NUM_TOKENS = 5;
 export const NUM_MARKETS = NUM_TOKENS - 1;
 export const MANGO_GROUP_PADDING = 8 - (NUM_TOKENS + NUM_MARKETS) % 8;
 export const MAX_RATE = 3.0
 export const OPTIMAL_UTIL = 0.7
 export const OPTIMAL_RATE = 0.2
+export const INFO_LEN = 32
 
 class PublicKeyLayout extends Blob {
   constructor(property) {
@@ -156,7 +157,9 @@ export const MarginAccountLayout = struct([
   seq(U64F64(), NUM_TOKENS, 'borrows'),
   seq(publicKeyLayout(), NUM_MARKETS, 'openOrders'),
   u8('beingLiquidated'),
-  seq(u8(), 7, 'padding')
+  u8('hasBorrows'),
+  seq(u8(), 32, 'info'),
+  seq(u8(), 38, 'padding')
 ]);
 
 export const MangoSrmAccountLayout = struct([
@@ -276,7 +279,7 @@ MangoInstructionLayout.addVariant(14,
 )
 MangoInstructionLayout.addVariant(15, struct([u8('limit')]), 'ForceCancelOrders')
 MangoInstructionLayout.addVariant(16, struct([u64('maxDeposit')]), 'PartialLiquidate')
-
+MangoInstructionLayout.addVariant(17, struct([seq(u8(), INFO_LEN, 'info')]), 'AddMarginAccountInfo')
 // @ts-ignore
 const instructionMaxSpan = Math.max(...Object.values(MangoInstructionLayout.registry).map((r) => r.span));
 export function encodeMangoInstruction(data) {
@@ -284,5 +287,3 @@ export function encodeMangoInstruction(data) {
   const span = MangoInstructionLayout.encode(data, b);
   return b.slice(0, span);
 }
-
-

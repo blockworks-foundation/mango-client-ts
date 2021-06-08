@@ -5,7 +5,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Order } from '@project-serum/serum/lib/market';
-import { encodeMangoInstruction, NUM_TOKENS } from './layout';
+import { encodeMangoInstruction, INFO_LEN, NUM_TOKENS } from './layout';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import { uiToNative } from './utils';
 
@@ -304,6 +304,29 @@ export function makePartialLiquidateInstruction(
     })),
   ];
   const data = encodeMangoInstruction({ PartialLiquidate: { maxDeposit } });
+
+  return new TransactionInstruction({ keys, data, programId });
+}
+
+export function makeAddMarginAccountInfoInstruction(
+  programId: PublicKey,
+  mangoGroup: PublicKey,
+  marginAccount: PublicKey,
+  owner: PublicKey,
+  info: string
+): TransactionInstruction {
+  const keys = [
+    { isSigner: false, isWritable: true, pubkey: mangoGroup },
+    { isSigner: false, isWritable: true, pubkey: marginAccount },
+    { isSigner: true, isWritable: false, pubkey: owner },
+  ];
+  // TODO convert info into a 32 byte utf encoded byte array
+  const encoded = Buffer.from(info)
+  if (encoded.length > INFO_LEN) {
+    throw new Error("info string too long. Must be less than or equal to 32 bytes")
+  }
+  const infoArray = new Uint8Array(encoded, 0, INFO_LEN)
+  const data = encodeMangoInstruction({ AddMarginAccountInfo: { info: infoArray } });
 
   return new TransactionInstruction({ keys, data, programId });
 }
