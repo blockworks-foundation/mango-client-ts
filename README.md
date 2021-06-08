@@ -2,6 +2,16 @@
 # Mango Client
 A client to engage with the mango program
 
+## Versions
+
+1.0.0 released Jun 8, 2021
+- Supports the 5 token version of Mango
+- https://trade.mango.markets
+
+0.1.19
+- Supports the 3 token version of Mango
+- https://usdt.mango.markets
+
 ## Testing
 **All tests are meant to be run on devnet**
 The full test run, takes a long time to run and in some cases fail due to connectivity issues or someone else working on *devnet*. Therefore it is recommended to run isolated tests like so -
