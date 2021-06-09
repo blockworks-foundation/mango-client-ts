@@ -4,7 +4,7 @@ A client to engage with the mango program
 
 ## Versions
 
-1.0.0 released Jun 8, 2021
+2.0.0 released Jun 9, 2021
 - Supports the 5 token version of Mango
 - https://trade.mango.markets
 
