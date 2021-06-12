@@ -13,7 +13,7 @@ import {
   parseTokenAccountData,
   sleep
 } from './utils'
-import { NUM_TOKENS } from './layout';
+import { NUM_MARKETS, NUM_TOKENS } from './layout';
 
 async function tests() {
   const cluster = "mainnet-beta";
@@ -55,7 +55,7 @@ async function tests() {
 
   async function getMarginAccountDetails() {
     const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk);
-    const marginAccountPk = new PublicKey("Ga6xNLmkq3Mw95kUWPip2xnUGGEWnFmeiYFxjaZ1GFse")
+    const marginAccountPk = new PublicKey("AoqCcazWgh1VyDhDmvUEt36UHKt3ujJv57c9YEvaDZLj")
     const marginAccount = await client.getMarginAccount(connection, marginAccountPk, mangoGroup.dexProgramId)
     const prices = await mangoGroup.getPrices(connection)
 
@@ -66,24 +66,22 @@ async function tests() {
     for (let i = 0; i < NUM_TOKENS; i++) {
       console.log(marginAccount.getUiDeposit(mangoGroup, i), marginAccount.getUiBorrow(mangoGroup, i))
     }
-    // for (let i = 0; i < NUM_MARKETS; i++) {
-    //   let openOrdersAccount = marginAccount.openOrdersAccounts[i]
-    //   if (openOrdersAccount === undefined) {
-    //     continue
-    //   }
-    //
-    //   for (const oid of openOrdersAccount.orders) {
-    //     console.log(oid.toString())
-    //   }
-    //   console.log(i,
-    //     nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_MARKETS]),
-    //     nativeToUi(openOrdersAccount.quoteTokenFree.toNumber(), mangoGroup.mintDecimals[NUM_MARKETS]),
-    //
-    //     nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]),
-    //     nativeToUi(openOrdersAccount.baseTokenFree.toNumber(), mangoGroup.mintDecimals[i])
-    //
-    //   )
-    // }
+    for (let i = 0; i < NUM_MARKETS; i++) {
+      let openOrdersAccount = marginAccount.openOrdersAccounts[i]
+      if (openOrdersAccount === undefined) {
+        continue
+      }
+
+      console.log('referrer rebates', i, openOrdersAccount['referrerRebatesAccrued'].toNumber())
+      console.log(i,
+        nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber() + openOrdersAccount['referrerRebatesAccrued'].toNumber(), mangoGroup.mintDecimals[NUM_MARKETS]),
+        nativeToUi(openOrdersAccount.quoteTokenFree.toNumber(), mangoGroup.mintDecimals[NUM_MARKETS]),
+
+        nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]),
+        nativeToUi(openOrdersAccount.baseTokenFree.toNumber(), mangoGroup.mintDecimals[i])
+
+      )
+    }
 
   }
 

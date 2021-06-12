@@ -268,7 +268,7 @@ export class MarginAccount {
       const oos = this.openOrdersAccounts[i]
       if (oos != undefined) {
         value += nativeToUi(oos.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]) * prices[i]
-        value += nativeToUi(oos.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_TOKENS-1])
+        value += nativeToUi(oos.quoteTokenTotal.toNumber() + oos['referrerRebatesAccrued'].toNumber(), mangoGroup.mintDecimals[NUM_TOKENS-1])
       }
     }
 
@@ -306,9 +306,8 @@ export class MarginAccount {
       }
 
       assets[i] += nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i])
-      assets[NUM_TOKENS-1] += nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_TOKENS-1])
+      assets[NUM_TOKENS-1] += nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber() + openOrdersAccount['referrerRebatesAccrued'].toNumber(), mangoGroup.mintDecimals[NUM_TOKENS-1])
     }
-
 
     return assets
   }
@@ -335,7 +334,7 @@ export class MarginAccount {
       }
 
       assetsVal += nativeToUi(openOrdersAccount.baseTokenTotal.toNumber(), mangoGroup.mintDecimals[i]) * prices[i]
-      assetsVal += nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber(), mangoGroup.mintDecimals[NUM_TOKENS-1])
+      assetsVal += nativeToUi(openOrdersAccount.quoteTokenTotal.toNumber() + openOrdersAccount['referrerRebatesAccrued'].toNumber(), mangoGroup.mintDecimals[NUM_TOKENS-1])
     }
 
     return assetsVal
@@ -755,12 +754,12 @@ export class MangoClient {
       const openOrdersAccount = marginAccount.openOrdersAccounts[i]
       if (openOrdersAccount === undefined) {
         continue
-      } else if (openOrdersAccount.quoteTokenFree.toNumber() === 0 && openOrdersAccount.baseTokenFree.toNumber() === 0) {
+      } else if (openOrdersAccount.quoteTokenFree.toNumber() + openOrdersAccount['referrerRebatesAccrued'].toNumber() === 0 && openOrdersAccount.baseTokenFree.toNumber() === 0) {
         continue
       }
 
       assetGains[i] += openOrdersAccount.baseTokenFree.toNumber()
-      assetGains[NUM_TOKENS-1] += openOrdersAccount.quoteTokenFree.toNumber()
+      assetGains[NUM_TOKENS-1] += openOrdersAccount.quoteTokenFree.toNumber() + openOrdersAccount['referrerRebatesAccrued'].toNumber()
 
       const spotMarket = markets[i]
       const dexSigner = await PublicKey.createProgramAddress(
