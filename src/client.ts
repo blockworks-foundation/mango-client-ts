@@ -186,6 +186,7 @@ export class MarginAccount {
   deposits!: number[];
   borrows!: number[];
   beingLiquidated!: boolean;
+  hasBorrows!: boolean;
 
   openOrders!: PublicKey[];
   openOrdersAccounts: (OpenOrders | undefined)[]  // undefined if an openOrdersAccount not yet initialized and has zeroKey
@@ -1436,7 +1437,7 @@ export class MangoClient {
     return await this.getAllMarginAccounts(connection, programId, mangoGroup, [{
       memcmp: {
         offset: MarginAccountLayout.offsetOf('hasBorrows'),
-        bytes: 1
+        bytes: "2" // [1] base58 encoded
       }
     }])
   }
