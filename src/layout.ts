@@ -5,9 +5,9 @@ import BN from 'bn.js';
 export const NUM_TOKENS = 5;
 export const NUM_MARKETS = NUM_TOKENS - 1;
 export const MANGO_GROUP_PADDING = 8 - (NUM_TOKENS + NUM_MARKETS) % 8;
-export const MAX_RATE = 3.0
+export const MAX_RATE = 1.5
 export const OPTIMAL_UTIL = 0.7
-export const OPTIMAL_RATE = 0.2
+export const OPTIMAL_RATE = 0.06
 export const INFO_LEN = 32
 
 class PublicKeyLayout extends Blob {

@@ -55,7 +55,7 @@ async function tests() {
 
   async function getMarginAccountDetails() {
     const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk);
-    const marginAccountPk = new PublicKey("AoqCcazWgh1VyDhDmvUEt36UHKt3ujJv57c9YEvaDZLj")
+    const marginAccountPk = new PublicKey("BZXTBk41pBuwgw4RL3hUxRXqSdiA7VQiaxr4ueEMZrsH")
     const marginAccount = await client.getMarginAccount(connection, marginAccountPk, mangoGroup.dexProgramId)
     const prices = await mangoGroup.getPrices(connection)
 
