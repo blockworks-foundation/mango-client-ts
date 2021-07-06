@@ -187,6 +187,7 @@ export class MarginAccount {
   borrows!: number[];
   beingLiquidated!: boolean;
   hasBorrows!: boolean;
+  info!: number[];
 
   openOrders!: PublicKey[];
   openOrdersAccounts: (OpenOrders | undefined)[]  // undefined if an openOrdersAccount not yet initialized and has zeroKey
