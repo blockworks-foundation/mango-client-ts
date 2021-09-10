@@ -19,7 +19,7 @@
     "build": "tsc --project ./tsconfig.production.json",
     "start": "ts-node src/tests.ts",
     "clean": "rm -rf lib",
-    "prepare": "run-s clean build",
+    "prepare": "yarn clean && yarn build",
     "shell": "node -e \"$(< shell)\" -i --experimental-repl-await",
     "test": "mocha -r ts-node/register tests/Stateless.test.ts --timeout 0",
     "test:build": "run-s build",
