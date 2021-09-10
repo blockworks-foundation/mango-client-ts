@@ -2,6 +2,8 @@
   "extends": "@tsconfig/node10/tsconfig.json",
 
   "compilerOptions": {
+    "target": "es6",
+    "lib": ["es2019"],
     "outDir": "./lib",
     "allowJs": true,
     "checkJs": true,
