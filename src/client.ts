@@ -56,6 +56,7 @@ import {
 } from './instruction';
 import { Aggregator } from './schema';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { getMultipleAccounts } from '.';
 
 export const tokenToDecimals = {
   "BTC": 4,
@@ -1381,37 +1382,32 @@ export class MangoClient {
       marginAccountsFilters.push(...filters);
     }
 
-    const marginAccountsProms = getFilteredProgramAccounts(connection, programId, marginAccountsFilters)
+    const marginAccounts = await getFilteredProgramAccounts(connection, programId, marginAccountsFilters)
       .then((accounts) => (
         accounts.map(({ publicKey, accountInfo }) =>
           new MarginAccount(publicKey, MarginAccountLayout.decode(accountInfo == null ? undefined : accountInfo.data))
         )
       ))
 
-    const ordersFilters = [
-      {
-        memcmp: {
-          offset: OpenOrders.getLayout(mangoGroup.dexProgramId).offsetOf('owner'),
-          bytes: mangoGroup.signerKey.toBase58()
-        }
-      },
-      {
-        dataSize: OpenOrders.getLayout(mangoGroup.dexProgramId).span
-      }
-    ]
 
-    const openOrdersProms = getFilteredProgramAccounts(connection, mangoGroup.dexProgramId, ordersFilters)
-      .then(
-        (accounts) => (
-          accounts.map(
-            ( { publicKey, accountInfo } ) =>
-            OpenOrders.fromAccountInfo(publicKey, accountInfo, mangoGroup.dexProgramId)
-          )
-        )
-      )
+    const openOrderPks = marginAccounts
+      .map((ma) => ma.openOrders.filter((pk) => !pk.equals(zeroKey)))
+      .flat();
 
-    const marginAccounts = await marginAccountsProms
-    const openOrders = await openOrdersProms
+    const openOrderAccountInfos = await getMultipleAccounts(
+      connection,
+      openOrderPks,
+    );
+
+    const openOrders = openOrderAccountInfos.map(
+      ({ publicKey, accountInfo }) =>
+        OpenOrders.fromAccountInfo(
+          publicKey,
+          accountInfo,
+          mangoGroup.dexProgramId,
+        ),
+    );
+
     const pkToOpenOrdersAccount = {}
     openOrders.forEach(
       (openOrdersAccount) => (

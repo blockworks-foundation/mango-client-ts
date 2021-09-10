@@ -278,19 +278,36 @@ export function parseTokenAccount(
 export async function getMultipleAccounts(
   connection: Connection,
   publicKeys: PublicKey[],
-  commitment?: Commitment
-): Promise<{ publicKey: PublicKey; accountInfo: AccountInfo<Buffer> }[]> {
-  const publickKeyStrs = publicKeys.map((pk) => (pk.toBase58()));
+  commitment?: Commitment,
+): Promise<
+  {
+    publicKey: PublicKey;
+    context: { slot: number };
+    accountInfo: AccountInfo<Buffer>;
+  }[]
+> {
+  const len = publicKeys.length;
+  if (len > 100) {
+    const mid = Math.floor(publicKeys.length / 2);
+    return Promise.all([
+      getMultipleAccounts(connection, publicKeys.slice(0, mid), commitment),
+      getMultipleAccounts(connection, publicKeys.slice(mid, len), commitment),
+    ]).then((a) => a[0].concat(a[1]));
+  }
+  const publicKeyStrs = publicKeys.map((pk) => pk.toBase58());
+  // load connection commitment as a default
+  commitment ||= connection.commitment;
 
-  const args = commitment ? [publickKeyStrs, {commitment}] : [publickKeyStrs];
+  const args = commitment ? [publicKeyStrs, { commitment }] : [publicKeyStrs];
   // @ts-ignore
   const resp = await connection._rpcRequest('getMultipleAccounts', args);
   if (resp.error) {
     throw new Error(resp.error.message);
   }
   return resp.result.value.map(
-    ({ data, executable, lamports, owner } , i) => ({
+    ({ data, executable, lamports, owner }, i: number) => ({
       publicKey: publicKeys[i],
+      context: resp.result.context,
       accountInfo: {
         data: Buffer.from(data[0], 'base64'),
         executable,

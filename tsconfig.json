@@ -2,6 +2,8 @@
   "extends": "@tsconfig/node10/tsconfig.json",
 
   "compilerOptions": {
+    "target": "es6",
+    "lib": ["es2019"],
     "outDir": "./lib",
     "allowJs": true,
     "checkJs": true,
@@ -13,5 +15,10 @@
     "jsx": "react"
   },
   "include": ["./tests/**/*", "./src/**/*"],
-  "exclude": ["./tests/**/*.test.js", "./src/**/*.test.js", "node_modules", "**/node_modules"]
+  "exclude": [
+    "./tests/**/*.test.js",
+    "./src/**/*.test.js",
+    "node_modules",
+    "**/node_modules"
+  ]
 }
