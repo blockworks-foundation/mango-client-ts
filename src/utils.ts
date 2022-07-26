@@ -14,6 +14,11 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
+import {
+  parseBaseData,
+  parsePriceData,
+  AccountType,
+} from '@pythnetwork/client';
 import { bits, blob, struct, u8, u32, nu64 } from 'buffer-layout';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { AccountLayout } from './layout';
@@ -25,6 +30,7 @@ import {
   u64,
   zeros,
 } from '@project-serum/serum/lib/layout';
+import { Aggregator } from './schema';
 
 export const zeroKey = new PublicKey(new Uint8Array(32));
 
@@ -417,4 +423,25 @@ export function decodeRecentEvents(buffer: Buffer, lastSeenSeqNum?: number) {
   }
 
   return { header, nodes };
+}
+
+const PYTH_MAGIC = Buffer.from([0xa1, 0xb2, 0xc3, 0xd4]);
+
+export async function getOraclePrice(
+  connection: Connection,
+  oracle: PublicKey,
+): Promise<number> {
+  const info = await connection.getAccountInfo(oracle);
+  if (!info || !info.data.length) {
+    throw new Error('account does not exist');
+  }
+
+  const pythBase = parseBaseData(info.data);
+  if (pythBase?.type == AccountType.Price) {
+    const price = parsePriceData(info.data);
+    return price.aggregate.price;
+  } else {
+    const agg = Aggregator.deserialize(info.data);
+    return agg.answer.median.toNumber() / Math.pow(10, agg.config.decimals);
+  }
 }

@@ -28,6 +28,7 @@ import {
   awaitTransactionSignatureConfirmation,
   createAccountInstruction,
   getFilteredProgramAccounts,
+  getOraclePrice,
   getUnixTs,
   nativeToUi,
   parseTokenAccountData,
@@ -105,15 +106,10 @@ export class MangoGroup {
   }
 
   async getPrices(connection: Connection): Promise<number[]> {
-    const aggs = await Promise.all(
-      this.oracles.map((pk) => Aggregator.loadWithConnection(pk, connection)),
+    const oraclePrices = await Promise.all(
+      this.oracles.map((pk) => getOraclePrice(connection, pk)),
     );
-    return aggs
-      .map(
-        (agg) =>
-          agg.answer.median.toNumber() / Math.pow(10, agg.config.decimals),
-      )
-      .concat(1.0);
+    return oraclePrices.concat([1.0]);
   }
 
   getMarketIndex(spotMarket: Market): number {

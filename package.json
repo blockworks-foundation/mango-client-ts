@@ -59,6 +59,7 @@
     "@project-serum/common": "^0.0.1-beta.3",
     "@project-serum/serum": "^0.13.20",
     "@project-serum/sol-wallet-adapter": "^0.1.4",
+    "@pythnetwork/client": "^2.7.2",
     "@solana/spl-token": "0.0.13",
     "@solana/web3.js": "^0.95.0",
     "bn.js": "^5.1.2",
