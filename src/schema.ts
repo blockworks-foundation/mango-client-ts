@@ -1,16 +1,15 @@
-import BN from "bn.js"
-import { deserialize, serialize } from "borsh"
+import BN from 'bn.js';
+import { deserialize, serialize } from 'borsh';
 import { Connection, PublicKey } from '@solana/web3.js';
-
 
 // const conn = new Connection("https://devnet.solana.com", 'singleGossip')
 
-const MAX_ORACLES = 13
+const MAX_ORACLES = 13;
 
 const boolMapper = {
   encode: boolToInt,
   decode: intToBool,
-}
+};
 
 const pubkeyMapper = {
   encode: (key: PublicKey) => {
@@ -20,48 +19,48 @@ const pubkeyMapper = {
     //   key
     // }
     // TODO: support either account or public key
-    return key.toBuffer()
+    return key.toBuffer();
   },
 
   decode: (buf: Uint8Array) => {
-    return new PublicKey(buf)
+    return new PublicKey(buf);
   },
-}
+};
 
 // support strings that can be contained in at most 32 bytes
 const str32Mapper = {
   encode: (str: string) => {
-    str = str.substr(0, 32).padEnd(32)
-    return Buffer.from(str, "utf8").slice(0, 32) // truncate at 32 bytes
+    str = str.substr(0, 32).padEnd(32);
+    return Buffer.from(str, 'utf8').slice(0, 32); // truncate at 32 bytes
   },
 
   decode: (bytes: Uint8Array) => {
-    return Buffer.from(bytes).toString("utf8").trim()
+    return Buffer.from(bytes).toString('utf8').trim();
   },
-}
+};
 
 const u64Date = {
   encode: (date: Date) => {
-    return new BN(Math.floor(date.getTime() / 1000))
+    return new BN(Math.floor(date.getTime() / 1000));
   },
 
   decode: (unixtime: BN) => {
-    return new Date(unixtime.toNumber() * 1000)
+    return new Date(unixtime.toNumber() * 1000);
   },
-}
+};
 
 export abstract class Serialization {
   public static async loadWithConnection<T>(
     this: { new (data: any): T },
     key: PublicKey,
-    connection: Connection
+    connection: Connection,
   ): Promise<T> {
-    const info = await connection.getAccountInfo(key)
+    const info = await connection.getAccountInfo(key);
     if (!info) {
-      throw new Error("account does not exist")
+      throw new Error('account does not exist');
     }
 
-    return deserialize(schema, this, info.data)
+    return deserialize(schema, this, info.data);
   }
   // public static async load<T>(
   //   this: { new (data: any): T },
@@ -76,22 +75,22 @@ export abstract class Serialization {
   // }
 
   public static deserialize<T>(this: { new (data: any): T }, data: Buffer): T {
-    return deserialize(schema, this, data)
+    return deserialize(schema, this, data);
   }
 
   public static serialize<T extends Serialization>(
     this: { new (data: any): T },
-    data: object
+    data: object,
   ): Buffer {
-    return new this(data).serialize()
+    return new this(data).serialize();
   }
 
   public serialize(): Buffer {
-    let buf = Buffer.from(serialize(schema, this))
+    let buf = Buffer.from(serialize(schema, this));
     if (buf.length == 0) {
-      throw new Error("serialized buffer is 0. something wrong with schema")
+      throw new Error('serialized buffer is 0. something wrong with schema');
     }
-    return buf
+    return buf;
   }
 
   // public toJSON(pretty = true) {
@@ -106,157 +105,156 @@ export abstract class Serialization {
 
   constructor(data) {
     // this[Serialization.DATA_KEY] = data
-    Object.assign(this, data)
+    Object.assign(this, data);
   }
 }
 
 class Submission {
-  public updatedAt!: BN
-  public value!: BN
-  public oracle!: PublicKey
+  public updatedAt!: BN;
+  public value!: BN;
+  public oracle!: PublicKey;
 
   public static schema = {
-    kind: "struct",
+    kind: 'struct',
     fields: [
-      ["updatedAt", "u64"],
-      ["value", "u64"],
-      ["oracle", [32], pubkeyMapper],
+      ['updatedAt', 'u64'],
+      ['value', 'u64'],
+      ['oracle', [32], pubkeyMapper],
     ],
-  }
+  };
 
   constructor(data: any) {
-    Object.assign(this, data)
+    Object.assign(this, data);
   }
 }
 
 export interface IAggregatorConfig {
-  decimals: number
-  description: string
-  restartDelay: number
-  rewardAmount: number
-  maxSubmissions: number
-  minSubmissions: number
-  rewardTokenAccount: PublicKey
+  decimals: number;
+  description: string;
+  restartDelay: number;
+  rewardAmount: number;
+  maxSubmissions: number;
+  minSubmissions: number;
+  rewardTokenAccount: PublicKey;
 }
 
 export class AggregatorConfig
   extends Serialization
-  implements IAggregatorConfig {
-  public decimals!: number
-  public description!: string
-  public restartDelay!: number
-  public rewardAmount!: number
-  public maxSubmissions!: number
-  public minSubmissions!: number
-  public rewardTokenAccount!: PublicKey
+  implements IAggregatorConfig
+{
+  public decimals!: number;
+  public description!: string;
+  public restartDelay!: number;
+  public rewardAmount!: number;
+  public maxSubmissions!: number;
+  public minSubmissions!: number;
+  public rewardTokenAccount!: PublicKey;
 
   public static schema = {
-    kind: "struct",
+    kind: 'struct',
     fields: [
-      ["description", [32], str32Mapper],
-      ["decimals", "u8"],
-      ["restartDelay", "u8"],
-      ["maxSubmissions", "u8"],
-      ["minSubmissions", "u8"],
-      ["rewardAmount", "u64"],
-      ["rewardTokenAccount", [32], pubkeyMapper],
+      ['description', [32], str32Mapper],
+      ['decimals', 'u8'],
+      ['restartDelay', 'u8'],
+      ['maxSubmissions', 'u8'],
+      ['minSubmissions', 'u8'],
+      ['rewardAmount', 'u64'],
+      ['rewardTokenAccount', [32], pubkeyMapper],
     ],
-  }
+  };
 }
 
 export class Submissions extends Serialization {
-  public isInitialized!: boolean
-  public submissions!: Submission[]
+  public isInitialized!: boolean;
+  public submissions!: Submission[];
 
-  public static size = 625
+  public static size = 625;
   public static schema = {
-    kind: "struct",
+    kind: 'struct',
     fields: [
-      ["isInitialized", "u8", boolMapper],
-      ["submissions", [Submission, MAX_ORACLES]],
+      ['isInitialized', 'u8', boolMapper],
+      ['submissions', [Submission, MAX_ORACLES]],
     ],
-  }
+  };
 
   // if not already submitted, and has empty spot
   public canSubmit(pk: PublicKey, cfg: AggregatorConfig): boolean {
     if (this.hadSubmitted(pk)) {
-      return false
+      return false;
     }
 
     let emptyIndex = this.submissions.findIndex((s) => {
-      return s.updatedAt.isZero()
-    })
+      return s.updatedAt.isZero();
+    });
 
-    return emptyIndex > 0 && emptyIndex < cfg.maxSubmissions
+    return emptyIndex > 0 && emptyIndex < cfg.maxSubmissions;
   }
 
   public hadSubmitted(pk: PublicKey): boolean {
     return !!this.submissions.find((s) => {
-      return s.oracle.equals(pk)
-    })
+      return s.oracle.equals(pk);
+    });
   }
 }
 
 export class Round extends Serialization {
-  public id!: BN
-  public createdAt!: BN
-  public updatedAt!: BN
+  public id!: BN;
+  public createdAt!: BN;
+  public updatedAt!: BN;
 
   public static schema = {
-    kind: "struct",
+    kind: 'struct',
     fields: [
-      ["id", "u64"],
-      ["createdAt", "u64"],
-      ["updatedAt", "u64"],
+      ['id', 'u64'],
+      ['createdAt', 'u64'],
+      ['updatedAt', 'u64'],
     ],
-  }
+  };
 }
 
 export class Answer extends Serialization {
-  public roundID!: BN
-  public median!: BN
-  public createdAt!: BN
-  public updatedAt!: BN
+  public roundID!: BN;
+  public median!: BN;
+  public createdAt!: BN;
+  public updatedAt!: BN;
 
   public static schema = {
-    kind: "struct",
+    kind: 'struct',
     fields: [
-      ["roundID", "u64"],
-      ["median", "u64"],
-      ["createdAt", "u64"],
-      ["updatedAt", "u64"],
+      ['roundID', 'u64'],
+      ['median', 'u64'],
+      ['createdAt', 'u64'],
+      ['updatedAt', 'u64'],
     ],
-  }
+  };
 }
 
 export class Aggregator extends Serialization {
-  public static size = 229
+  public static size = 229;
 
-  public config!: AggregatorConfig
-  public roundSubmissions!: PublicKey
-  public answerSubmissions!: PublicKey
-  public answer!: Answer
-  public round!: Round
+  public config!: AggregatorConfig;
+  public roundSubmissions!: PublicKey;
+  public answerSubmissions!: PublicKey;
+  public answer!: Answer;
+  public round!: Round;
 
   public static schema = {
-    kind: "struct",
+    kind: 'struct',
     fields: [
-      ["config", AggregatorConfig],
-      ["isInitialized", "u8", boolMapper],
-      ["owner", [32], pubkeyMapper],
-      ["round", Round],
-      ["roundSubmissions", [32], pubkeyMapper],
-      ["answer", Answer],
-      ["answerSubmissions", [32], pubkeyMapper],
+      ['config', AggregatorConfig],
+      ['isInitialized', 'u8', boolMapper],
+      ['owner', [32], pubkeyMapper],
+      ['round', Round],
+      ['roundSubmissions', [32], pubkeyMapper],
+      ['answer', Answer],
+      ['answerSubmissions', [32], pubkeyMapper],
     ],
-  }
-
-
+  };
 }
 
 abstract class InstructionSerialization extends Serialization {
   public serialize(): Buffer {
-    return new Instruction({ [this.constructor.name]: this }).serialize()
+    return new Instruction({ [this.constructor.name]: this }).serialize();
   }
 }
 
@@ -269,55 +267,55 @@ export class Initialize extends InstructionSerialization {
   // public description!: string
 
   public static schema = {
-    kind: "struct",
-    fields: [["config", AggregatorConfig]],
-  }
+    kind: 'struct',
+    fields: [['config', AggregatorConfig]],
+  };
 }
 
 export class Configure extends InstructionSerialization {
   public static schema = {
-    kind: "struct",
-    fields: [["config", AggregatorConfig]],
-  }
+    kind: 'struct',
+    fields: [['config', AggregatorConfig]],
+  };
 }
 
 export class AddOracle extends InstructionSerialization {
   public static schema = {
-    kind: "struct",
-    fields: [["description", [32], str32Mapper]],
-  }
+    kind: 'struct',
+    fields: [['description', [32], str32Mapper]],
+  };
 }
 
 export class RemoveOracle extends InstructionSerialization {
   public static schema = {
-    kind: "struct",
+    kind: 'struct',
     fields: [],
-  }
+  };
 }
 
 export class Withdraw extends InstructionSerialization {
   public static schema = {
-    kind: "struct",
-    fields: [["faucetOwnerSeed", ["u8"]]],
-  }
+    kind: 'struct',
+    fields: [['faucetOwnerSeed', ['u8']]],
+  };
 }
 
 export class Submit extends InstructionSerialization {
   public static schema = {
-    kind: "struct",
+    kind: 'struct',
     fields: [
-      ["round_id", "u64"],
-      ["value", "u64"],
+      ['round_id', 'u64'],
+      ['value', 'u64'],
     ],
-  }
+  };
 }
 
 export class Instruction extends Serialization {
-  public enum!: string
+  public enum!: string;
 
   public static schema = {
-    kind: "enum",
-    field: "enum",
+    kind: 'enum',
+    field: 'enum',
     values: [
       [Initialize.name, Initialize],
       [Configure.name, Configure],
@@ -325,63 +323,63 @@ export class Instruction extends Serialization {
       [RemoveOracle.name, RemoveOracle],
       [Submit.name, Submit],
     ],
-  }
+  };
 
   public constructor(prop: { [key: string]: any }) {
-    super({})
+    super({});
     // deserializer calls the construction with `{ [enum]: value }`, so we need
     // to figure out the enum type
     //
     // expect only one key-value (what a retarded interface)
     for (let key of Object.keys(prop)) {
-      this.enum = key
-      this[key] = prop[key]
-      return
+      this.enum = key;
+      this[key] = prop[key];
+      return;
     }
 
-    throw new Error("not an expected enum object")
+    throw new Error('not an expected enum object');
   }
 
   public get value() {
-    return this[this.enum]
+    return this[this.enum];
   }
 }
 
 function intToBool(i: number) {
   if (i == 0) {
-    return false
+    return false;
   } else {
-    return true
+    return true;
   }
 }
 
 function boolToInt(t: boolean) {
   if (t) {
-    return 1
+    return 1;
   } else {
-    return 0
+    return 0;
   }
 }
 
 export class Oracle extends Serialization {
-  public static size = 113
-  public allowStartRound!: BN
-  public withdrawable!: BN
+  public static size = 113;
+  public allowStartRound!: BN;
+  public withdrawable!: BN;
 
   public static schema = {
-    kind: "struct",
+    kind: 'struct',
     fields: [
-      ["description", [32], str32Mapper],
-      ["isInitialized", "u8", boolMapper],
-      ["withdrawable", "u64"],
-      ["allowStartRound", "u64"],
-      ["aggregator", [32], pubkeyMapper],
-      ["owner", [32], pubkeyMapper],
+      ['description', [32], str32Mapper],
+      ['isInitialized', 'u8', boolMapper],
+      ['withdrawable', 'u64'],
+      ['allowStartRound', 'u64'],
+      ['aggregator', [32], pubkeyMapper],
+      ['owner', [32], pubkeyMapper],
     ],
-  }
+  };
 
   public canStartNewRound(round: BN): boolean {
-    return this.allowStartRound.lte(round)
+    return this.allowStartRound.lte(round);
   }
 }
 
@@ -402,5 +400,4 @@ export const schema = new Map([
   [Initialize, Initialize.schema],
   [AddOracle, AddOracle.schema],
   [Submit, Submit.schema],
-
-] as any) as any
+] as any) as any;

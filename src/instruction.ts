@@ -313,7 +313,7 @@ export function makeAddMarginAccountInfoInstruction(
   mangoGroup: PublicKey,
   marginAccount: PublicKey,
   owner: PublicKey,
-  info: string
+  info: string,
 ): TransactionInstruction {
   const keys = [
     { isSigner: false, isWritable: true, pubkey: mangoGroup },
@@ -321,12 +321,16 @@ export function makeAddMarginAccountInfoInstruction(
     { isSigner: true, isWritable: false, pubkey: owner },
   ];
   // TODO convert info into a 32 byte utf encoded byte array
-  const encoded = Buffer.from(info)
+  const encoded = Buffer.from(info);
   if (encoded.length > INFO_LEN) {
-    throw new Error("info string too long. Must be less than or equal to 32 bytes")
+    throw new Error(
+      'info string too long. Must be less than or equal to 32 bytes',
+    );
   }
-  const infoArray = new Uint8Array(encoded, 0, INFO_LEN)
-  const data = encodeMangoInstruction({ AddMarginAccountInfo: { info: infoArray } });
+  const infoArray = new Uint8Array(encoded, 0, INFO_LEN);
+  const data = encodeMangoInstruction({
+    AddMarginAccountInfo: { info: infoArray },
+  });
 
   return new TransactionInstruction({ keys, data, programId });
 }
