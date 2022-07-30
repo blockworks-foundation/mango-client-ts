@@ -480,7 +480,7 @@ export class MangoClient {
       await connection.getRecentBlockhash('singleGossip')
     ).blockhash;
     transaction.setSigners(
-      payer.publicKey,
+      payer.publicKey!,
       ...additionalSigners.map((a) => a.publicKey),
     );
 
@@ -761,7 +761,7 @@ export class MangoClient {
     programId: PublicKey,
     mangoGroup: MangoGroup,
     marginAccount: MarginAccount,
-    wallet: Wallet | Account,
+    wallet: Account,
     token: PublicKey,
     tokenAcc: PublicKey,
 
@@ -801,7 +801,7 @@ export class MangoClient {
       programId,
       mangoGroup.publicKey,
       marginAccount.publicKey,
-      wallet.publicKey,
+      wallet.publicKey!,
       mangoGroup.signerKey,
       tokenAcc,
       mangoGroup.vaults[tokenIndex],
@@ -1882,7 +1882,7 @@ export class MangoClient {
       {
         memcmp: {
           offset: MarginAccountLayout.offsetOf('owner'),
-          bytes: owner.publicKey.toBase58(),
+          bytes: owner.publicKey!.toBase58(),
         },
       },
 
@@ -1946,7 +1946,7 @@ export class MangoClient {
       {
         memcmp: {
           offset: MangoSrmAccountLayout.offsetOf('owner'),
-          bytes: owner.publicKey.toBase58(),
+          bytes: owner.publicKey!.toBase58(),
         },
       },
 

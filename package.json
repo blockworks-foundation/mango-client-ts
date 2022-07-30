@@ -56,15 +56,12 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@project-serum/common": "^0.0.1-beta.3",
-    "@project-serum/serum": "^0.13.20",
-    "@project-serum/sol-wallet-adapter": "^0.1.4",
+    "@project-serum/serum": "^0.13.65",
+    "@project-serum/sol-wallet-adapter": "^0.2.6",
     "@pythnetwork/client": "^2.7.2",
-    "@solana/spl-token": "0.0.13",
-    "@solana/web3.js": "^0.95.0",
-    "bn.js": "^5.1.2",
-    "borsh": "https://github.com/defactojob/borsh-js#field-mapper",
-    "buffer-layout": "^1.2.0"
+    "@solana/spl-token": "^0.1.6",
+    "@solana/web3.js": "^1.30.2",
+    "borsh": "https://github.com/defactojob/borsh-js#field-mapper"
   },
   "browserslist": [
     ">0.2%",
