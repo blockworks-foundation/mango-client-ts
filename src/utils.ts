@@ -1,9 +1,14 @@
 import {
   Account,
-  AccountInfo, Commitment,
+  AccountInfo,
+  Commitment,
   Connection,
-  PublicKey, RpcResponseAndContext, SimulatedTransactionResponse,
-  SystemProgram, Transaction, TransactionConfirmationStatus,
+  PublicKey,
+  RpcResponseAndContext,
+  SimulatedTransactionResponse,
+  SystemProgram,
+  Transaction,
+  TransactionConfirmationStatus,
   TransactionInstruction,
   TransactionSignature,
 } from '@solana/web3.js';
@@ -21,7 +26,7 @@ import {
   zeros,
 } from '@project-serum/serum/lib/layout';
 
-export const zeroKey = new PublicKey(new Uint8Array(32))
+export const zeroKey = new PublicKey(new Uint8Array(32));
 
 export async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -57,16 +62,16 @@ export async function awaitTransactionSignatureConfirmation(
   txid: TransactionSignature,
   timeout: number,
   connection: Connection,
-  confirmLevel: TransactionConfirmationStatus
+  confirmLevel: TransactionConfirmationStatus,
 ) {
   let done = false;
 
-  const confirmLevels: (TransactionConfirmationStatus | null)[] = ['finalized']
+  const confirmLevels: (TransactionConfirmationStatus | null)[] = ['finalized'];
   if (confirmLevel === 'confirmed') {
-    confirmLevels.push('confirmed')
+    confirmLevels.push('confirmed');
   } else if (confirmLevel === 'processed') {
-    confirmLevels.push('confirmed')
-    confirmLevels.push('processed')
+    confirmLevels.push('confirmed');
+    confirmLevels.push('processed');
   }
 
   const result = await new Promise((resolve, reject) => {
@@ -113,7 +118,12 @@ export async function awaitTransactionSignatureConfirmation(
                 console.log('REST error for', txid, result);
                 done = true;
                 reject(result.err);
-              } else if (!(result.confirmations || confirmLevels.includes(result.confirmationStatus))) {
+              } else if (
+                !(
+                  result.confirmations ||
+                  confirmLevels.includes(result.confirmationStatus!)
+                )
+              ) {
                 console.log('REST not confirmed', txid, result);
               } else {
                 console.log('REST confirmed', txid, result);
@@ -135,26 +145,26 @@ export async function awaitTransactionSignatureConfirmation(
   return result;
 }
 
-
 export async function createAccountInstruction(
   connection: Connection,
   payer: PublicKey,
   space: number,
   owner: PublicKey,
-  lamports?: number
-): Promise<{ account: Account, instruction: TransactionInstruction }> {
+  lamports?: number,
+): Promise<{ account: Account; instruction: TransactionInstruction }> {
   const account = new Account();
   const instruction = SystemProgram.createAccount({
     fromPubkey: payer,
     newAccountPubkey: account.publicKey,
-    lamports: lamports ? lamports : await connection.getMinimumBalanceForRentExemption(space),
+    lamports: lamports
+      ? lamports
+      : await connection.getMinimumBalanceForRentExemption(space),
     space,
-    programId: owner
-  })
+    programId: owner,
+  });
 
   return { account, instruction };
 }
-
 
 const MINT_LAYOUT = struct([blob(44), u8('decimals'), blob(37)]);
 
@@ -180,15 +190,13 @@ function throwIfNull<T>(value: T | null, message = 'account not found'): T {
   return value;
 }
 
-
 export function uiToNative(amount: number, decimals: number): BN {
-  return new BN(Math.round(amount * Math.pow(10, decimals)))
+  return new BN(Math.round(amount * Math.pow(10, decimals)));
 }
 
 export function nativeToUi(amount: number, decimals: number): number {
-  return amount / Math.pow(10, decimals)
+  return amount / Math.pow(10, decimals);
 }
-
 
 export async function getFilteredProgramAccounts(
   connection: Connection,
@@ -221,24 +229,25 @@ export async function getFilteredProgramAccounts(
 }
 
 export async function promiseUndef(): Promise<undefined> {
-  return undefined
+  return undefined;
 }
 
 export const getUnixTs = () => {
   return new Date().getTime() / 1000;
-}
-
+};
 
 export const ACCOUNT_LAYOUT = struct([
   blob(32, 'mint'),
   blob(32, 'owner'),
   nu64('amount'),
-  blob(93)
+  blob(93),
 ]);
 
-export function parseTokenAccountData(
-  data: Buffer,
-): { mint: PublicKey; owner: PublicKey; amount: number } {
+export function parseTokenAccountData(data: Buffer): {
+  mint: PublicKey;
+  owner: PublicKey;
+  amount: number;
+} {
   let { mint, owner, amount } = ACCOUNT_LAYOUT.decode(data);
   return {
     mint: new PublicKey(mint),
@@ -247,69 +256,76 @@ export function parseTokenAccountData(
   };
 }
 
-export function parseTokenAccount(
-  data: Buffer
-): { mint: PublicKey; owner: PublicKey; amount: BN } {
-
-  const decoded = AccountLayout.decode(data)
+export function parseTokenAccount(data: Buffer): {
+  mint: PublicKey;
+  owner: PublicKey;
+  amount: BN;
+} {
+  const decoded = AccountLayout.decode(data);
   return {
     mint: decoded.mint,
     owner: decoded.owner,
-    amount: decoded.amount
-  }
+    amount: decoded.amount,
+  };
 }
 
 export async function getMultipleAccounts(
   connection: Connection,
   publicKeys: PublicKey[],
-  commitment?: Commitment
+  commitment?: Commitment,
 ): Promise<{ publicKey: PublicKey; accountInfo: AccountInfo<Buffer> }[]> {
-  const publickKeyStrs = publicKeys.map((pk) => (pk.toBase58()));
+  const publickKeyStrs = publicKeys.map((pk) => pk.toBase58());
 
-  const args = commitment ? [publickKeyStrs, {commitment}] : [publickKeyStrs];
+  const args = commitment ? [publickKeyStrs, { commitment }] : [publickKeyStrs];
   // @ts-ignore
   const resp = await connection._rpcRequest('getMultipleAccounts', args);
   if (resp.error) {
     throw new Error(resp.error.message);
   }
-  return resp.result.value.map(
-    ({ data, executable, lamports, owner } , i) => ({
-      publicKey: publicKeys[i],
-      accountInfo: {
-        data: Buffer.from(data[0], 'base64'),
-        executable,
-        owner: new PublicKey(owner),
-        lamports,
-      },
-    }),
-  );
+  return resp.result.value.map(({ data, executable, lamports, owner }, i) => ({
+    publicKey: publicKeys[i],
+    accountInfo: {
+      data: Buffer.from(data[0], 'base64'),
+      executable,
+      owner: new PublicKey(owner),
+      lamports,
+    },
+  }));
 }
-
 
 export async function findLargestTokenAccountForOwner(
   connection: Connection,
   owner: PublicKey,
-  mint: PublicKey
-): Promise<{ publicKey: PublicKey; tokenAccount: { mint: PublicKey; owner: PublicKey; amount: number} }> {
-
-  const response = await connection.getTokenAccountsByOwner(owner, {mint, programId: TOKEN_PROGRAM_ID}, connection.commitment)
+  mint: PublicKey,
+): Promise<{
+  publicKey: PublicKey;
+  tokenAccount: { mint: PublicKey; owner: PublicKey; amount: number };
+}> {
+  const response = await connection.getTokenAccountsByOwner(
+    owner,
+    { mint, programId: TOKEN_PROGRAM_ID },
+    connection.commitment,
+  );
   let max = -1;
-  let maxTokenAccount: null | { mint: PublicKey; owner: PublicKey; amount: number} = null
-  let maxPubkey: null | PublicKey = null
+  let maxTokenAccount: null | {
+    mint: PublicKey;
+    owner: PublicKey;
+    amount: number;
+  } = null;
+  let maxPubkey: null | PublicKey = null;
   for (const { pubkey, account } of response.value) {
-
-    const tokenAccount = parseTokenAccountData(account.data)
+    const tokenAccount = parseTokenAccountData(account.data);
     if (tokenAccount.amount > max) {
-      maxTokenAccount = tokenAccount
-      max = tokenAccount.amount
-      maxPubkey = pubkey
+      maxTokenAccount = tokenAccount;
+      max = tokenAccount.amount;
+      maxPubkey = pubkey;
     }
   }
 
   if (maxPubkey && maxTokenAccount) {
-    return {publicKey: maxPubkey, tokenAccount: maxTokenAccount}
+    return { publicKey: maxPubkey, tokenAccount: maxTokenAccount };
   } else {
-    throw new Error("No accounts for this token")
+    throw new Error('No accounts for this token');
   }
 }
 
@@ -344,11 +360,7 @@ const EVENT = struct([
   u64('clientOrderId'),
 ]);
 
-
-export function decodeRecentEvents(
-  buffer: Buffer,
-  lastSeenSeqNum?: number,
-) {
+export function decodeRecentEvents(buffer: Buffer, lastSeenSeqNum?: number) {
   const header = EVENT_QUEUE_HEADER.decode(buffer);
   const nodes: any[] = [];
 
@@ -357,15 +369,17 @@ export function decodeRecentEvents(
       (buffer.length - EVENT_QUEUE_HEADER.span) / EVENT.span,
     );
 
-    const newEventsCount = header.seqNum - lastSeenSeqNum
+    const newEventsCount = header.seqNum - lastSeenSeqNum;
 
     for (let i = newEventsCount; i > 0; --i) {
-      const nodeIndex = (header.head + header.count + allocLen - i) % allocLen
-      const decodedItem = EVENT.decode(buffer, EVENT_QUEUE_HEADER.span + nodeIndex * EVENT.span)
-      nodes.push(decodedItem)
+      const nodeIndex = (header.head + header.count + allocLen - i) % allocLen;
+      const decodedItem = EVENT.decode(
+        buffer,
+        EVENT_QUEUE_HEADER.span + nodeIndex * EVENT.span,
+      );
+      nodes.push(decodedItem);
     }
   }
 
   return { header, nodes };
 }
-
