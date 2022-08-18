@@ -57,6 +57,7 @@
   "dependencies": {
     "@project-serum/serum": "^0.13.20",
     "@project-serum/sol-wallet-adapter": "^0.1.4",
+    "@pythnetwork/client": "^2.7.3",
     "@solana/spl-token": "^0.0.13",
     "@solana/web3.js": "^0.90.0",
     "bn.js": "^5.1.2",
