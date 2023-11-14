@@ -31,6 +31,8 @@ import {
   zeros,
 } from '@project-serum/serum/lib/layout';
 import { Aggregator } from './schema';
+import Big from 'big.js';
+import SwitchboardProgram from '@switchboard-xyz/sbv2-lite';
 
 export const zeroKey = new PublicKey(new Uint8Array(32));
 
@@ -429,6 +431,43 @@ export function decodeRecentEvents(buffer: Buffer, lastSeenSeqNum?: number) {
 
 const PYTH_MAGIC = Buffer.from([0xa1, 0xb2, 0xc3, 0xd4]);
 
+export function switchboardDecimalToBig(sbDecimal: {
+  mantissa: BN;
+  scale: number;
+}): Big {
+  const mantissa = new Big(sbDecimal.mantissa.toString());
+  const scale = sbDecimal.scale;
+  const oldDp = Big.DP;
+  Big.DP = 20;
+  const result: Big = mantissa.div(new Big(10).pow(scale));
+  Big.DP = oldDp;
+  return result;
+}
+let sbv2MainnetProgram;
+export async function parseSwitchboardOracleV2(
+  accountInfo: AccountInfo<Buffer>,
+  connection: Connection,
+): Promise<{ price: number; lastUpdatedSlot: number; uiDeviation: number }> {
+  if (!sbv2MainnetProgram) {
+    sbv2MainnetProgram = await SwitchboardProgram.loadMainnet(connection);
+  }
+
+  const price = sbv2MainnetProgram
+    .decodeLatestAggregatorValue(accountInfo)!
+    .toNumber();
+  const lastUpdatedSlot = sbv2MainnetProgram
+    .decodeAggregator(accountInfo)
+    .latestConfirmedRound!.roundOpenSlot!.toNumber();
+  const stdDeviation = switchboardDecimalToBig(
+    sbv2MainnetProgram.decodeAggregator(accountInfo).latestConfirmedRound
+      .stdDeviation,
+  );
+
+  if (!price || !lastUpdatedSlot)
+    throw new Error('Unable to parse Switchboard Oracle V2');
+  return { price, lastUpdatedSlot, uiDeviation: stdDeviation.toNumber() };
+}
+
 export async function getOraclePrice(
   connection: Connection,
   oracle: PublicKey,
@@ -438,12 +477,17 @@ export async function getOraclePrice(
     throw new Error('account does not exist');
   }
 
-  const pythBase = parseBaseData(info.data);
-  if (pythBase?.type == AccountType.Price) {
-    const price = parsePriceData(info.data);
-    return price.aggregate.price;
+  if (info.data.length == 3851) {
+    const { price } = await parseSwitchboardOracleV2(info, connection);
+    return price;
   } else {
-    const agg = Aggregator.deserialize(info.data);
-    return agg.answer.median.toNumber() / Math.pow(10, agg.config.decimals);
+    const pythBase = parseBaseData(info.data);
+    if (pythBase?.type == AccountType.Price) {
+      const price = parsePriceData(info.data);
+      return price.aggregate.price;
+    } else {
+      const agg = Aggregator.deserialize(info.data);
+      return agg.answer.median.toNumber() / Math.pow(10, agg.config.decimals);
+    }
   }
 }
